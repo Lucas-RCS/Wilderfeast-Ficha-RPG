@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --wf-orange: #ff9b42;
+    --wf-orange-dark: #f28c28;
+    --wf-blue: #89b5f7;
+    --wf-blue-dark: #13335c;
+    --wf-teal: #38c2b3;
+    --wf-teal-dark: #16857a;
+    --wf-cream: #242220;
+    --wf-cream-dark: #1a1918;
+    --wf-brown: #b0a497;
+    --wf-ink: #f5efeb;
+  }
+
+  body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    color: #f5efeb;
+    background-color: #121110;
+    color-scheme: dark;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: "Cinzel", serif;
+    letter-spacing: 0.02em;
+  }
+
+  .font-handwriting {
+    font-family: "Patrick Hand", cursive;
+  }
+
+  .font-syne {
+    font-family: "Syne", sans-serif;
+  }
+
+  .font-code {
+    font-family: "Fira Code", monospace;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Backgrounds in dark mode */
+.dark .bg-\[\#F5EFEB\],
+.dark .bg-\[\#FAF7F0\],
+.dark .bg-\[\#F7F1E3\] {
+  background-color: #1a1918 !important;
+}
+
+.dark .bg-\[\#EFE9DC\],
+.dark .bg-\[\#E2D9C8\],
+.dark .bg-\[\#E4DAC7\] {
+  background-color: #242220 !important;
+}
+
+.dark .bg-white {
+  background-color: #22201d !important;
+}
+
+/* Specific component surfaces */
+.dark aside,
+.dark main,
+.dark header,
+.dark section,
+.dark .bg-\[\#FAF7F0\] {
+  border-color: #383430 !important;
+}
+
+/* Borders in dark mode */
+.dark .border-\[\#D8CEBA\],
+.dark .border-\[\#D0C4AF\],
+.dark .border-\[\#EFE9DC\],
+.dark .border-\[\#E2D9C8\],
+.dark .border-\[\#D5C9B4\] {
+  border-color: #383430 !important;
+}
+
+/* Text colors in dark mode */
+.dark .text-\[\#2C241B\],
+.dark .text-\[\#171717\],
+.dark .text-\[\#4A3F35\] {
+  color: #f5efeb !important;
+}
+
+.dark .text-\[\#736352\],
+.dark .text-\[\#8A7968\],
+.dark .text-\[\#5C4632\] {
+  color: #b0a497 !important;
+}
+
+.dark .text-\[\#173F73\] {
+  color: #89b5f7 !important;
+}
+
+/* Inputs & Form controls in dark mode */
+.dark input[type="text"],
+.dark input[type="number"],
+.dark select,
+.dark textarea {
+  background-color: #23211e !important;
+  color: #f5efeb !important;
+  border-color: #423e39 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #7a7065 !important;
+}
+
+.dark select option {
+  background-color: #1f1d1b !important;
+  color: #f5efeb !important;
+}
+
+.dark select optgroup {
+  background-color: #181716 !important;
+  color: #ff9b42 !important;
+}
+
+/* Button hovers in dark mode */
+.dark .hover\:bg-\[\#EFE9DC\]:hover,
+.dark .hover\:bg-\[\#E4DAC7\]:hover,
+.dark .hover\:bg-\[\#D8CEBA\]:hover,
+.dark .hover\:bg-\[\#D5C9B4\]:hover {
+  background-color: #33302b !important;
+}
+
+/* Dark mode banner / top bar */
+.dark .bg-\[\#173F73\] {
+  background-color: #13335c !important;
+}
+
+.dark .hover\:bg-\[\#112F56\]:hover {
+  background-color: #0e2644 !important;
+}
+
+.dark .text-\[\#E66826\],
+.dark .text-\[\#F28C28\] {
+  color: #ff9b42 !important;
+}
+
+.dark .text-\[\#16857A\] {
+  color: #38c2b3 !important;
+}
+
+.dark .text-\[\#9B2C2C\] {
+  color: #fc8181 !important;
+}
+
+.dark .bg-\[\#9B2C2C\] {
+  background-color: #9b2c2c !important;
+}
+
+.dark .bg-\[\#16857A\] {
+  background-color: #16857a !important;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(92, 70, 50, 0.08);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1a1918;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #f28c28;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d47318;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #e66826;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #f28c28;
+}
+
+/* Subtle Wilderfeast border ornament styles */
+.wf-card-border {
+  border: 2px solid rgba(23, 63, 115, 0.25);
+  box-shadow:
+    0 4px 12px -2px rgba(23, 23, 23, 0.06),
+    0 2px 4px -1px rgba(23, 23, 23, 0.04);
+}
+
+.dark .wf-card-border {
+  border: 2px solid rgba(242, 140, 40, 0.25);
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.6);
+}
+
+.wf-banner-header {
+  background: linear-gradient(135deg, #173f73 0%, #0f2b4e 100%);
+}
+
+.dark .wf-banner-header {
+  background: linear-gradient(135deg, #1a1918 0%, #121110 100%);
+}
+
+/* PRINT & PDF EXPORT OPTIMIZATIONS (A4 MULTI-PAGE DOCUMENT) */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 10mm 10mm 10mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .page-break {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Force exact borders and layout in print */
+  .wf-print-page {
+    width: 100% !important;
+    min-height: 275mm !important;
+    max-height: 290mm !important;
+    padding: 6mm !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+    border: 2px solid #173f73 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+}
+
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
