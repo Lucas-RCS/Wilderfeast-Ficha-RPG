@@ -217,7 +217,6 @@ export const HubView: React.FC<HubViewProps> = ({
           </p>
         </div>
 
-        {/* New Player Onboarding Guide Card */}
         {showQuickGuide && (
           <div className="mb-8 p-3 sm:p-3 rounded-2xl bg-[#1A1918] border border-[#383430] shadow-sm relative animate-fadeIn">
             <div className="flex items-start justify-between gap-4">
@@ -786,9 +785,7 @@ export const HubView: React.FC<HubViewProps> = ({
         </div>
       )}
 
-      {/* ========================================================= */}
       {/* MODAL: EXCLUIR */}
-      {/* ========================================================= */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-[#1A1918] w-full max-w-sm rounded-2xl border border-[#383430] shadow-2xl p-5 space-y-3 text-[#F5EFEB]">
