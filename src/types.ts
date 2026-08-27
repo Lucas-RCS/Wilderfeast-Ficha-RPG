@@ -95,7 +95,8 @@ export interface ITrait {
   id: string;
   name: string;
   level: number;
-  cost: string;
+  type: "Passiva" | "Ação" | "Sucesso";
+  cost?: number;
   description: string;
 }
 
@@ -115,6 +116,13 @@ export interface JournalNote {
   createdAt: string;
 }
 
+export interface ISpecialty {
+  name: string;
+  theme: string;
+  description: string;
+  initialTraits: Array<ITrait>;
+}
+
 // ============================================================================
 // FICHA DE FERAL
 // ============================================================================
@@ -125,7 +133,6 @@ export interface IFeral {
     name: string;
     pronouns: string;
     specialty: string;
-    packName: string;
     appearance: string;
     avatarUrl?: string;
     notes?: string;

@@ -16,15 +16,49 @@ export interface MonsterLineageDefinition {
 }
 
 export const MONSTER_LINEAGES: MonsterLineageDefinition[] = [
-  { name: "Açougueiro", description: "Monstros com protuberâncias de metal ou mineral, carniceiros e predadores blindados." },
-  { name: "Amontoeiro", description: "Monstros que acumulam comida em covis, gordura corporal ou reservas duradouras." },
-  { name: "Churrasqueiro", description: "Monstros que convivem com chamas, calor extremo e combustão." },
-  { name: "Jardineiro", description: "Monstros que gerenciam a flora, sementes e o crescimento vegetal da Terra Una." },
-  { name: "Molheiro", description: "Monstros que excretam secreções, tóxicas, medicinais, mucos e compostos químicos." },
-  { name: "Padeiro", description: "Monstros longevos, polinizadores ou com adaptações de grande resiliência." },
-  { name: "Peixeiro", description: "Monstros aquáticos, semiaquáticos e voadores dos mares e rios." },
-  { name: "Pivoteiro", description: "Monstros definidos por metamorfose, mimetismo, inteligência e adaptação dinâmica." },
-  { name: "Personalizada", description: "Linhagem lendária ou única criada pelo Guia." },
+  {
+    name: "Açougueiro",
+    description:
+      "Monstros com protuberâncias de metal ou mineral, carniceiros e predadores blindados.",
+  },
+  {
+    name: "Amontoeiro",
+    description:
+      "Monstros que acumulam comida em covis, gordura corporal ou reservas duradouras.",
+  },
+  {
+    name: "Churrasqueiro",
+    description: "Monstros que convivem com chamas, calor extremo e combustão.",
+  },
+  {
+    name: "Jardineiro",
+    description:
+      "Monstros que gerenciam a flora, sementes e o crescimento vegetal da Terra Una.",
+  },
+  {
+    name: "Molheiro",
+    description:
+      "Monstros que excretam secreções, tóxicas, medicinais, mucos e compostos químicos.",
+  },
+  {
+    name: "Padeiro",
+    description:
+      "Monstros longevos, polinizadores ou com adaptações de grande resiliência.",
+  },
+  {
+    name: "Peixeiro",
+    description:
+      "Monstros aquáticos, semiaquáticos e voadores dos mares e rios.",
+  },
+  {
+    name: "Pivoteiro",
+    description:
+      "Monstros definidos por metamorfose, mimetismo, inteligência e adaptação dinâmica.",
+  },
+  {
+    name: "Personalizada",
+    description: "Linhagem lendária ou única criada pelo Guia.",
+  },
 ];
 
 export interface StageConfig {
@@ -56,7 +90,8 @@ export const STAGE_CONFIG: Record<MonsterStage, StageConfig> = {
     vigorMax: 40,
     styleModifier: 1,
     durabilityModifier: 5,
-    fullTurnsRule: "2 turnos completos por rodada se enfrentar 3 ou mais ferais.",
+    fullTurnsRule:
+      "2 turnos completos por rodada se enfrentar 3 ou mais ferais.",
   },
   Zênite: {
     label: "Zênite",
@@ -148,10 +183,7 @@ export function calculateEffectiveStats(creature: ICreature) {
   );
 
   const effectiveParts = creature.parts.map((part) => {
-    const max = Math.max(
-      1,
-      part.durability.max + config.durabilityModifier,
-    );
+    const max = Math.max(1, part.durability.max + config.durabilityModifier);
 
     return {
       ...part,
@@ -234,8 +266,7 @@ export function createDefaultCreature(
         },
       ),
     ],
-    diet:
-      "Generalista: frutos silvestres, raízes, pequenas caças e recursos locais.",
+    diet: "Generalista: frutos silvestres, raízes, pequenas caças e recursos locais.",
     habitat:
       "Costa Sen, arredores da Trilha; fendas rochosas e bosques úmidos.",
     behavior:

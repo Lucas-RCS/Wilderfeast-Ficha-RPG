@@ -111,10 +111,6 @@ export function downloadJSON(data: unknown, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
-// -----------------------------------------------------------------------------
-// Normalização: converte storage/import para os contratos de types.ts.
-// -----------------------------------------------------------------------------
-
 const STYLE_KEYS: StyleKey[] = ["ligeiro", "poderoso", "preciso", "sagaz"];
 
 const DEFAULT_STYLE: IStyle = {
@@ -181,17 +177,12 @@ function normalizeFeral(value: unknown): IFeral {
       specialty: isString(identity.specialty)
         ? identity.specialty
         : base.identity.specialty,
-      packName: isString(identity.packName)
-        ? identity.packName
-        : base.identity.packName,
       appearance: isString(identity.appearance)
         ? identity.appearance
         : base.identity.appearance,
       avatarUrl: isString(identity.avatarUrl)
         ? identity.avatarUrl
-        : isString(identity.image)
-          ? identity.image
-          : base.identity.avatarUrl,
+        : base.identity.avatarUrl,
       notes: isString(identity.notes) ? identity.notes : base.identity.notes,
     },
     harmony: isNumber(raw.harmony) ? raw.harmony : base.harmony,
@@ -233,16 +224,8 @@ function normalizeCategory(value: unknown): PartCategory {
 function normalizePart(value: unknown, index: number): ICreaturePart {
   const raw = isObject(value) ? value : {};
   const durability = isObject(raw.durability) ? raw.durability : {};
-  const max = isNumber(durability.max)
-    ? durability.max
-    : isNumber(raw.baseMaxDurability)
-      ? raw.baseMaxDurability
-      : 20;
-  const current = isNumber(durability.current)
-    ? durability.current
-    : isNumber(raw.currentDurability)
-      ? raw.currentDurability
-      : max;
+  const max = isNumber(durability.max) ? durability.max : 20;
+  const current = isNumber(durability.current) ? durability.current : max;
 
   return {
     id: isString(raw.id) ? raw.id : `part-${index + 1}`,
@@ -250,37 +233,17 @@ function normalizePart(value: unknown, index: number): ICreaturePart {
     categories: Array.isArray(raw.categories)
       ? raw.categories.map(normalizeCategory)
       : ["Natural"],
-    range: isNumber(raw.range)
-      ? raw.range
-      : isNumber(raw.weaponReach)
-        ? raw.weaponReach
-        : undefined,
-    skills: isString(raw.skills)
-      ? (raw.skills as SkillKey)
-      : isString(raw.weaponSkill)
-        ? (raw.weaponSkill as SkillKey)
-        : undefined,
-    styles: isString(raw.styles)
-      ? (raw.styles as StyleKey)
-      : isString(raw.weaponStyle)
-        ? (raw.weaponStyle as StyleKey)
-        : undefined,
+    range: isNumber(raw.range) ? raw.range : undefined,
+    skills: isString(raw.skills) ? (raw.skills as SkillKey) : undefined,
+    styles: isString(raw.styles) ? (raw.styles as StyleKey) : undefined,
     durability: {
       current: Math.max(0, current),
       max: Math.max(1, max),
     },
     description: isString(raw.description)
       ? raw.description
-      : isString(raw.weaponEffect)
-        ? raw.weaponEffect
-        : isString(raw.weakPointEffect)
-          ? raw.weakPointEffect
-          : "Parte corporal da criatura.",
-    whenBroken: isString(raw.whenBroken)
-      ? raw.whenBroken
-      : isString(raw.brokenEffect)
-        ? raw.brokenEffect
-        : undefined,
+      : "Parte corporal da criatura.",
+    whenBroken: isString(raw.whenBroken) ? raw.whenBroken : undefined,
   };
 }
 
@@ -289,26 +252,14 @@ function normalizeCreature(value: unknown): ICreature {
   const identity = isObject(raw.identity) ? raw.identity : {};
   const vigor = isObject(raw.vigor) ? raw.vigor : {};
 
-  const name = isString(identity.name)
-    ? identity.name
-    : isString(raw.name)
-      ? raw.name
-      : "Nova Criatura";
+  const name = isString(identity.name) ? identity.name : "Nova Criatura";
 
   const lineage = (
-    isString(identity.lineage)
-      ? identity.lineage
-      : isString(raw.lineage)
-        ? raw.lineage
-        : DEFAULT_CREATURE_LINEAGE
+    isString(identity.lineage) ? identity.lineage : DEFAULT_CREATURE_LINEAGE
   ) as MonsterLineage;
 
   const stage = (
-    isString(identity.stage)
-      ? identity.stage
-      : isString(raw.stage)
-        ? raw.stage
-        : DEFAULT_CREATURE_STAGE
+    isString(identity.stage) ? identity.stage : DEFAULT_CREATURE_STAGE
   ) as MonsterStage;
 
   const base = createDefaultCreature(name, lineage, stage);
@@ -325,64 +276,28 @@ function normalizeCreature(value: unknown): ICreature {
       size: isNumber(identity.size) ? identity.size : base.identity.size,
       description: isString(identity.description)
         ? identity.description
-        : isString(raw.description)
-          ? raw.description
-          : base.identity.description,
-      avatarUrl: isString(identity.avatarUrl)
-        ? identity.avatarUrl
-        : isString(raw.avatarUrl)
-          ? raw.avatarUrl
-          : undefined,
+        : base.identity.description,
+      avatarUrl: isString(identity.avatarUrl) ? identity.avatarUrl : undefined,
     },
     vigor: {
       current: isNumber(vigor.current) ? vigor.current : base.vigor.current,
       max: isNumber(vigor.max) ? vigor.max : base.vigor.max,
     },
-    styles: normalizeStyles(raw.styles ?? raw.baseStyles, base.styles),
+    styles: normalizeStyles(raw.styles, base.styles),
     skills: normalizeSkills(raw.skills, base.skills),
     traits: Array.isArray(raw.traits) ? clone(raw.traits) : base.traits,
     additionalTraits: Array.isArray(raw.additionalTraits)
       ? clone(raw.additionalTraits)
       : base.additionalTraits,
     parts: Array.isArray(raw.parts) ? raw.parts.map(normalizePart) : base.parts,
-    diet:
-      typeof raw.diet === "string"
-        ? raw.diet
-        : isObject(raw.diet) && typeof raw.diet.description === "string"
-          ? raw.diet.description
-          : base.diet,
-    habitat:
-      typeof raw.habitat === "string"
-        ? raw.habitat
-        : isObject(raw.habitat)
-          ? [raw.habitat.region, raw.habitat.areas, raw.habitat.notes]
-              .filter(Boolean)
-              .join(" — ")
-          : base.habitat,
-    behavior:
-      typeof raw.behavior === "string"
-        ? raw.behavior
-        : isObject(raw.behavior)
-          ? [
-              raw.behavior.targetSelection,
-              raw.behavior.instincts,
-              raw.behavior.woundedPhase,
-              Array.isArray(raw.behavior.specialRules)
-                ? raw.behavior.specialRules.join(" ")
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" ")
-          : base.behavior,
+    diet: isString(raw.diet) ? raw.diet : base.diet,
+    habitat: isString(raw.habitat) ? raw.habitat : base.habitat,
+    behavior: isString(raw.behavior) ? raw.behavior : base.behavior,
     conditions: Array.isArray(raw.conditions)
       ? (clone(raw.conditions) as ICondition[])
       : [],
   };
 }
-
-// -----------------------------------------------------------------------------
-// Storage: cards são projeções da ficha, nunca dados persistidos.
-// -----------------------------------------------------------------------------
 
 function readFeralStore(): FeralStore {
   const raw = safeParseJSON<ObjectLike>(getItem(FERAL_KEY));
@@ -402,16 +317,6 @@ function readFeralStore(): FeralStore {
           lastSaved: isString(item.lastSaved) ? item.lastSaved : now(),
         };
       }
-    }
-  } else if (isObject(raw.sheets)) {
-    for (const [id, sheet] of Object.entries(raw.sheets)) {
-      store.items[id] = {
-        data: normalizeFeral(sheet),
-        lastSaved:
-          isObject(sheet) && isString(sheet.lastSaved)
-            ? sheet.lastSaved
-            : now(),
-      };
     }
   }
 
@@ -443,16 +348,6 @@ function readCreatureStore(): CreatureStore {
         };
       }
     }
-  } else if (isObject(raw.sheets)) {
-    for (const [id, sheet] of Object.entries(raw.sheets)) {
-      store.items[id] = {
-        data: normalizeCreature(sheet),
-        lastSaved:
-          isObject(sheet) && isString(sheet.lastSaved)
-            ? sheet.lastSaved
-            : now(),
-      };
-    }
   }
 
   return store;
@@ -475,7 +370,7 @@ function fileSlug(name: string): string {
   );
 }
 
-function saveFeralInternal(feral: IFeral): IFeral {
+export function saveFeral(feral: IFeral): IFeral {
   const store = readFeralStore();
   const data = normalizeFeral(feral);
   store.items[data.id] = { data, lastSaved: now() };
@@ -524,10 +419,8 @@ export function loadFeral(id: string): IFeral {
   feral.feastHistory = [];
   feral.notes = [];
 
-  return saveFeralInternal(feral);
+  return saveFeral(feral);
 }
-
-export const saveFeral = saveFeralInternal;
 
 export function deleteFeral(id: string): void {
   const store = readFeralStore();
@@ -542,7 +435,7 @@ export function duplicateFeral(id: string): IFeral | null {
   const copy = clone(source);
   copy.id = generateId("feral");
   copy.identity.name = `${source.identity.name || "Feral Sem Nome"} (Cópia)`;
-  return saveFeralInternal(copy);
+  return saveFeral(copy);
 }
 
 export function renameFeral(id: string, name: string): void {
@@ -552,7 +445,7 @@ export function renameFeral(id: string, name: string): void {
 
   const feral = clone(source);
   feral.identity.name = name.trim();
-  saveFeralInternal(feral);
+  saveFeral(feral);
 }
 
 export function exportFeralAsJSON(feral: IFeral): void {
@@ -564,7 +457,7 @@ export function importFeralFromJSON(json: string): IFeral | null {
   try {
     const feral = normalizeFeral(JSON.parse(json));
     feral.id = generateId("feral");
-    return saveFeralInternal(feral);
+    return saveFeral(feral);
   } catch {
     return null;
   }
@@ -668,18 +561,3 @@ export function deleteCustomUtensil(id: string): void {
   delete store.customUtensils[id];
   writeFeralStore(store);
 }
-
-// Aliases temporários para migração de chamadas antigas.
-export const loadAllFeralSummaries = loadAllFeralCards;
-export const loadFeralSheet = loadFeral;
-export const saveFeralSheet = saveFeral;
-export const deleteFeralSheet = deleteFeral;
-export const duplicateFeralSheet = duplicateFeral;
-export const renameFeralSheet = renameFeral;
-
-export const loadAllCreatureSummaries = loadAllCreatureCards;
-export const loadCreatureSheet = loadCreature;
-export const saveCreatureSheet = saveCreature;
-export const deleteCreatureSheet = deleteCreature;
-export const duplicateCreatureSheet = duplicateCreature;
-export const renameCreatureSheet = renameCreature;

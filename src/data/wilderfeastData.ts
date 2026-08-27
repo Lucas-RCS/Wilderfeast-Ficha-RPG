@@ -1,4 +1,4 @@
-import type { IFeral } from "../types";
+import type { IFeral, ISpecialty, ITrait } from "../types";
 
 export interface UtensilDefinition {
   name: "Barbante" | "Cutelo" | "Espeto" | "Luvas" | "Maçarico" | "Panela";
@@ -170,20 +170,7 @@ export const UTENSILS_DATA: Record<string, UtensilDefinition> = {
   },
 };
 
-export interface SpecialtyDefinition {
-  name: string;
-  theme: string;
-  description: string;
-  initialTraits: Array<{
-    name: string;
-    cost: string;
-    description: string;
-    type: "Passiva" | "Ação" | "Sucesso";
-  }>;
-  sampleMonsters: Array<{ name: string; species: string; relation: string }>;
-}
-
-export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
+export const SPECIALTIES_DATA: Record<string, ISpecialty> = {
   Açougueiro: {
     name: "Açougueiro",
     theme:
@@ -192,57 +179,28 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Ferais-açougueiros não têm desconforto com a morte e suportam o peso dos golpes finais com firmeza e precisão anatômica.",
     initialTraits: [
       {
+        id: "acougueiro-default-trait-1",
         name: "CHEIRO DE SANGUE",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Você ganha Vantagem em todos os Testes durante a primeira rodada da Caçada caso o lado oponente tenha uma criatura Ferida.",
       },
       {
+        id: "acougueiro-default-trait-2",
         name: "ARMADURA NATURAL",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Você diminui à metade o Dano que sofre de GOLPEAR PODEROSO e de ATIRAR PODEROSO.",
       },
       {
+        id: "acougueiro-default-trait-3",
         name: "CARNICEIRO",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Você não pode ficar Envenenado por comida. Se Forragear (bem-sucedido ou não), você também ganha <H> porções de Detritos (Receba 1 Envenenado).",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "Cebola",
-        species: "lapu-lapu",
-        relation:
-          "Afetuoso, cujo carinho entusiasmado pode deixar pele descoberta em carne-viva.",
-      },
-      {
-        name: "Estraçalhador",
-        species: "lobo-diadema",
-        relation:
-          "Ousado, a quem você dá os ossos que sobram depois de limpar a carne do gado.",
-      },
-      {
-        name: "Ko, o Plácido",
-        species: "shulu xie",
-        relation:
-          "Indecifrável, diagnosticado por você com frenesi em estágio inicial e sob seus cuidados.",
-      },
-      {
-        name: "Maharla",
-        species: "asewa",
-        relation:
-          "Cauteloso, a quem você raramente vê, mas deixa rolos de pele solta e enferrujada no território.",
-      },
-      {
-        name: "Sol Poente",
-        species: "kakwari",
-        relation:
-          "Altivo, desfila pelos jardins quando não está praticando para suas apresentações.",
       },
     ],
   },
@@ -254,57 +212,29 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Ferais-amontoeiros dominam sal, fermentação e refrigeradores de arkaicaço para estocar e resistir aos invernos severos.",
     initialTraits: [
       {
+        id: "amontoeiro-default-trait-1",
         name: "CONSTRUTOR DE NINHO",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Quando a matilha Acampa, você e seus parças podem manter todos os níveis de uma Condição em vez de removê-las.",
       },
       {
+        id: "amontoeiro-default-trait-2",
         name: "ENGOLIR INTEIRO",
-        cost: "Custo: 1 Ação",
+        cost: 1,
+        level: 1,
         type: "Ação",
         description:
           "Coma qualquer quantidade de Ingredientes para recuperar uma quantidade igual de Vigor. Você não ganha nenhum efeito bônus.",
       },
       {
+        id: "amontoeiro-default-trait-3",
         name: "HIBERNADOR",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Cada nível de Descansado aumenta seu Vigor máximo em 2 em vez de 1.",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "Asapó",
-        species: "lotangwa",
-        relation:
-          "Dedicada; o vínculo dela com outra fêmea era tão forte que você deu um ovo para criarem juntas.",
-      },
-      {
-        name: "Bandido",
-        species: "syowari",
-        relation:
-          "Rude e acumulador, cuja obsessão com objetos brilhantes levou-o a roubar seu utensílio várias vezes.",
-      },
-      {
-        name: "Cho Contente",
-        species: "tanpo",
-        relation:
-          "Gregário, cuja preferência por banhos de lama fez com que se tornasse mascote local.",
-      },
-      {
-        name: "Migalhas",
-        species: "pondon",
-        relation:
-          "Preguiçoso e escavador, que precisa de horas de escovação para desembaraçar os nós do pelo.",
-      },
-      {
-        name: "Senhora Zida",
-        species: "Gelaranha de Asig",
-        relation:
-          "Indiferente, que faz teias com tapeçarias que deixam qualquer um maravilhado.",
       },
     ],
   },
@@ -316,56 +246,29 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Priorizam sabores ricos, calor intenso e energia transbordante nas refeições.",
     initialTraits: [
       {
+        id: "churrasqueiro-default-trait-1",
         name: "AMEAÇAR",
-        cost: "Custo: 1 Sucesso PODEROSO",
+        level: 1,
+        cost: 1,
         type: "Sucesso",
         description: "Uma criatura à sua escolha fica Amedrontada.",
       },
       {
+        id: "churrasqueiro-default-trait-2",
         name: "CORPO QUENTE",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "No começo de cada turno, criaturas à sua escolha a até 0 Pernada sofrem 2 de Dano. Se estiver Preso por uma PARTE, essa PARTE fica Queimada. Suas PARTES não ficam Queimadas.",
       },
       {
+        id: "churrasqueiro-default-trait-3",
         name: "SOPRO DE FOGO",
-        cost: "Custo: 2 Ações",
+        level: 1,
+        cost: 2,
         type: "Ação",
         description:
           "Faça um ATIRAR PODEROSO contra uma criatura a até 2 Pernadas. Se passar, cause [A] Dano à Parte e a PARTE alvejada fica Queimada.",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "Brasa",
-        species: "hagsechu",
-        relation:
-          "Independente, que constantemente se mete em confusão quando você não está olhando.",
-      },
-      {
-        name: "Caçafumaça",
-        species: "hutangwa",
-        relation:
-          "Astuto e incendiário, cuja habilidade de atear fogo já foi usada por você.",
-      },
-      {
-        name: "Capa Vermelha",
-        species: "fagurila",
-        relation:
-          "Letárgico, ex-atração de circo aproveitando uma aposentadoria tranquila.",
-      },
-      {
-        name: "Chan Tuai Sao",
-        species: "tsian xie",
-        relation:
-          "Voraz, a quem o vilarejo oferece sacrifícios a cada lua cheia.",
-      },
-      {
-        name: "Coisinha",
-        species: "sposu",
-        relation:
-          "Destemido e espinhoso, que conquistou o melhor território de monstros maiores com pura audácia.",
       },
     ],
   },
@@ -377,56 +280,29 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Ferais-jardineiros buscam dietas equilibradas com frutos-ferais, vegetais e harmonia com a vegetação.",
     initialTraits: [
       {
+        id: "jardineiro-default-trait-1",
         name: "ACELERAR",
-        cost: "Custo: 1 Sucesso LIGEIRO",
+        cost: 1,
+        level: 1,
         type: "Sucesso",
         description: "Você pode se Mover sem gastar uma Ação.",
       },
       {
+        id: "jardineiro-default-trait-2",
         name: "DIGESTÃO LENTA",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Refeições com efeitos que duram até a sua próxima refeição duram até o fim da Jornada.",
       },
       {
+        id: "jardineiro-default-trait-3",
         name: "INVESTIDA",
-        cost: "Custo: 1 Ação",
+        cost: 1,
+        level: 1,
         type: "Ação",
         description:
           "Escolha uma criatura a até 3 Pernadas. Você se Move a 0 Pernada dela e causa Dano a ela e a si mesmo igual ao número de Pernadas movidas.",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "Ceifeiro",
-        species: "ko-ketak",
-        relation:
-          "Organizado, prefere que cada pedaço de alimento e toco esteja no lugar exato do seu covil.",
-      },
-      {
-        name: "Coração Branco",
-        species: "peliçalce",
-        relation:
-          "De outro mundo, a quem você perseguiu por anos na esperança de observar mais de perto.",
-      },
-      {
-        name: "Meleca",
-        species: "jama-jama",
-        relation:
-          "Confiante e frugívoro, pilhando campos enquanto você arca com os danos pacientemente.",
-      },
-      {
-        name: "Mhen Tan",
-        species: "golanuvem",
-        relation:
-          "Plácido monstro de suporte emocional cuja canção grave acalma os corações nervosos.",
-      },
-      {
-        name: "Shu Shu",
-        species: "zimmudo",
-        relation:
-          "Alheio, cujo bosque de bambu você salvou diversas vezes sem que ele sequer tenha percebido.",
       },
     ],
   },
@@ -438,56 +314,28 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Ferais-molheiros têm a reputação de serem meticulosos e volúveis, temperando tudo a seu gosto inexplicável e infalível.",
     initialTraits: [
       {
+        id: "molheiro-default-trait-1",
         name: "DESORIENTANTE",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Criaturas que o ataquem (quer sejam bem-sucedidas, quer falhem) ficam Confusas.",
       },
       {
+        id: "molheiro-default-trait-2",
         name: "ESCORREGADIO",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description: "Você não pode ficar Preso.",
       },
       {
+        id: "molheiro-default-trait-3",
         name: "VENENO",
-        cost: "Custo: 1 Sucesso em ATIRAR ou GOLPEAR",
+        cost: 1,
+        level: 1,
         type: "Sucesso",
         description:
           "A criatura atingida por seu ATIRAR ou GOLPEAR fica Envenenada.",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "Ghan, a Sombra",
-        species: "ziziwen",
-        relation:
-          "Oportunista e hematófago, visto pelos habitantes locais como presságio mítico.",
-      },
-      {
-        name: "Meio-pau",
-        species: "raizanguejo",
-        relation:
-          "Paciente, instalou-se em um lugar inconveniente e não se moveu desde então.",
-      },
-      {
-        name: "Popolama",
-        species: "mongpo",
-        relation:
-          "Beligerante e gosmento, espirra muco grosso em você de maneira peculiarmente afetuosa.",
-      },
-      {
-        name: "Sya Mai",
-        species: "onagung",
-        relation:
-          "Amorfo e meticuloso, decide repentinamente que odeia sua comida favorita anterior.",
-      },
-      {
-        name: "Tremendão",
-        species: "satra",
-        relation:
-          "Tímido e bioluminescente, que você jurou um dia livrar das garras de um magistrado corrupto.",
       },
     ],
   },
@@ -499,56 +347,28 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Conhecidos por sua resiliência inabalável, persistência e temperamento calmo.",
     initialTraits: [
       {
+        id: "padeiro-default-trait-1",
         name: "ENXAME",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Se você ajudar uma criatura que também tem este Traço, ambos recuperam <H> de Vigor.",
       },
       {
+        id: "padeiro-default-trait-2",
         name: "POLINIZADOR",
-        cost: "Custo: 1 Sucesso em PROCURAR",
+        cost: 1,
+        level: 1,
         type: "Sucesso",
         description: "Harmonia aumenta em 1.",
       },
       {
+        id: "padeiro-default-trait-3",
         name: "ROBUSTO",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Nada consegue empurrar ou puxar você, a menos que você permita ou esteja Preso.",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "Cacheado",
-        species: "myotak",
-        relation:
-          "Genioso, que uma vez derrubou você de uma encosta por não querer dividir pães de mel.",
-      },
-      {
-        name: "Huir",
-        species: "chamig",
-        relation:
-          "Titânico e venerado, em cujas costas sua família viajou e viveu por gerações.",
-      },
-      {
-        name: "Mãe-Mãe",
-        species: "enxame votra",
-        relation:
-          "Venerado enxame coletivo cuidado pela sua família há gerações.",
-      },
-      {
-        name: "Pãodoce",
-        species: "mammudo",
-        relation:
-          "Gentil e encouraçado, que você acompanha em longas caminhadas calmas nas tardes.",
-      },
-      {
-        name: "Pua Li",
-        species: "pitangwa",
-        relation:
-          "Tranquilona e conversadora, objeto de décadas de estudos sobre cognição animal.",
       },
     ],
   },
@@ -560,55 +380,28 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Mutações conferem acesso a oceanos inexplorados, correntes tempestuosas e manobras velozes.",
     initialTraits: [
       {
+        id: "peixeiro-default-trait-1",
         name: "CHOQUE ELÉTRICO",
-        cost: "Custo: 2 Ações",
+        cost: 2,
+        level: 1,
         type: "Ação",
         description:
           "Faça um CHAMAR LIGEIRO. Se passar, cada criatura a até 1 Pernada sofre [A] de Dano e fica Atordoada.",
       },
       {
+        id: "peixeiro-default-trait-2",
         name: "ECOLOCALIZAÇÃO",
-        cost: "Custo: 1 Sucesso em CHAMAR",
+        cost: 1,
+        level: 1,
         type: "Sucesso",
         description: "Uma criatura à sua escolha fica Exposta.",
       },
       {
+        id: "peixeiro-default-trait-3",
         name: "NADAR",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description: "Você pode nadar sem Desvantagem.",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "A Nu",
-        species: "uopang",
-        relation:
-          "Solitário molusco que você mantém escondido e seguro de caçadores numa enseada rasa.",
-      },
-      {
-        name: "Bochechões",
-        species: "yudoubu",
-        relation:
-          "Písceo e crítico, com incrível habilidade de notar a má intenção de forasteiros.",
-      },
-      {
-        name: "Comprido",
-        species: "varithan",
-        relation:
-          "Brincalhão e serpentino, só come se você fizer uma brincadeira com a porção.",
-      },
-      {
-        name: "Melodia",
-        species: "shakoi",
-        relation:
-          "Esperto habitante oceânico que resgata relíquias e tesouros de antigos naufrágios.",
-      },
-      {
-        name: "Pichi-Chi",
-        species: "zaili",
-        relation:
-          "Filhote órfã e elétrica que você resgatou e adotou depois de encontrar na areia.",
       },
     ],
   },
@@ -620,56 +413,29 @@ export const SPECIALTIES_DATA: Record<string, SpecialtyDefinition> = {
       "Ferais-versáteis que se adaptam a qualquer situação, mudando de forma e abordagem conforme a necessidade.",
     initialTraits: [
       {
+        id: "pivoteiro-default-trait-1",
         name: "CAMUFLAGEM",
-        cost: "Custo: 1 Sucesso SAGAZ",
+        cost: 1,
+        level: 1,
         type: "Sucesso",
         description: "Você fica Escondido.",
       },
       {
+        id: "pivoteiro-default-trait-2",
         name: "METAMORFOSE",
-        cost: "Passiva",
+        level: 1,
         type: "Passiva",
         description:
           "Durante o Banquete, você pode perder este Traço permanentemente. Se fizer isso, ganhe +1 nível em dois ESTILOS, HABILIDADES ou TRAÇOS.",
       },
       {
+        id: "pivoteiro-default-trait-3",
         name: "REGENERAÇÃO",
-        cost: "Custo: 1 Sucesso",
+        cost: 1,
+        level: 1,
         type: "Sucesso",
         description:
           "Recupere 1 de Durabilidade de qualquer uma de suas PARTES.",
-      },
-    ],
-    sampleMonsters: [
-      {
-        name: "Coveiro",
-        species: "botabo",
-        relation:
-          "Assustador e urbano, com lampejos de inteligência que surpreendem a todos.",
-      },
-      {
-        name: "Jovem Duke",
-        species: "kala-kala",
-        relation:
-          "Mímico vocal criado em cativeiro que consegue imitar instrumentos e uivar por horas.",
-      },
-      {
-        name: "Mata-Gigante",
-        species: "tatangwa",
-        relation:
-          "Feroz e cauteloso, sobrevivente de caçadas a troféus cuja confiança você conquistou.",
-      },
-      {
-        name: "Shim",
-        species: "zaswang",
-        relation:
-          "Tentaculado e curioso, a quem você sempre presenteia com novas caixas quebra-cabeças.",
-      },
-      {
-        name: "Zoujo",
-        species: "rakuzar",
-        relation:
-          "Leal metamorfo, a única criatura que ainda o reconheceu após sua primeira grande mutação.",
       },
     ],
   },
@@ -1772,325 +1538,14 @@ export const ALL_TRAITS_COMPENDIUM = [
   },
 ];
 
-export const ORIGIN_TABLE_CREATION = [
-  {
-    roll: 1,
-    text: "Estévia Selvagem, você forrageou enquanto brincava na vegetação baixa. Seus pais lhe disseram para nunca pegar uma segunda antes de terminar a primeira.",
-    skill: "procurar",
-  },
-  {
-    roll: 2,
-    text: "Peixe Salgado, seco ao sol preso entre os seus dentes enquanto você subia pelas cordas. Seu capitão não gostava de fogo no navio.",
-    skill: "agarrar",
-  },
-  {
-    roll: 3,
-    text: "Queijo e uma fatia de pão, comidos enquanto seu rebanho de wooda balia à sua volta. Em dias agradáveis, você mastigava devagar aproveitando a brisa.",
-    skill: "atravessar",
-  },
-  {
-    roll: 4,
-    text: "Cozido Fino, servido da cozinha comunitária da cidade-estação. Havia órfãos reunidos ao redor das estações para pedir esmolas.",
-    skill: "golpear",
-  },
-  {
-    roll: 5,
-    text: "Fraldinha decorada com folha d’ouro. Seu jantar sempre chegava quente da cozinha da mansão, mas os olhares da família eram frios.",
-    skill: "armazenar",
-  },
-  {
-    roll: 6,
-    text: "Massa folhada trançada, salpicada com canela. Com sua voz rouca de anunciar produtos, você sempre roubou um pedaço no fim do turno no mercado.",
-    skill: "chamar",
-  },
-  {
-    roll: 7,
-    text: "Chá de Flor de Menta, que alivia dores e machucados. O apotecário ensinou os usos de todas as plantas que você trazia para ele.",
-    skill: "curar",
-  },
-  {
-    roll: 8,
-    text: "Bolinhos no vapor, comidos enquanto você esperava. Você jantou na varanda todas as noites por um ano até aceitar que seus pais não voltariam.",
-    skill: "assegurar",
-  },
-  {
-    roll: 9,
-    text: "Laranjas-melão, tão grandes quanto uma cabeça, colhidas dos jardins do templo. Você servia as fatias em pratos que você mesmo fazia.",
-    skill: "manufaturar",
-  },
-  {
-    roll: 10,
-    text: "Carne-seca na sela, feita da carne que caçou na trilha. Sua montaria monstruosa ainda vive ao seu lado.",
-    skill: "atirar",
-  },
-  {
-    roll: 11,
-    text: "Verduras cozidas e um copo de leite, servidos no internato do Cartel em uma dieta supostamente otimizada pela ciência.",
-    skill: "curar",
-  },
-  {
-    roll: 12,
-    text: "Ovos mexidos, com pedacinhos de casca. Quando treinava malabarismo, seu mentor o fazia comer todos os ovos caídos.",
-    skill: "exibir",
-  },
-  {
-    roll: 13,
-    text: "Peixe-Cão, decorado para parecer milagroso. Se o golpe falhasse, comia a refeição e tentava de novo na manhã seguinte.",
-    skill: "exibir",
-  },
-  {
-    roll: 14,
-    text: "Vegetais fermentados, perfumados com tempero. Os aldeões sempre compartilhavam picles caseiros.",
-    skill: "manufaturar",
-  },
-  {
-    roll: 15,
-    text: "Arroz duro e insosso misturado com serragem pelos guardas da prisão. Você comia para ter forças para fugir.",
-    skill: "golpear",
-  },
-  {
-    roll: 16,
-    text: "Macarrão frito com cebolinha e linguiça. Nos dias de caça farta, irmãos brigavam pelos melhores pedaços.",
-    skill: "atirar",
-  },
-  {
-    roll: 17,
-    text: "Cozido estridente, roubado dos trens com um companheiro clandestino. Os vagões eram sua maior despensa.",
-    skill: "atravessar",
-  },
-  {
-    roll: 18,
-    text: "Caranguejos do rio escaldados, pescados com as próprias mãos no mangue com dedos cheios de cortes.",
-    skill: "agarrar",
-  },
-  {
-    roll: 19,
-    text: "Bolos de feijão estampados com selos sagrados que você aprendeu a desenhar de cabeça.",
-    skill: "assegurar",
-  },
-  {
-    roll: 20,
-    text: "Vermes que se contorciam em sua boca. Guardiões usavam você para explorar os mistérios mais profundos do mundo.",
-    skill: "estudar",
-  },
-];
-
-export const ORIGIN_TABLE_INITIATION = [
-  {
-    roll: 1,
-    text: "Com seus pais guiando suas mãos, honrando o juramento sagrado de proteger os ermos.",
-    skill: "manufaturar",
-  },
-  {
-    roll: 2,
-    text: "Com seus pais confirmando sua vontade, adotado por ferais que hesitaram em forçá-lo a esta vida.",
-    skill: "assegurar",
-  },
-  {
-    roll: 3,
-    text: "Com seus pais rosnando, confusos. Adotado por monstros, aprendeu coisas humanas para protegê-los.",
-    skill: "chamar",
-  },
-  {
-    roll: 4,
-    text: "Com seus pais em silêncio e rostos pálidos. Bocas demais para alimentar fizeram você partir para a trilha.",
-    skill: "procurar",
-  },
-  {
-    roll: 5,
-    text: "Diagnosticado com o frenesi, juntou-se à matilha sob a condição de mantê-lo sob controle.",
-    skill: "curar",
-  },
-  {
-    roll: 6,
-    text: "Para salvar sua vila, estudou tudo sobre o monstro em frenesi antes de cozinhá-lo e comê-lo.",
-    skill: "estudar",
-  },
-  {
-    roll: 7,
-    text: "Para vingar sua vila destruída. Quando matou e comeu o monstro, a carne tinha gosto de cinzas.",
-    skill: "atirar",
-  },
-  {
-    roll: 8,
-    text: "Para destruir a ganância dos vizinhos que ameaçavam a terra, fez da selva parte de si para salvá-la.",
-    skill: "exibir",
-  },
-  {
-    roll: 9,
-    text: "Como punição por um crime terrível: servir como feral ou ser entregue ao Cartel.",
-    skill: "golpear",
-  },
-  {
-    roll: 10,
-    text: "Para evitar punição fugindo de casa, comer qualquer carne encontrada era o único jeito de sobreviver.",
-    skill: "agarrar",
-  },
-  {
-    roll: 11,
-    text: "Por ordem do seu oficial do exército. Dentre todos os soldados do experimento, só você sobreviveu.",
-    skill: "atirar",
-  },
-  {
-    roll: 12,
-    text: "Após assinar um contrato com patrono rico prometendo riquezas pela caçada.",
-    skill: "armazenar",
-  },
-  {
-    roll: 13,
-    text: "Para curar seu corpo após lesão grave ou doença debilitante onde o banquete era a única cura.",
-    skill: "curar",
-  },
-  {
-    roll: 14,
-    text: "Para estudar a Lei Una em primeira mão como acadêmico pesquisador.",
-    skill: "estudar",
-  },
-  {
-    roll: 15,
-    text: "Para ver a Terra Una e transformar o corpo para sobreviver aos ermos.",
-    skill: "atravessar",
-  },
-  {
-    roll: 16,
-    text: "Com a cria no colo, jurou acolher e criar o filhote órfão do monstro que abateu.",
-    skill: "chamar",
-  },
-  {
-    roll: 17,
-    text: "Marcado por presságio ao nascer, recebeu treinamento desde a juventude.",
-    skill: "armazenar",
-  },
-  {
-    roll: 18,
-    text: "Acidentalmente: comeu carne de monstro infectado sem saber até as mutações começarem.",
-    skill: "procurar",
-  },
-  {
-    roll: 19,
-    text: "Pela glória da caçada: no primeiro combate descobriu que nunca se sentiu tão vivo.",
-    skill: "golpear",
-  },
-  {
-    roll: 20,
-    text: "Em luto pelo melhor amigo morto pelo frenesi, tornou-se feral em sua homenagem.",
-    skill: "assegurar",
-  },
-];
-
-export const ORIGIN_TABLE_AMBITION = [
-  {
-    roll: 1,
-    text: "Cumbucas de arroz-maluco em mesa acolhedora, esperando um dia confiar em alguém para partilhar.",
-    skill: "procurar",
-  },
-  {
-    roll: 2,
-    text: "Um sanduíche em piquenique na árvore da infância, querendo presenciar o dia em que a árvore se curar.",
-    skill: "agarrar",
-  },
-  {
-    roll: 3,
-    text: "Carpaccio de caça caçado pelo monstro jovem sob seus cuidados, sabendo que ele agora pode se cuidar.",
-    skill: "chamar",
-  },
-  {
-    roll: 4,
-    text: "Carne assada de um monstro zênite, consumida onde ele caiu, cantando seu nome pela eternidade.",
-    skill: "exibir",
-  },
-  {
-    roll: 5,
-    text: "Salada verde fresca do seu próprio jardim, querendo cultivar tanto quanto sabe caçar.",
-    skill: "manufaturar",
-  },
-  {
-    roll: 6,
-    text: "Uma antiga receita de família mantida em segredo.",
-    skill: "manufaturar",
-  },
-  {
-    roll: 7,
-    text: "Compotas de luxo roubadas do Cartel e compartilhadas com os rebeldes em um banquete triunfal.",
-    skill: "atirar",
-  },
-  {
-    roll: 8,
-    text: "Um caneco de hidromel com um feral lendário que admira, contando histórias de cada troféu.",
-    skill: "armazenar",
-  },
-  {
-    roll: 9,
-    text: "Água de uma nascente no pico mais alto do mundo após escalar até o topo.",
-    skill: "atravessar",
-  },
-  {
-    roll: 10,
-    text: "Bem-casados de pêssego com seu amor na cabeceira da mesa, torcendo para que as mutações não impeçam isso.",
-    skill: "assegurar",
-  },
-  {
-    roll: 11,
-    text: "Vinho brindando à vitória após humilhar seus inimigos diante de grande plateia.",
-    skill: "exibir",
-  },
-  {
-    roll: 12,
-    text: "Uma refeição com ingredientes que ninguém nunca provou antes em toda a Terra Una.",
-    skill: "procurar",
-  },
-  {
-    roll: 13,
-    text: "Pratos com crostas de especiarias das cozinhas do palácio para saber como vive a nobreza.",
-    skill: "armazenar",
-  },
-  {
-    roll: 14,
-    text: "Prato criado por seu antigo mestre que confiou a receita há muito tempo.",
-    skill: "estudar",
-  },
-  {
-    roll: 15,
-    text: "Tortas roubadas diretamente do prato de um gigante.",
-    skill: "agarrar",
-  },
-  {
-    roll: 16,
-    text: "Doces confeitados de uma terra distante e lendária.",
-    skill: "atravessar",
-  },
-  {
-    roll: 17,
-    text: "Chá preparado ao estilo do Cartel que gigantes reservam para reuniões de negócios.",
-    skill: "curar",
-  },
-  {
-    roll: 18,
-    text: "Maçãs-do-amor compartilhadas como oferenda a um monstro sagrado.",
-    skill: "chamar",
-  },
-  {
-    roll: 19,
-    text: "Um pedaço do verme tétrico de além dos pórticos esquecidos.",
-    skill: "estudar",
-  },
-  {
-    roll: 20,
-    text: "O coração cru de um gigante diante de seu próprio povo.",
-    skill: "golpear",
-  },
-];
-
 export const DEFAULT_NEW_FERAL: IFeral = {
   id: "feral-default-1",
   identity: {
     name: "Feral Sem Nome",
-    pronouns: "ele/dele",
+    pronouns: "",
     specialty: "Açougueiro",
-    packName: "Matilha da Fogueira Solitária",
-    appearance:
-      "Cabelos revoltos, olhos cor de âmbar selvagem e marcas leves de mutação na pele.",
-    notes: "Um feral recém-iniciado na trilha da culinária monstruosa.",
+    appearance: "",
+    notes: "",
   },
   harmony: 3,
   vigor: {
@@ -2098,20 +1553,20 @@ export const DEFAULT_NEW_FERAL: IFeral = {
     max: 20,
   },
   styles: {
-    ligeiro: 1,
-    poderoso: 3,
-    preciso: 2,
-    sagaz: 1,
+    ligeiro: 0,
+    poderoso: 0,
+    preciso: 0,
+    sagaz: 0,
   },
   skills: {
-    agarrar: 1,
+    agarrar: 0,
     armazenar: 0,
     assegurar: 0,
     atirar: 0,
-    atravessar: 1,
+    atravessar: 0,
     chamar: 0,
     curar: 0,
-    estudar: 1,
+    estudar: 0,
     exibir: 0,
     golpear: 0,
     manufaturar: 0,
@@ -2125,71 +1580,27 @@ export const DEFAULT_NEW_FERAL: IFeral = {
     maxDurability: 20,
     notes: "Lâmina afiada e pesada com marcas de corte antigo.",
   },
-  techniques: [
-    {
-      id: "tech-initial-1",
-      name: "CORTE LIMPO",
-      level: "Iniciante",
-      cost: "4 Ações",
-      description:
-        "Faça um GOLPEAR PODEROSO ou GOLPEAR PRECISO contra uma criatura a até 1 Pernada de distância. Se acertar, cause [A] × 2 Dano à Parte. Se falhar, você fica Exposto.",
-    },
-    {
-      id: "tech-initial-2",
-      name: "SEM DESPERDÍCIO",
-      level: "Iniciante",
-      cost: "Passiva",
-      description:
-        "Depois que terminar O Banquete, você ganha 1 porção deste Ingrediente: O Melhor Pedaço (Receba +1 em qualquer ESTILO).",
-    },
-  ],
+  techniques: [],
   traits: [
     {
       id: "trait-brio",
       name: "BRIO",
       level: 1,
-      cost: "Custo: 1 Sucesso",
+      cost: 1,
+      type: "Sucesso",
       description: "Aumente o resultado do Dado de Ação [A] em 1.",
     },
     {
       id: "trait-tino",
       name: "TINO",
       level: 1,
-      cost: "Custo: 1 Sucesso",
+      type: "Sucesso",
+      cost: 1,
       description: "Estabeleça um detalhe relevante sobre a situação na cena.",
-    },
-    {
-      id: "trait-spec-1",
-      name: "CHEIRO DE SANGUE",
-      level: 1,
-      cost: "Passiva",
-      description:
-        "Você ganha Vantagem em todos os Testes durante a primeira rodada da Caçada caso o lado oponente tenha uma criatura Ferida.",
     },
   ],
   conditions: [],
-  familiarBeasts: [
-    {
-      id: "fb-initial-1",
-      name: "Cebola",
-      species: "lapu-lapu",
-      connectionLevel: 1,
-      skills: "Aquecimento de refeições e alarme noturno",
-      personality: "Dócil, brincalhão e comilona",
-      relation: "Companheiro carinhoso",
-      description:
-        "Lapu-lapu jovem de lã de aço macia que adora cochilar perto das brasas da fogueira.",
-    },
-  ],
+  familiarBeasts: [],
   feastHistory: [],
-  notes: [
-    {
-      id: "note-1",
-      createdAt: "Início da Campanha",
-      title: "Primeiros Rastros na Trilha",
-      content:
-        "Nossa matilha avistou rastros frescos perto da ravina. O aroma das ervas indica que uma caçada se aproxima.",
-      category: "Sessão",
-    },
-  ],
+  notes: [],
 };

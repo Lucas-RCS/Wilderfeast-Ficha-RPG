@@ -60,7 +60,11 @@ export const CustomUtensilModal: React.FC<CustomUtensilModalProps> = ({
     setTechniques((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const handleUpdateTechnique = <K extends keyof ITechnique>(id: string, field: K, value: ITechnique[K]) => {
+  const handleUpdateTechnique = <K extends keyof ITechnique>(
+    id: string,
+    field: K,
+    value: ITechnique[K],
+  ) => {
     setTechniques((prev) =>
       prev.map((t) => (t.id === id ? { ...t, [field]: value } : t)),
     );
@@ -273,7 +277,11 @@ export const CustomUtensilModal: React.FC<CustomUtensilModalProps> = ({
                     <select
                       value={tech.level}
                       onChange={(e) =>
-                        handleUpdateTechnique(tech.id, "level", e.target.value)
+                        handleUpdateTechnique(
+                          tech.id,
+                          "level",
+                          e.target.value as ITechnique["level"],
+                        )
                       }
                       className="px-2 py-1 text-[11px] font-semibold rounded bg-[#1A1917] border border-[#3E3A34]"
                     >

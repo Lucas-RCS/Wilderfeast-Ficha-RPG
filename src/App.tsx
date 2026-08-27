@@ -27,7 +27,11 @@ import {
   importCreatureFromJSON,
 } from "./lib/storage";
 import { createDefaultCreature } from "./data/creatureData";
-import { DEFAULT_NEW_FERAL, UTENSILS_DATA, SPECIALTIES_DATA } from "./data/wilderfeastData";
+import {
+  DEFAULT_NEW_FERAL,
+  UTENSILS_DATA,
+  SPECIALTIES_DATA,
+} from "./data/wilderfeastData";
 import { useUndoRedo } from "./hooks/useUndoRedo";
 
 import { HubView } from "./pages/HubView";
@@ -52,7 +56,6 @@ import {
 function createFeralDraft(): IFeral {
   return JSON.parse(JSON.stringify(DEFAULT_NEW_FERAL)) as IFeral;
 }
-
 
 export function App() {
   // Navigation Module: 'hub' | 'feral' | 'creature'
@@ -120,6 +123,7 @@ export function App() {
         name: t.name,
         level: 1,
         cost: t.cost,
+        type: t.type,
         description: t.description,
       })) || [];
 
@@ -211,7 +215,9 @@ export function App() {
     const duplicated = duplicateCreature(id);
     if (duplicated) {
       refreshCards();
-      showToast(`Criatura duplicada: "${duplicated.identity.name || "Criatura"}"`);
+      showToast(
+        `Criatura duplicada: "${duplicated.identity.name || "Criatura"}"`,
+      );
     }
   };
 
@@ -517,7 +523,8 @@ export function App() {
                   {currentCreature.identity.name || "Criatura Sem Nome"}
                 </span>
                 <span className="text-xs text-[#B0A497]">
-                  • {currentCreature.identity.lineage} ({currentCreature.identity.stage})
+                  • {currentCreature.identity.lineage} (
+                  {currentCreature.identity.stage})
                 </span>
                 <span className="text-[11px] font-semibold text-[#38C2B3] flex items-center gap-1 ml-2">
                   <Check className="w-3 h-3" />

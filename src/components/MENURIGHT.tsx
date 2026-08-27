@@ -13,7 +13,14 @@ import {
   Zap,
   Info,
 } from "lucide-react";
-import type { IFeral, ICondition, ITechnique, ITrait, SkillKey, JournalNote } from "../types";
+import type {
+  IFeral,
+  ICondition,
+  ITechnique,
+  ITrait,
+  SkillKey,
+  JournalNote,
+} from "../types";
 import { InfoTooltip } from "./InfoTooltip";
 
 interface RightDetailColumnProps {
@@ -37,22 +44,11 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
   const [activeTab, setActiveTab] = useState<FeralTabKey>("skills");
 
   // Modals & form states
-  const [editingTechnique, setEditingTechnique] = useState<{
-    id?: string;
-    name: string;
-    level: "Iniciante" | "Intermediária" | "Avançada";
-    cost: string;
-    description: string;
-    notes?: string;
-  } | null>(null);
+  const [editingTechnique, setEditingTechnique] = useState<ITechnique | null>(
+    null,
+  );
 
-  const [editingTrait, setEditingTrait] = useState<{
-    id?: string;
-    name: string;
-    level: number;
-    cost: string;
-    description: string;
-  } | null>(null);
+  const [editingTrait, setEditingTrait] = useState<ITrait | null>(null);
 
   const [editingBeast, setEditingBeast] = useState<{
     id?: string;
@@ -580,9 +576,10 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
                 type="button"
                 onClick={() =>
                   setEditingTechnique({
+                    id: `tech-${Date.now()}`,
                     name: "",
                     level: "Iniciante",
-                    cost: "1 Sucesso",
+                    cost: "",
                     description: "",
                   })
                 }
@@ -702,9 +699,10 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
                 type="button"
                 onClick={() =>
                   setEditingTrait({
+                    id: `trait-${Date.now()}`,
                     name: "",
                     level: 1,
-                    cost: "Passiva",
+                    type: "Passiva",
                     description: "",
                   })
                 }
@@ -1266,12 +1264,15 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
                     Custo / Tipo
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     value={editingTrait.cost}
                     onChange={(e) =>
-                      setEditingTrait({ ...editingTrait, cost: e.target.value })
+                      setEditingTrait({
+                        ...editingTrait,
+                        cost: parseInt(e.target.value) || 0,
+                      })
                     }
-                    placeholder="Ex: Passiva, 1 Ação"
+                    placeholder="Ex: 1"
                     className="w-full px-3 py-2 text-xs font-semibold rounded-lg bg-[#22201D] border border-[#383430]"
                   />
                 </div>
