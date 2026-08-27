@@ -216,7 +216,7 @@ export const HubView: React.FC<HubViewProps> = ({
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black font-serif tracking-tight text-[#89B5F7] uppercase mb-2">
-            Feral <span className="font-bold text-[#FF9B42]">&</span> Feast
+            Wilderfeast
           </h1>
           <p className="text-sm sm:text-base text-[#B0A497] font-serif italic">
             "Você é o que você come. Ame o que você mata e ame o que pode matar

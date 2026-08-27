@@ -34,7 +34,7 @@ import {
 } from "./data/wilderfeastData";
 import { useUndoRedo } from "./hooks/useUndoRedo";
 
-import { HubView } from "./pages/HubView";
+import { HubView } from "./page/HubView";
 import { LeftStatusColumn } from "./components/MENULEFT";
 import { RightDetailColumn } from "./components/MENURIGHT";
 import { CreatureSheetView } from "./components/CreatureSheetView";

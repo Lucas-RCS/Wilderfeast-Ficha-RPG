@@ -61,7 +61,6 @@ const STYLES_LIST: Array<{
   },
 ];
 
-
 interface LeftStatusColumnProps {
   sheet: IFeral;
   onChange: (updated: Partial<IFeral>) => void;
@@ -74,8 +73,8 @@ export const LeftStatusColumn: React.FC<LeftStatusColumnProps> = ({
 }) => {
   const [isCustomUtensilModalOpen, setIsCustomUtensilModalOpen] =
     useState(false);
-  const [customUtensils, setCustomUtensils] = useState<CustomUtensil[]>(
-    () => loadCustomUtensils(),
+  const [customUtensils, setCustomUtensils] = useState<CustomUtensil[]>(() =>
+    loadCustomUtensils(),
   );
 
   // Helper to adjust a Style value

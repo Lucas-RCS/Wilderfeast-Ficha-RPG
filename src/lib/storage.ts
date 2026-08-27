@@ -1,24 +1,14 @@
 import type {
-  CustomUtensil,
-  ICondition,
   ICreature,
   ICreatureCard,
   ICreaturePart,
   IFeral,
   IFeralCard,
-  ISkill,
-  IStyle,
-  ITechnique,
-  ITrait,
-  IUtensil,
-  JournalNote,
   MonsterLineage,
   MonsterStage,
-  PartCategory,
   SkillKey,
   StyleKey,
 } from "../types";
-import { DEFAULT_NEW_FERAL } from "../data/wilderfeastData";
 import {
   createDefaultCreature,
   DEFAULT_CREATURE_LINEAGE,
@@ -43,6 +33,31 @@ interface CreatureStore {
   version: typeof STORE_VERSION;
   items: ItemMap<ICreature>;
 }
+
+const DEFAULT_NEW_FERAL: IFeral = {
+  id: "",
+  name: "",
+  stage: 1,
+  lineage: "",
+  traits: [],
+  parts: [],
+  skills: {
+    agarrar: 0,
+    armazenar: 0,
+    assegurar: 0,
+    atirar: 0,
+    atravessar: 0,
+    chamar: 0,
+    curar: 0,
+    estudar: 0,
+    exibir: 0,
+    golpear: 0,
+    manufaturar: 0,
+    procurar: 0,
+  },
+  styles: { ligeiro: 1, poderoso: 1, preciso: 1, sagaz: 1 },
+  utensils: [],
+};
 
 const isObject = (value: unknown): value is ObjectLike =>
   typeof value === "object" && value !== null && !Array.isArray(value);

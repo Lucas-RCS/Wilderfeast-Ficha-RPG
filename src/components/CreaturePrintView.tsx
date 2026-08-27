@@ -28,7 +28,9 @@ const SKILLS_ORDER: Array<{ key: SkillKey; label: string }> = [
   { key: "procurar", label: "PROCURAR" },
 ];
 
-export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) => {
+export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({
+  sheet,
+}) => {
   const { maxVigor, effectiveStyles, effectiveParts, config } =
     calculateEffectiveStats(sheet);
 
@@ -41,7 +43,8 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
               {sheet.identity.name || "CRIATURA SEM NOME"}
             </h1>
             <p className="text-[13px] font-sans font-bold text-gray-700 italic">
-              Linhagem: {sheet.identity.lineage} • Estágio: {sheet.identity.stage} • Porte: {sheet.identity.size}
+              Linhagem: {sheet.identity.lineage} • Estágio:{" "}
+              {sheet.identity.stage} • Porte: {sheet.identity.size}
             </p>
           </div>
           <div className="text-right font-sans">
@@ -69,9 +72,15 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
           <div className="grid grid-cols-2 gap-2 text-center">
             {STYLES_ORDER.map((st) => (
               <div key={st.key} className="border border-black p-1.5">
-                <div className="text-[10px] font-bold uppercase">{st.label}</div>
-                <div className="font-mono font-black text-base">+{effectiveStyles[st.key]}</div>
-                <div className="text-[9px] text-gray-500 font-sans">Base: {sheet.styles[st.key]}</div>
+                <div className="text-[10px] font-bold uppercase">
+                  {st.label}
+                </div>
+                <div className="font-mono font-black text-base">
+                  +{effectiveStyles[st.key]}
+                </div>
+                <div className="text-[9px] text-gray-500 font-sans">
+                  Base: {sheet.styles[st.key]}
+                </div>
               </div>
             ))}
           </div>
@@ -83,9 +92,16 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
           </h2>
           <div className="grid grid-cols-4 gap-1.5 text-center">
             {SKILLS_ORDER.map((sk) => (
-              <div key={sk.key} className="border border-gray-400 p-1 flex items-center justify-between px-2">
-                <span className="text-[10px] font-bold font-sans">{sk.label}</span>
-                <span className="font-mono font-bold text-xs">+{sheet.skills[sk.key]}</span>
+              <div
+                key={sk.key}
+                className="border border-gray-400 p-1 flex items-center justify-between px-2"
+              >
+                <span className="text-[10px] font-bold font-sans">
+                  {sk.label}
+                </span>
+                <span className="font-mono font-bold text-xs">
+                  +{sheet.skills[sk.key]}
+                </span>
               </div>
             ))}
           </div>
@@ -99,9 +115,15 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
         <div className="space-y-2">
           {sheet.traits.map((trait) => (
             <div key={trait.id} className="text-xs">
-              <span className="font-bold uppercase tracking-wide">{trait.name}</span>
-              <span className="font-sans font-medium text-gray-600 ml-1.5">({trait.cost})</span>
-              <span className="text-gray-800 ml-1.5">— {trait.description}</span>
+              <span className="font-bold uppercase tracking-wide">
+                {trait.name}
+              </span>
+              <span className="font-sans font-medium text-gray-600 ml-1.5">
+                ({trait.cost})
+              </span>
+              <span className="text-gray-800 ml-1.5">
+                — {trait.description}
+              </span>
             </div>
           ))}
 
@@ -113,7 +135,8 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 {sheet.additionalTraits.map((trait) => (
                   <div key={trait.id}>
-                    <strong className="uppercase">{trait.name}:</strong> {trait.description}
+                    <strong className="uppercase">{trait.name}:</strong>{" "}
+                    {trait.description}
                   </div>
                 ))}
               </div>
@@ -128,7 +151,10 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
               <div className="grid grid-cols-2 gap-2">
                 {sheet.conditions.map((condition) => (
                   <div key={condition.id}>
-                    <strong>{condition.name} {condition.level > 0 ? `(${condition.level})` : ""}:</strong>{" "}
+                    <strong>
+                      {condition.name}{" "}
+                      {condition.level > 0 ? `(${condition.level})` : ""}:
+                    </strong>{" "}
                     {condition.description}
                   </div>
                 ))}
@@ -153,19 +179,28 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
             <div key={part.id} className="border border-gray-300 p-2 text-xs">
               <div className="flex items-center justify-between font-sans mb-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-black uppercase text-sm">{part.name}</span>
-                  <span className="text-[10px] text-gray-600">[{part.categories.join(", ")}]</span>
+                  <span className="font-black uppercase text-sm">
+                    {part.name}
+                  </span>
+                  <span className="text-[10px] text-gray-600">
+                    [{part.categories.join(", ")}]
+                  </span>
                 </div>
                 <span className="font-mono font-bold">
-                  Durabilidade: {part.durability.current} / {part.durability.max}
+                  Durabilidade: {part.durability.current} /{" "}
+                  {part.durability.max}
                 </span>
               </div>
-              <div className="text-[11px] text-gray-900">{part.description}</div>
+              <div className="text-[11px] text-gray-900">
+                {part.description}
+              </div>
               {(part.range !== undefined || part.skills || part.styles) && (
                 <div className="text-[11px] mt-1">
                   <strong>Combate:</strong>{" "}
                   {part.range !== undefined ? `Alcance ${part.range}` : ""}
-                  {part.skills ? ` • Habilidade ${part.skills.toUpperCase()}` : ""}
+                  {part.skills
+                    ? ` • Habilidade ${part.skills.toUpperCase()}`
+                    : ""}
                   {part.styles ? ` • Estilo ${part.styles.toUpperCase()}` : ""}
                 </div>
               )}
@@ -184,9 +219,15 @@ export const CreaturePrintView: React.FC<CreaturePrintViewProps> = ({ sheet }) =
           ECOLOGIA & COMPORTAMENTO
         </h2>
         <div className="space-y-2 text-justify">
-          <p><strong>Dieta:</strong> {sheet.diet}</p>
-          <p><strong>Hábitat:</strong> {sheet.habitat}</p>
-          <p><strong>Comportamento:</strong> {sheet.behavior}</p>
+          <p>
+            <strong>Dieta:</strong> {sheet.diet}
+          </p>
+          <p>
+            <strong>Hábitat:</strong> {sheet.habitat}
+          </p>
+          <p>
+            <strong>Comportamento:</strong> {sheet.behavior}
+          </p>
         </div>
       </div>
     </div>

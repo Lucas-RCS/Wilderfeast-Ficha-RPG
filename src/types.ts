@@ -1,15 +1,10 @@
+export type ID = number;
+
 // ============================================================================
 // ESTILOS & HABILIDADES
 // ============================================================================
 
 export type StyleKey = "ligeiro" | "poderoso" | "preciso" | "sagaz";
-
-export interface IStyle {
-  ligeiro: number;
-  poderoso: number;
-  preciso: number;
-  sagaz: number;
-}
 
 export type SkillKey =
   | "agarrar"
@@ -25,24 +20,64 @@ export type SkillKey =
   | "manufaturar"
   | "procurar";
 
-export interface ISkill {
-  agarrar: number;
-  armazenar: number;
-  assegurar: number;
-  atirar: number;
-  atravessar: number;
-  chamar: number;
-  curar: number;
-  estudar: number;
-  exibir: number;
-  golpear: number;
-  manufaturar: number;
-  procurar: number;
+export type FeralStyleLevel = 1 | 2 | 3 | 4 | 5;
+export type CreatureStyleLevel = 0 | 1 | 2 | 3 | 4 | 5;
+export type SkillLevel = 0 | 1 | 2 | 3;
+
+export type FeralStyles = Record<StyleKey, FeralStyleLevel>;
+export type CreatureStyles = Record<StyleKey, CreatureStyleLevel>;
+export type Skills = Record<SkillKey, SkillLevel>;
+
+// ============================================================================
+// CUSTOS
+// ============================================================================
+
+export type CostType = "acoes" | "vigor" | "sucessos";
+
+export interface ICost {
+  type: CostType;
+  amount: number;
+  restriction?: string;
 }
 
 // ============================================================================
-// UTENSÍLIOS
+// TRAÇOS
 // ============================================================================
+
+export interface ITraitDefinition {
+  id: ID;
+  name: string;
+  description: string;
+  cost?: ICost;
+  maxLevel?: number | null;
+}
+
+export interface ITraitState {
+  traitId: ID;
+  level: number;
+}
+
+// ============================================================================
+// CONDIÇÕES
+// ============================================================================
+
+export interface IConditionDefinition {
+  id: ID;
+  name: string;
+  description: string;
+  maxLevel?: number | null;
+}
+
+export interface IConditionState {
+  conditionId: ID;
+  level: number;
+}
+
+// ============================================================================
+// TÉCNICAS
+// ============================================================================
+
+export type TechniqueLevel = "Iniciante" | "Intermediária" | "Avançada";
 
 export type UtensilKey =
   | "Barbante"
@@ -50,77 +85,163 @@ export type UtensilKey =
   | "Espeto"
   | "Luvas"
   | "Maçarico"
-  | "Panela"
-  | string;
+  | "Panela";
 
-export interface IUtensil {
-  type: UtensilKey;
-  customName: string;
-  reach: number;
-  currentDurability: number;
-  maxDurability: number;
-  notes?: string;
-  isCustom?: boolean;
-  style1?: StyleKey;
-  style2?: StyleKey;
+export interface ITechniqueDefinition {
+  id: ID;
+  name: string;
+  level: TechniqueLevel;
+  description: string;
+  cost?: ICost;
+  utensils?: UtensilKey[];
 }
 
-export interface CustomUtensil {
-  id: string;
-  name: string;
-  description: string;
-  style1: StyleKey;
-  style2: StyleKey;
-  reach: number;
-  maxDurability: number;
-  techniques: Array<ITechnique>;
-  personalitySuggestions?: string[];
+export interface ITechniqueState {
+  techniqueId: ID;
+}
+
+export interface ITechniqueTraining {
+  techniqueId: ID;
+  sessions: number;
 }
 
 // ============================================================================
-// ENTIDADES
+// UTENSÍLIOS
 // ============================================================================
 
-export interface ITechnique {
-  id: string;
+export interface IUtensilDefinition {
+  id: UtensilKey;
   name: string;
-  level: "Iniciante" | "Intermediária" | "Avançada";
-  cost: string;
+  defaultRange: number;
+  defaultMaxDurability: number;
+  brokenDescription: string;
+}
+
+export interface IFeralUtensil {
+  utensilId: UtensilKey;
+  range: number;
+  durability: {
+    current: number;
+    max: number;
+  };
+}
+
+// ============================================================================
+// ESPECIALIDADES
+// ============================================================================
+
+export type SpecialtyKey =
+  | "Açougueiro"
+  | "Amontoeiro"
+  | "Churrasqueiro"
+  | "Jardineiro"
+  | "Molheiro"
+  | "Padeiro"
+  | "Peixeiro"
+  | "Pivoteiro";
+
+export interface ISpecialtyDefinition {
+  id: SpecialtyKey;
+  name: string;
   description: string;
+
+  // Opções de onde o primeiro Traço inicial da Especialidade pode ser escolhido.
+  firstTraitOptions: ID[];
+
+  // Monstros importantes sugeridos pela Especialidade.
+  importantMonsterOptions?: ID[];
+}
+
+// ============================================================================
+// ORIGEM
+// ============================================================================
+
+export type OriginDishType = "criacao" | "iniciacao" | "ambicao";
+
+export interface IOriginDish {
+  type: OriginDishType;
+  description: string;
+  skillBonus: SkillKey;
+
+  // Usado principalmente na Iniciação, que descreve o monstro do primeiro
+  // Banquete Feral.
+  monsterId?: ID;
+
   notes?: string;
-  utensil?: string;
 }
 
-export interface ITrait {
-  id: string;
-  name: string;
-  level: number;
-  type: "Passiva" | "Ação" | "Sucesso";
-  cost?: number;
+export interface IOriginConnection {
+  dish: OriginDishType;
+  partnerFeralId: ID;
   description: string;
 }
 
-export interface ICondition {
-  id: string;
-  name: string;
-  level: number;
-  description: string;
-  notes?: string;
+export interface IFeralOrigin {
+  creation: IOriginDish;
+  initiation: IOriginDish;
+  ambition: IOriginDish;
+
+  homeland?: string;
+  typicalIngredient: string;
+  typicalSeasoning: string;
+
+  connection: IOriginConnection;
 }
 
-export interface JournalNote {
-  id: string;
+// ============================================================================
+// PERSONALIDADE
+// ============================================================================
+
+export interface IFeralPersonality {
+  is: string;
+  strivesToBe: string;
+}
+
+// ============================================================================
+// BANQUETE & PROGRESSÃO
+// ============================================================================
+
+export type PermanentReward =
+  | {
+      type: "style";
+      key: StyleKey;
+    }
+  | {
+      type: "skill";
+      key: SkillKey;
+    }
+  | {
+      type: "trait";
+      traitId: ID;
+    };
+
+export interface IFeastRecord {
+  id: ID;
+  monsterId: ID;
+  dishName?: string;
+  date?: string;
+  permanentReward: PermanentReward;
+}
+
+// ============================================================================
+// ANOTAÇÕES
+// ============================================================================
+
+export interface IJournalNote {
+  id: ID;
   title: string;
   category: string;
   content: string;
   createdAt: string;
 }
 
-export interface ISpecialty {
-  name: string;
-  theme: string;
+// ============================================================================
+// MONSTRO IMPORTANTE
+// ============================================================================
+
+export interface IImportantMonsterRelation {
+  monsterId: ID;
   description: string;
-  initialTraits: Array<ITrait>;
 }
 
 // ============================================================================
@@ -128,56 +249,112 @@ export interface ISpecialty {
 // ============================================================================
 
 export interface IFeral {
-  id: string;
-  identity: {
-    name: string;
-    pronouns: string;
-    specialty: string;
-    appearance: string;
-    avatarUrl?: string;
-    notes?: string;
-  };
-  harmony: number;
+  id: ID;
+
+  name: string;
+  pronouns: string;
+  appearance: string;
+  avatarUrl?: string;
+
+  specialtyId: SpecialtyKey;
+  utensil: IFeralUtensil;
+  personality: IFeralPersonality;
+  origin: IFeralOrigin;
+
+  importantMonster: IImportantMonsterRelation;
+
+  styles: FeralStyles;
+  skills: Skills;
+
   vigor: {
     current: number;
     max: number;
   };
-  styles: IStyle;
-  skills: ISkill;
-  utensil: IUtensil;
-  techniques: Array<ITechnique>;
-  traits: Array<ITrait>;
-  conditions: Array<ICondition>;
-  familiarBeasts: Array<{
-    id: string;
-    name: string;
-    species: string;
-    connectionLevel: number;
-    skills: string;
-    personality: string;
-    relation?: string;
-    description?: string;
-    notes?: string;
-  }>;
-  feastHistory: Array<{
-    id: string;
-    dishName: string;
-    monsterSource: string;
-    date: string;
-    ingredients?: string;
-    permanentBenefit: string;
-  }>;
-  notes: Array<JournalNote>;
+
+  techniques: ITechniqueState[];
+  techniqueTraining?: ITechniqueTraining;
+  traits: ITraitState[];
+  conditions: IConditionState[];
+
+  feastHistory: IFeastRecord[];
+  notes: IJournalNote[];
+
+  packId?: ID;
 }
 
+// ============================================================================
+// CARTÃO / RESUMO DE FERAL
+// ============================================================================
+
 export interface IFeralCard {
-  id: string;
+  id: ID;
   name: string;
-  avatarUrl?: string;
-  specialty: string;
-  utensil: string;
-  lastSaved: string;
   pronouns?: string;
+  avatarUrl?: string;
+  specialtyId: SpecialtyKey;
+  utensilId: UtensilKey;
+  packId?: ID;
+  lastSaved: string;
+}
+
+// ============================================================================
+// MATILHA
+// ============================================================================
+
+export type PackArchetype =
+  | "academica"
+  | "juramentada"
+  | "livre"
+  | "mercenaria"
+  | "outra";
+
+export interface IPackHarmony {
+  current: number;
+  max: number;
+}
+
+export interface IMatilha {
+  id: ID;
+  name: string;
+  archetype: PackArchetype;
+  purpose: string;
+  lair: string;
+
+  memberIds: ID[];
+  harmony: IPackHarmony;
+
+  // Monstros sob cuidado da Matilha/Toca.
+  caredMonsterIds?: ID[];
+}
+
+// ============================================================================
+// COMBATE — PARTES DE MONSTROS
+// ============================================================================
+
+export interface IPartAttack {
+  range: number;
+  skill: SkillKey;
+  style: StyleKey;
+}
+
+export interface ICreaturePart {
+  id: ID;
+  name: string;
+
+  durability: {
+    current: number;
+    max: number;
+  };
+
+  description?: string;
+  passiveEffect?: string;
+  attack?: IPartAttack;
+
+  broken?: {
+    description: string;
+    passiveEffect?: string;
+    attack?: IPartAttack;
+  };
 }
 
 // ============================================================================
@@ -194,57 +371,42 @@ export type MonsterLineage =
   | "Molheiro"
   | "Padeiro"
   | "Peixeiro"
-  | "Pivoteiro"
-  | string;
-
-export type PartCategory = "Passiva" | "Alcance" | "Natural" | "Outro";
-
-export interface ICreaturePart {
-  id: string;
-  name: string;
-  categories: PartCategory[];
-  range?: number;
-  skills?: SkillKey;
-  styles?: StyleKey;
-  durability: {
-    current: number;
-    max: number;
-  };
-  description: string;
-  whenBroken?: string;
-}
+  | "Pivoteiro";
 
 export interface ICreature {
-  id: string;
-  identity: {
-    name: string;
-    lineage: MonsterLineage;
-    stage: MonsterStage;
-    size: number;
-    description: string;
-    avatarUrl?: string;
-  };
+  id: ID;
+
+  name: string;
+  lineage: MonsterLineage;
+  stage: MonsterStage;
+  sizeDescription: string;
+  description: string;
+  avatarUrl?: string;
+
   vigor: {
     current: number;
     max: number;
   };
-  styles: IStyle;
-  skills: ISkill;
-  traits: Array<ITrait>;
-  additionalTraits: Array<{
-    id: string;
-    name: string;
-    description: string;
-  }>;
-  parts: Array<ICreaturePart>;
+
+  styles: CreatureStyles;
+  skills: Skills;
+
+  traits: ITraitState[];
+  additionalTraits: ITraitState[];
+  conditions: IConditionState[];
+  parts: ICreaturePart[];
+
   diet: string;
   habitat: string;
-  behavior: string; // Comportamento
-  conditions: Array<ICondition>;
+  behavior: string;
 }
 
+// ============================================================================
+// CARTÃO / RESUMO DE CRIATURA
+// ============================================================================
+
 export interface ICreatureCard {
-  id: string;
+  id: ID;
   name: string;
   description: string;
   avatarUrl?: string;
