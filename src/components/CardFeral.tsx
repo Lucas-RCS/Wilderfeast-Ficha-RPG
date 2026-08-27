@@ -10,7 +10,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { FeralType } from "../types";
+import type { IFeralCard } from "../types";
+
+type SheetType = "feral" | "creature";
+type RenameHandler = (id: string, currentName: string, type: SheetType) => void;
+type DeleteTarget = { id: string; name: string; type: SheetType };
 
 export function CardFeral({
   data,
@@ -19,19 +23,11 @@ export function CardFeral({
   handleOpenRename,
   setDeleteTarget,
 }: {
-  data: FeralType;
+  data: IFeralCard;
   onOpenFeral: (id: string) => void;
   onDuplicateFeral: (id: string) => void;
-  handleOpenRename: (
-    id: string,
-    currentName: string,
-    type: "feral" | "creature",
-  ) => void;
-  setDeleteTarget: (target: {
-    id: string;
-    name: string;
-    type: "feral" | "creature";
-  }) => void;
+  handleOpenRename: RenameHandler;
+  setDeleteTarget: (target: DeleteTarget) => void;
 }) {
   return (
     <div

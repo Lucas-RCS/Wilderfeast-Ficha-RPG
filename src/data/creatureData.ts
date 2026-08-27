@@ -1,62 +1,42 @@
-import { CreatureSheet, MonsterStage, StyleKey } from "../types";
+import type {
+  ICreature,
+  ICreaturePart,
+  ISkill,
+  IStyle,
+  MonsterLineage,
+  MonsterStage,
+  SkillKey,
+  StyleKey,
+  PartCategory,
+} from "../types";
 
-export const MONSTER_LINEAGES = [
-  {
-    name: "Açougueiro",
-    description:
-      "Monstros com protuberâncias de metal ou mineral, carniceiros e predadores blindados.",
-  },
-  {
-    name: "Amontoeiro",
-    description:
-      "Monstros que acumulam comida em covis, gordura corporal ou reservas duradouras.",
-  },
-  {
-    name: "Churrasqueiro",
-    description: "Monstros que convivem com chamas, calor extremo e combustão.",
-  },
-  {
-    name: "Jardineiro",
-    description:
-      "Monstros que gerenciam a flora, sementes e o crescimento vegetal da Terra Una.",
-  },
-  {
-    name: "Molheiro",
-    description:
-      "Monstros que excretam secreções, tóxicas, medicinais, mucos e compostos químicos.",
-  },
-  {
-    name: "Padeiro",
-    description:
-      "Monstros longevos, polinizadores ou com adaptações de grande resiliência.",
-  },
-  {
-    name: "Peixeiro",
-    description:
-      "Monstros aquáticos, semiaquáticos e voadores dos mares e rios.",
-  },
-  {
-    name: "Pivoteiro",
-    description:
-      "Monstros definidos por metamorfose, mimetismo, inteligência e adaptação dinâmica.",
-  },
-  {
-    name: "Personalizada",
-    description: "Linhagem lendária ou única criada pelo Guia.",
-  },
+export interface MonsterLineageDefinition {
+  name: MonsterLineage;
+  description: string;
+}
+
+export const MONSTER_LINEAGES: MonsterLineageDefinition[] = [
+  { name: "Açougueiro", description: "Monstros com protuberâncias de metal ou mineral, carniceiros e predadores blindados." },
+  { name: "Amontoeiro", description: "Monstros que acumulam comida em covis, gordura corporal ou reservas duradouras." },
+  { name: "Churrasqueiro", description: "Monstros que convivem com chamas, calor extremo e combustão." },
+  { name: "Jardineiro", description: "Monstros que gerenciam a flora, sementes e o crescimento vegetal da Terra Una." },
+  { name: "Molheiro", description: "Monstros que excretam secreções, tóxicas, medicinais, mucos e compostos químicos." },
+  { name: "Padeiro", description: "Monstros longevos, polinizadores ou com adaptações de grande resiliência." },
+  { name: "Peixeiro", description: "Monstros aquáticos, semiaquáticos e voadores dos mares e rios." },
+  { name: "Pivoteiro", description: "Monstros definidos por metamorfose, mimetismo, inteligência e adaptação dinâmica." },
+  { name: "Personalizada", description: "Linhagem lendária ou única criada pelo Guia." },
 ];
 
-export const STAGE_CONFIG: Record<
-  MonsterStage,
-  {
-    label: string;
-    vigorMax: number;
-    styleModifier: number; // For non-zero styles (or -1 with min 0 for Jovem)
-    durabilityModifier: number;
-    fullTurnsRule: string;
-    traitSpecial?: string;
-  }
-> = {
+export interface StageConfig {
+  label: MonsterStage;
+  vigorMax: number;
+  styleModifier: number;
+  durabilityModifier: number;
+  fullTurnsRule: string;
+  traitSpecial?: string;
+}
+
+export const STAGE_CONFIG: Record<MonsterStage, StageConfig> = {
   Jovem: {
     label: "Jovem",
     vigorMax: 20,
@@ -76,8 +56,7 @@ export const STAGE_CONFIG: Record<
     vigorMax: 40,
     styleModifier: 1,
     durabilityModifier: 5,
-    fullTurnsRule:
-      "2 turnos completos por rodada se enfrentar 3 ou mais ferais.",
+    fullTurnsRule: "2 turnos completos por rodada se enfrentar 3 ou mais ferais.",
   },
   Zênite: {
     label: "Zênite",
@@ -91,63 +70,100 @@ export const STAGE_CONFIG: Record<
   },
 };
 
-/**
- * Calculates effective stats from base values and monster stage
- * This guarantees no data degradation across stage switching!
- */
-export function calculateEffectiveStats(sheet: CreatureSheet) {
-  const stage = sheet.stage || "Adulto";
-  const config = STAGE_CONFIG[stage] || STAGE_CONFIG.Adulto;
+const DEFAULT_STYLES: IStyle = {
+  ligeiro: 2,
+  poderoso: 2,
+  preciso: 1,
+  sagaz: 1,
+};
 
-  const maxVigor = config.vigorMax;
+const DEFAULT_SKILLS: ISkill = {
+  agarrar: 1,
+  armazenar: 0,
+  assegurar: 0,
+  atirar: 0,
+  atravessar: 1,
+  chamar: 1,
+  curar: 0,
+  estudar: 1,
+  exibir: 0,
+  golpear: 2,
+  manufaturar: 0,
+  procurar: 1,
+};
 
-  // Effective Styles calculation:
-  // Jovem: base - 1 (min 0)
-  // Adulto: base
-  // Ancião: base > 0 ? base + 1 : 0
-  // Zênite: base > 0 ? base + 2 : 0
-  const effectiveStyles: Record<StyleKey, number> = {
-    ligeiro:
-      stage === "Jovem"
-        ? Math.max(0, sheet.baseStyles.ligeiro - 1)
-        : sheet.baseStyles.ligeiro > 0
-          ? sheet.baseStyles.ligeiro + config.styleModifier
-          : 0,
-    poderoso:
-      stage === "Jovem"
-        ? Math.max(0, sheet.baseStyles.poderoso - 1)
-        : sheet.baseStyles.poderoso > 0
-          ? sheet.baseStyles.poderoso + config.styleModifier
-          : 0,
-    preciso:
-      stage === "Jovem"
-        ? Math.max(0, sheet.baseStyles.preciso - 1)
-        : sheet.baseStyles.preciso > 0
-          ? sheet.baseStyles.preciso + config.styleModifier
-          : 0,
-    sagaz:
-      stage === "Jovem"
-        ? Math.max(0, sheet.baseStyles.sagaz - 1)
-        : sheet.baseStyles.sagaz > 0
-          ? sheet.baseStyles.sagaz + config.styleModifier
-          : 0,
+const ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+function createId(prefix: string): string {
+  let suffix = "";
+  for (let i = 0; i < 7; i++) {
+    suffix += ID_CHARS[Math.floor(Math.random() * ID_CHARS.length)];
+  }
+  return `${prefix}-${Date.now()}-${suffix}`;
+}
+
+const cloneStyles = (): IStyle => ({ ...DEFAULT_STYLES });
+const cloneSkills = (): ISkill => ({ ...DEFAULT_SKILLS });
+
+function createPart(
+  id: string,
+  name: string,
+  description: string,
+  options: {
+    categories?: PartCategory[];
+    range?: number;
+    skills?: SkillKey;
+    styles?: StyleKey;
+    whenBroken?: string;
+  } = {},
+): ICreaturePart {
+  return {
+    id,
+    name,
+    categories: options.categories ?? ["Natural"],
+    durability: { current: 20, max: 20 },
+    description,
+    range: options.range,
+    skills: options.skills,
+    styles: options.styles,
+    whenBroken: options.whenBroken,
   };
+}
 
-  // Effective Part Durability
-  const effectiveParts = sheet.parts.map((part) => {
-    const effMax = Math.max(
+export function calculateEffectiveStats(creature: ICreature) {
+  const config = STAGE_CONFIG[creature.identity.stage] ?? STAGE_CONFIG.Adulto;
+
+  const effectiveStyles = (Object.keys(creature.styles) as StyleKey[]).reduce(
+    (result, style) => {
+      const base = creature.styles[style];
+      result[style] =
+        config.styleModifier < 0
+          ? Math.max(0, base + config.styleModifier)
+          : base > 0
+            ? base + config.styleModifier
+            : 0;
+      return result;
+    },
+    { ligeiro: 0, poderoso: 0, preciso: 0, sagaz: 0 } as IStyle,
+  );
+
+  const effectiveParts = creature.parts.map((part) => {
+    const max = Math.max(
       1,
-      part.baseMaxDurability + config.durabilityModifier,
+      part.durability.max + config.durabilityModifier,
     );
+
     return {
       ...part,
-      effectiveMaxDurability: effMax,
-      currentDurability: Math.min(part.currentDurability, effMax),
+      durability: {
+        current: Math.min(part.durability.current, max),
+        max,
+      },
     };
   });
 
   return {
-    maxVigor,
+    maxVigor: config.vigorMax,
     effectiveStyles,
     effectiveParts,
     config,
@@ -156,44 +172,27 @@ export function calculateEffectiveStats(sheet: CreatureSheet) {
 
 export function createDefaultCreature(
   name = "Nova Criatura",
-  lineage = "Molheiro",
+  lineage: MonsterLineage = "Molheiro",
   stage: MonsterStage = "Adulto",
-): CreatureSheet {
-  const config = STAGE_CONFIG[stage] || STAGE_CONFIG.Adulto;
+): ICreature {
+  const config = STAGE_CONFIG[stage] ?? STAGE_CONFIG.Adulto;
 
   return {
-    id: `creature-${Date.now()}`,
-    version: 1,
-    name,
-    lineage,
-    stage,
-    sizeConcept: "Tem em média 4 metros de comprimento.",
-    description:
-      "Um monstro selvagem da Terra Una adaptado ao seu ecossistema.",
-    lastSaved: new Date().toISOString(),
+    id: createId("creature"),
+    identity: {
+      name,
+      lineage,
+      stage,
+      size: 4,
+      description:
+        "Um monstro selvagem da Terra Una adaptado ao seu ecossistema.",
+    },
     vigor: {
       current: config.vigorMax,
+      max: config.vigorMax,
     },
-    baseStyles: {
-      ligeiro: 2,
-      poderoso: 2,
-      preciso: 1,
-      sagaz: 1,
-    },
-    skills: {
-      agarrar: 1,
-      armazenar: 0,
-      assegurar: 0,
-      atirar: 0,
-      atravessar: 1,
-      chamar: 1,
-      curar: 0,
-      estudar: 1,
-      exibir: 0,
-      golpear: 2,
-      manufaturar: 0,
-      procurar: 1,
-    },
+    styles: cloneStyles(),
+    skills: cloneSkills(),
     traits: [
       {
         id: "c-trait-1",
@@ -212,59 +211,47 @@ export function createDefaultCreature(
           "Pode se alimentar de diversas fontes naturais da região sem restrições severas.",
       },
     ],
-    diet: {
-      type: "Generalista",
-      description: "Alimenta-se de frutos silvestres, raízes e pequenas caças.",
-      examples: "Monstros terrestres, vegetação nativa, carniça",
-    },
-    habitat: {
-      region: "Costa Sen",
-      areas: "Arredores da Trilha",
-      notes: "Habita fendas rochosas e bosques úmidos durante as monções.",
-    },
-    behavior: {
-      targetSelection:
-        "Se nenhuma criatura estiver Exposta, mire na criatura mais próxima.",
-      instincts:
-        "Seu instinto é manter o domínio territorial e golpear com precisão.",
-      woundedPhase:
-        "Quando Ferido 3, torna-se agressivo e foca em desferir golpes rápidos antes de recuar.",
-      specialRules: [],
-    },
     parts: [
-      {
-        id: "part-1",
-        name: "Garras",
-        categories: ["Arma"],
-        baseMaxDurability: 20,
-        currentDurability: 20,
-        weaponReach: 1,
-        weaponStyle: "poderoso",
-        weaponSkill: "golpear",
-        weaponEffect: "Golpe contundente que causa dano direto.",
-        brokenEffect:
-          "Alcance: 1 (GOLPEAR PODEROSO). Esta PARTE causa metade do Dano.",
-      },
-      {
-        id: "part-2",
-        name: "Carapaça",
-        categories: ["Ponto Fraco"],
-        baseMaxDurability: 20,
-        currentDurability: 20,
-        weakPointEffect: "Protege contra ataques frontais.",
-        brokenEffect: "Você fica Exposto e perde ARMADURA NATURAL.",
-      },
+      createPart(
+        "part-1",
+        "Garras",
+        "Garras resistentes usadas para ataques de curta distância.",
+        {
+          range: 1,
+          styles: "poderoso",
+          skills: "golpear",
+          whenBroken:
+            "Alcance: 1 (GOLPEAR PODEROSO). Esta PARTE causa metade do Dano.",
+        },
+      ),
+      createPart(
+        "part-2",
+        "Carapaça",
+        "Carapaça que protege o corpo contra impactos frontais.",
+        {
+          categories: ["Passiva"],
+          whenBroken: "Você fica Exposto e perde ARMADURA NATURAL.",
+        },
+      ),
     ],
-    specialActions: [
-      {
-        id: "act-1",
-        name: "Investida Selvagem",
-        type: "Ação",
-        cost: "2 Ações",
-        description:
-          "Move-se em direção ao alvo e desfere um golpe de impacto.",
-      },
-    ],
+    diet:
+      "Generalista: frutos silvestres, raízes, pequenas caças e recursos locais.",
+    habitat:
+      "Costa Sen, arredores da Trilha; fendas rochosas e bosques úmidos.",
+    behavior:
+      "Se nenhuma criatura estiver Exposta, mire na criatura mais próxima. Seu instinto é manter o domínio territorial e golpear com precisão. Quando Ferido 3, torna-se agressivo e foca em desferir golpes rápidos antes de recuar.",
     conditions: [],
   };
 }
+
+export function getStageConfig(stage: MonsterStage): StageConfig {
+  return STAGE_CONFIG[stage];
+}
+
+export function getLineageOptions(): MonsterLineageDefinition[] {
+  return MONSTER_LINEAGES;
+}
+
+export const DEFAULT_CREATURE_LINEAGE: MonsterLineage = "Molheiro";
+export const DEFAULT_CREATURE_STAGE: MonsterStage = "Adulto";
+export const DEFAULT_CREATURE_SIZE = 4;

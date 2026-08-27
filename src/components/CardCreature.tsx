@@ -1,6 +1,10 @@
 import { Clock, Copy, Edit3, Skull, Trash2, ArrowRight } from "lucide-react";
-import { CreatureType } from "../types";
+import type { ICreatureCard } from "../types";
 import { formatRelativeTime } from "../hooks/useUtils";
+
+type SheetType = "feral" | "creature";
+type RenameHandler = (id: string, currentName: string, type: SheetType) => void;
+type DeleteTarget = { id: string; name: string; type: SheetType };
 
 export function CardCreature({
   data,
@@ -9,10 +13,10 @@ export function CardCreature({
   onOpenCreature,
   setDeleteTarget,
 }: {
-  data: CreatureType;
-  handleOpenRename: (id: string, name: string, type: string) => void;
+  data: ICreatureCard;
+  handleOpenRename: RenameHandler;
   onDuplicateCreature: (id: string) => void;
-  setDeleteTarget: (target: { id: string; name: string; type: string }) => void;
+  setDeleteTarget: (target: DeleteTarget) => void;
   onOpenCreature: (id: string) => void;
 }) {
   return (

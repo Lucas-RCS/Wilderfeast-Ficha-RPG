@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Plus, Trash2, Wrench, Sparkles, AlertCircle } from "lucide-react";
-import { StyleKey, CustomUtensil } from "../types";
+import type { StyleKey, CustomUtensil, ITechnique } from "../types";
 import { saveCustomUtensil } from "../lib/storage";
 
 interface CustomUtensilModalProps {
@@ -28,17 +28,9 @@ export const CustomUtensilModal: React.FC<CustomUtensilModalProps> = ({
   const [reach, setReach] = useState<number>(1);
   const [maxDurability, setMaxDurability] = useState<number>(20);
 
-  const [techniques, setTechniques] = useState<
-    Array<{
-      id: string;
-      name: string;
-      level: "Iniciante" | "Intermediária" | "Avançada";
-      cost: string;
-      description: string;
-    }>
-  >([
+  const [techniques, setTechniques] = useState<ITechnique[]>([
     {
-      id: `custom-tech-1`,
+      id: "custom-tech-1",
       name: "TÉCNICA DE ABERTURA",
       level: "Iniciante",
       cost: "2 Ações",
@@ -68,7 +60,7 @@ export const CustomUtensilModal: React.FC<CustomUtensilModalProps> = ({
     setTechniques((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const handleUpdateTechnique = (id: string, field: string, value: string) => {
+  const handleUpdateTechnique = <K extends keyof ITechnique>(id: string, field: K, value: ITechnique[K]) => {
     setTechniques((prev) =>
       prev.map((t) => (t.id === id ? { ...t, [field]: value } : t)),
     );

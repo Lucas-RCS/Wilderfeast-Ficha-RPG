@@ -1,400 +1,199 @@
-import React, { useState } from "react";
-import {
-  CreatureSheet,
-  MonsterStage,
-  StyleKey,
+import React, { useMemo, useState } from "react";
+import type {
+  ICreature,
+  ICreaturePart,
+  ITrait,
   SkillKey,
-  CreaturePart,
-  CreatureSpecialAction,
+  StyleKey,
+  MonsterLineage,
+  MonsterStage,
+  PartCategory,
 } from "../types";
-import {
-  STAGE_CONFIG,
-  calculateEffectiveStats,
-  MONSTER_LINEAGES,
-} from "../data/creatureData";
-import {
-  ALL_TRAITS_COMPENDIUM,
-  ALL_CONDITIONS_DATA,
-} from "../data/wilderfeastData";
+import { calculateEffectiveStats, MONSTER_LINEAGES, STAGE_CONFIG } from "../data/creatureData";
+import { ALL_CONDITIONS_DATA, ALL_TRAITS_COMPENDIUM } from "../data/wilderfeastData";
 import { InfoTooltip } from "./InfoTooltip";
 import {
-  Shield,
-  Zap,
-  Plus,
-  Trash2,
+  Activity,
+  AlertTriangle,
+  BookOpen,
   ChevronDown,
   ChevronUp,
-  Heart,
-  AlertTriangle,
-  MapPin,
-  BookOpen,
-  Award,
   Dna,
+  Heart,
+  MapPin,
+  Plus,
+  Shield,
+  Trash2,
   Target,
 } from "lucide-react";
 
 interface CreatureSheetViewProps {
-  sheet: CreatureSheet;
-  onChange: (updated: Partial<CreatureSheet>) => void;
+  sheet: ICreature;
+  onChange: (updated: Partial<ICreature>) => void;
   onOpenCompendium: () => void;
 }
 
-type CreatureTabKey = "parts" | "skills" | "traits" | "behavior" | "actions";
+type CreatureTabKey = "parts" | "skills" | "traits" | "behavior";
 
-const STYLES_INFO: Array<{
-  key: StyleKey;
-  label: string;
-  desc: string;
-  tooltip: string;
-}> = [
-  {
-    key: "ligeiro",
-    label: "Ligeiro",
-    desc: "Velocidade, agilidade e esquiva",
-    tooltip:
-      "Velocidade de ataque, manobras rápidas no ar ou terra, e esquiva de armadilhas.",
-  },
-  {
-    key: "poderoso",
-    label: "Poderoso",
-    desc: "Força bruta, mordidas e impacto",
-    tooltip:
-      "Força destrutiva, investidas pesadas e capacidade de quebrar utensílios.",
-  },
-  {
-    key: "preciso",
-    label: "Preciso",
-    desc: "Foco, pontaria e ataques direcionados",
-    tooltip:
-      "Alvejar pontos fracos específicos dos ferais e disparar espinhos com acurácia.",
-  },
-  {
-    key: "sagaz",
-    label: "Sagaz",
-    desc: "Astúcia, camuflagem e venenos",
-    tooltip: "Uso de terreno, venenos, camuflagem e emboscadas estratégicas.",
-  },
+const STYLES_INFO: Array<{ key: StyleKey; label: string; desc: string; tooltip: string }> = [
+  { key: "ligeiro", label: "Ligeiro", desc: "Velocidade, agilidade e esquiva", tooltip: "Velocidade, agilidade e movimentos rápidos." },
+  { key: "poderoso", label: "Poderoso", desc: "Força bruta e impacto", tooltip: "Força destrutiva e impacto." },
+  { key: "preciso", label: "Preciso", desc: "Foco e ataques direcionados", tooltip: "Precisão e ataques direcionados." },
+  { key: "sagaz", label: "Sagaz", desc: "Astúcia e adaptação", tooltip: "Astúcia, camuflagem e emboscadas." },
 ];
 
-const SKILLS_LIST: Array<{ key: SkillKey; label: string; tooltip: string }> = [
-  {
-    key: "agarrar",
-    label: "Agarrar",
-    tooltip: "Prender ferais entre mandíbulas, garras ou tentáculos.",
-  },
-  {
-    key: "armazenar",
-    label: "Armazenar",
-    tooltip: "Manter reservas de calor, veneno ou alimento no papo.",
-  },
-  {
-    key: "assegurar",
-    label: "Assegurar",
-    tooltip: "Fincar garras no solo, ancorar-se e resistir a puxões.",
-  },
-  {
-    key: "atirar",
-    label: "Atirar",
-    tooltip: "Disparar projéteis orgânicos, espinhos, lamas ou chamas.",
-  },
-  {
-    key: "atravessar",
-    label: "Atravessar",
-    tooltip: "Romper obstáculos, escalar penhascos e voar entre copas.",
-  },
-  {
-    key: "chamar",
-    label: "Chamar",
-    tooltip: "Rugir para invocar bandos, atordoar presas e intimidar.",
-  },
-  {
-    key: "curar",
-    label: "Curar",
-    tooltip: "Regeneração biológica rápida de carapaças ou tecidos.",
-  },
-  {
-    key: "estudar",
-    label: "Estudar",
-    tooltip: "Ler o comportamento da matilha e antecipar movimentos.",
-  },
-  {
-    key: "exibir",
-    label: "Exibir",
-    tooltip: "Eriçar espinhos, abrir cristas e impor pânico visual.",
-  },
-  {
-    key: "golpear",
-    label: "Golpear",
-    tooltip: "Golpes com cauda, garras frontais e ataques corporais.",
-  },
-  {
-    key: "manufaturar",
-    label: "Manufaturar",
-    tooltip: "Construir teias, ninhos reforçados e poças de ácido.",
-  },
-  {
-    key: "procurar",
-    label: "Procurar",
-    tooltip: "Detectar cheiro de sangue, calor corporal e vibrações na terra.",
-  },
-];
+const SKILLS: Array<{ key: SkillKey; label: string }> = [
+  ["agarrar","Agarrar"],["armazenar","Armazenar"],["assegurar","Assegurar"],["atirar","Atirar"],
+  ["atravessar","Atravessar"],["chamar","Chamar"],["curar","Curar"],["estudar","Estudar"],
+  ["exibir","Exibir"],["golpear","Golpear"],["manufaturar","Manufaturar"],["procurar","Procurar"],
+].map(([key,label]) => ({ key: key as SkillKey, label }));
+
+const PART_CATEGORIES: PartCategory[] = ["Passiva", "Alcance", "Natural", "Outro"];
+
+const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
 export const CreatureSheetView: React.FC<CreatureSheetViewProps> = ({
   sheet,
   onChange,
   onOpenCompendium,
 }) => {
-  const { maxVigor, effectiveStyles, effectiveParts, config } =
-    calculateEffectiveStats(sheet);
-
   const [activeTab, setActiveTab] = useState<CreatureTabKey>("parts");
-  const [expandedPartId, setExpandedPartId] = useState<string | null>(
-    sheet.parts[0]?.id || null,
-  );
-  const [isAddingTrait, setIsAddingTrait] = useState(false);
-  const [selectedCompendiumTrait, setSelectedCompendiumTrait] = useState("");
+  const [expandedPartId, setExpandedPartId] = useState<string | null>(sheet.parts[0]?.id ?? null);
+  const { maxVigor, effectiveStyles, effectiveParts, config } = calculateEffectiveStats(sheet);
 
-  // Vigor modification
-  const handleVigorChange = (newVigor: number) => {
-    const clamped = Math.max(0, Math.min(maxVigor, newVigor));
-    onChange({ vigor: { current: clamped } });
-  };
+  const activeConditions = useMemo(() => sheet.conditions, [sheet.conditions]);
 
-  // Stage modification
-  const handleStageChange = (newStage: MonsterStage) => {
-    const newConfig = STAGE_CONFIG[newStage];
-    onChange({
-      stage: newStage,
-      vigor: {
-        current: Math.min(sheet.vigor.current, newConfig.vigorMax),
-      },
-    });
-  };
-
-  // Base Style modification
-  const handleBaseStyleChange = (key: StyleKey, delta: number) => {
-    const current = sheet.baseStyles[key] || 0;
-    const nextVal = Math.max(0, Math.min(5, current + delta));
-    onChange({
-      baseStyles: {
-        ...sheet.baseStyles,
-        [key]: nextVal,
-      },
-    });
-  };
-
-  // Skill modification (0 to 3)
-  const handleSkillChange = (key: SkillKey, delta: number) => {
-    const current = sheet.skills[key] || 0;
-    const nextVal = Math.max(0, Math.min(3, current + delta));
-    onChange({
-      skills: {
-        ...sheet.skills,
-        [key]: nextVal,
-      },
-    });
-  };
-
-  // Part management
-  const handleAddPart = () => {
-    const newPart: CreaturePart = {
-      id: `part-${Date.now()}`,
-      name: "Nova Parte (ex: Mandíbula)",
-      categories: ["Arma"],
-      baseMaxDurability: 20,
-      currentDurability: 20,
-      weaponReach: 1,
-      weaponStyle: "poderoso",
-      weaponSkill: "golpear",
-      weaponEffect: "Causa dano de impacto.",
-      brokenEffect: "Alcance: 1 (GOLPEAR). Esta PARTE causa metade do Dano.",
-    };
-    const updated = [...sheet.parts, newPart];
-    onChange({ parts: updated });
-    setExpandedPartId(newPart.id);
-  };
-
-  const handleUpdatePart = (
-    id: string,
-    updatedFields: Partial<CreaturePart>,
+  const changeIdentity = <K extends keyof ICreature["identity"]>(
+    key: K,
+    value: ICreature["identity"][K],
   ) => {
-    const updated = sheet.parts.map((p) =>
-      p.id === id ? { ...p, ...updatedFields } : p,
-    );
-    onChange({ parts: updated });
+    onChange({ identity: { ...sheet.identity, [key]: value } });
   };
 
-  const handleRemovePart = (id: string) => {
-    const updated = sheet.parts.filter((p) => p.id !== id);
-    onChange({ parts: updated });
+  const changeStyle = (key: StyleKey, delta: number) => {
+    const value = Math.max(0, Math.min(5, sheet.styles[key] + delta));
+    onChange({ styles: { ...sheet.styles, [key]: value } });
   };
 
-  const handlePartDurabilityDelta = (id: string, delta: number) => {
-    const effPart = effectiveParts.find((p) => p.id === id);
-    if (!effPart) return;
-    const effMax = effPart.effectiveMaxDurability;
-    const newDur = Math.max(
-      0,
-      Math.min(effMax, effPart.currentDurability + delta),
-    );
-    handleUpdatePart(id, { currentDurability: newDur });
+  const changeSkill = (key: SkillKey, delta: number) => {
+    const value = Math.max(0, Math.min(3, sheet.skills[key] + delta));
+    onChange({ skills: { ...sheet.skills, [key]: value } });
   };
 
-  // Trait management
-  const handleAddTrait = (isAdditional = false) => {
-    if (selectedCompendiumTrait) {
-      const found = ALL_TRAITS_COMPENDIUM.find(
-        (t) => t.name === selectedCompendiumTrait,
-      );
-      if (found) {
-        if (isAdditional) {
-          onChange({
-            additionalTraits: [
-              ...sheet.additionalTraits,
-              {
-                id: `add-trait-${Date.now()}`,
-                name: found.name,
-                description: found.description,
-              },
-            ],
-          });
-        } else {
-          onChange({
-            traits: [
-              ...sheet.traits,
-              {
-                id: `trait-${Date.now()}`,
-                name: found.name,
-                level: 1,
-                cost: found.cost,
-                description: found.description,
-              },
-            ],
-          });
-        }
-        setSelectedCompendiumTrait("");
-        setIsAddingTrait(false);
-        return;
-      }
-    }
+  const changeVigor = (value: number) => {
+    const current = Math.max(0, Math.min(maxVigor, value));
+    onChange({ vigor: { ...sheet.vigor, current } });
+  };
 
-    if (isAdditional) {
+  const changeStage = (stage: MonsterStage) => {
+    const nextMax = STAGE_CONFIG[stage].vigorMax;
+    onChange({
+      identity: { ...sheet.identity, stage },
+      vigor: { ...sheet.vigor, max: nextMax, current: Math.min(sheet.vigor.current, nextMax) },
+    });
+  };
+
+  const addPart = () => {
+    const part: ICreaturePart = {
+      id: `part-${Date.now()}`,
+      name: "Nova Parte",
+      categories: ["Natural"],
+      durability: { current: 20, max: 20 },
+      description: "Descrição anatômica da parte.",
+      range: 1,
+      skills: "golpear",
+      styles: "poderoso",
+      whenBroken: "Descreva o efeito quando esta parte for quebrada.",
+    };
+    onChange({ parts: [...sheet.parts, part] });
+    setExpandedPartId(part.id);
+  };
+
+  const updatePart = (id: string, fields: Partial<ICreaturePart>) => {
+    onChange({
+      parts: sheet.parts.map((part) => (part.id === id ? { ...part, ...fields } : part)),
+    });
+  };
+
+  const removePart = (id: string) => {
+    onChange({ parts: sheet.parts.filter((part) => part.id !== id) });
+    setExpandedPartId((current) => (current === id ? null : current));
+  };
+
+  const changePartDurability = (id: string, delta: number) => {
+    const part = effectiveParts.find((item) => item.id === id);
+    if (!part) return;
+    const current = Math.max(0, Math.min(part.durability.max, part.durability.current + delta));
+    updatePart(id, { durability: { ...sheet.parts.find((p) => p.id === id)!.durability, current } });
+  };
+
+  const addTrait = (additional: boolean) => {
+    if (additional) {
       onChange({
         additionalTraits: [
           ...sheet.additionalTraits,
-          {
-            id: `add-trait-${Date.now()}`,
-            name: "NOVO TRAÇO ADICIONAL",
-            description:
-              "Descrição das adaptações biológicas ou comportamentais ecológicas.",
-          },
+          { id: `additional-trait-${Date.now()}`, name: "NOVO TRAÇO ADICIONAL", description: "Descrição da adaptação." },
+        ],
+      });
+      return;
+    }
+
+    onChange({
+      traits: [
+        ...sheet.traits,
+        { id: `trait-${Date.now()}`, name: "NOVO TRAÇO", level: 1, cost: "Passiva", description: "Descrição do efeito." },
+      ],
+    });
+  };
+
+  const updateTrait = (id: string, fields: Partial<ITrait>) => {
+    onChange({ traits: sheet.traits.map((trait) => (trait.id === id ? { ...trait, ...fields } : trait)) });
+  };
+
+  const addCompendiumTrait = (additional: boolean) => {
+    const select = document.getElementById(additional ? "creature-additional-trait-select" : "creature-trait-select") as HTMLSelectElement | null;
+    const name = select?.value;
+    const found = ALL_TRAITS_COMPENDIUM.find((trait) => trait.name === name);
+    if (!found) return;
+
+    if (additional) {
+      onChange({
+        additionalTraits: [
+          ...sheet.additionalTraits,
+          { id: `additional-trait-${Date.now()}`, name: found.name, description: found.description },
         ],
       });
     } else {
       onChange({
         traits: [
           ...sheet.traits,
-          {
-            id: `trait-${Date.now()}`,
-            name: "NOVO TRAÇO",
-            level: 1,
-            cost: "Passiva",
-            description: "Descrição do efeito mecânico de combate da criatura.",
-          },
+          { id: `trait-${Date.now()}`, name: found.name, level: 1, cost: found.cost, description: found.description },
         ],
       });
     }
+    if (select) select.value = "";
   };
 
-  const handleRemoveTrait = (id: string, isAdditional = false) => {
-    if (isAdditional) {
-      onChange({
-        additionalTraits: sheet.additionalTraits.filter((t) => t.id !== id),
-      });
-    } else {
-      onChange({ traits: sheet.traits.filter((t) => t.id !== id) });
+  type ConditionDefinition = (typeof ALL_CONDITIONS_DATA)[number];
+
+  const toggleCondition = (definition: ConditionDefinition) => {
+    const existing = sheet.conditions.find((condition) => condition.name === definition.name);
+    if (existing) {
+      onChange({ conditions: sheet.conditions.filter((condition) => condition.id !== existing.id) });
+      return;
     }
-  };
-
-  // Special actions management
-  const handleAddAction = () => {
-    const newAct: CreatureSpecialAction = {
-      id: `act-${Date.now()}`,
-      name: "Nova Ação Especial",
-      type: "Ação",
-      cost: "2 Ações",
-      description: "Efeito tático devastador durante A Caçada.",
-    };
-    onChange({ specialActions: [...sheet.specialActions, newAct] });
-  };
-
-  const handleUpdateAction = (
-    id: string,
-    fields: Partial<CreatureSpecialAction>,
-  ) => {
     onChange({
-      specialActions: sheet.specialActions.map((a) =>
-        a.id === id ? { ...a, ...fields } : a,
-      ),
+      conditions: [
+        ...sheet.conditions,
+        { ...clone(definition), id: `condition-${Date.now()}-${sheet.conditions.length + 1}`, level: 1 },
+      ],
     });
   };
-
-  const handleRemoveAction = (id: string) => {
-    onChange({
-      specialActions: sheet.specialActions.filter((a) => a.id !== id),
-    });
-  };
-
-  // Conditions
-  const isConditionActive = (name: string) =>
-    sheet.conditions.some((c) => c.name === name);
-  const getConditionLevel = (name: string) =>
-    sheet.conditions.find((c) => c.name === name)?.level || 0;
-  const handleToggleCondition = (def: (typeof ALL_CONDITIONS_DATA)[0]) => {
-    const exists = sheet.conditions.find((c) => c.name === def.name);
-    if (exists) {
-      onChange({
-        conditions: sheet.conditions.filter((c) => c.name !== def.name),
-      });
-    } else {
-      onChange({
-        conditions: [
-          ...sheet.conditions,
-          {
-            id: `cond-${Date.now()}`,
-            name: def.name,
-            level: 1,
-            description: def.description,
-          },
-        ],
-      });
-    }
-  };
-
-  const handleConditionLevelDelta = (name: string, delta: number) => {
-    onChange({
-      conditions: sheet.conditions
-        .map((c) =>
-          c.name === name ? { ...c, level: Math.max(1, c.level + delta) } : c,
-        )
-        .filter((c) => c.level > 0),
-    });
-  };
-
-  const vigorPercent = Math.min(
-    100,
-    Math.max(0, (sheet.vigor.current / maxVigor) * 100),
-  );
 
   return (
-    <div className="w-full flex-1 px-4 sm:px-8 lg:px-12 py-6">
-      {/* 2-Column Grid (100% Fluid Width) */}
+    <main className="w-full flex-1 px-4 sm:px-8 lg:px-12 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        {/* ========================================================= */}
-        {/* COLUNA ESQUERDA: IDENTIDADE, VIGOR, ESTILOS & STATUS (5 cols) */}
-        {/* ========================================================= */}
         <section className="lg:col-span-5 space-y-6">
-          {/* Header Card: Nome, Linhagem, Estágio */}
           <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[#383430]">
               <span className="text-[10px] font-bold tracking-widest text-[#FF9B42] uppercase">
@@ -402,637 +201,294 @@ export const CreatureSheetView: React.FC<CreatureSheetViewProps> = ({
               </span>
               <InfoTooltip
                 title="Bestiário & Criação de Monstros"
-                description="Criaturas em Wilderfeast são divididas por Linhagens e Estágios (Juvenil, Adulto, Ancião, Zênite). Cada estágio aumenta o Vigor e os bônus de Estilo da criatura."
+                description="Linhagem, estágio, porte e descrição da criatura."
                 category="Bestiário"
                 onOpenCompendium={onOpenCompendium}
               />
             </div>
 
-            {/* Creature Name */}
             <div>
               <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">
                 Nome da Criatura *
               </label>
               <input
-                type="text"
-                value={sheet.name}
-                onChange={(e) => onChange({ name: e.target.value })}
-                placeholder="Ex: Satra Alfa, Magmagarto..."
-                className="w-full px-3 py-2 text-base font-serif font-bold rounded-lg bg-[#22201D] border border-[#383430] text-[#89B5F7] focus:outline-none focus:ring-1 focus:ring-[#173F73]"
+                value={sheet.identity.name}
+                onChange={(e) => changeIdentity("name", e.target.value)}
+                className="w-full px-3 py-2 text-base font-serif font-bold rounded-lg bg-[#22201D] border border-[#383430] text-[#89B5F7]"
               />
             </div>
 
-            {/* Linhagem & Estágio */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">
-                  Linhagem
-                </label>
+                <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">Linhagem</label>
                 <select
-                  value={sheet.lineage}
-                  onChange={(e) => onChange({ lineage: e.target.value })}
+                  value={sheet.identity.lineage}
+                  onChange={(e) => changeIdentity("lineage", e.target.value as MonsterLineage)}
                   className="w-full px-3 py-2 text-xs font-semibold rounded-lg bg-[#22201D] border border-[#383430] text-[#F5EFEB]"
                 >
-                  {MONSTER_LINEAGES.map((l) => (
-                    <option key={l.name} value={l.name}>
-                      {l.name}
-                    </option>
+                  {MONSTER_LINEAGES.map((lineage) => (
+                    <option key={lineage.name} value={lineage.name}>{lineage.name}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">
-                  Estágio de Vida
-                </label>
+                <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">Estágio de Vida</label>
                 <select
-                  value={sheet.stage}
-                  onChange={(e) =>
-                    handleStageChange(e.target.value as MonsterStage)
-                  }
+                  value={sheet.identity.stage}
+                  onChange={(e) => changeStage(e.target.value as MonsterStage)}
                   className="w-full px-3 py-2 text-xs font-bold rounded-lg bg-[#22201D] border border-[#383430] text-[#FF9B42]"
                 >
-                  <option value="Juvenil">Juvenil (+0 Estilos)</option>
-                  <option value="Adulto">Adulto (+1 Estilos)</option>
-                  <option value="Ancião">Ancião (+2 Estilos)</option>
-                  <option value="Zênite">Zênite (+3 Estilos)</option>
+                  {(Object.keys(STAGE_CONFIG) as MonsterStage[]).map((stage) => (
+                    <option key={stage} value={stage}>{stage}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Size Concept */}
             <div>
-              <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">
-                Conceito & Porte Físico
-              </label>
+              <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">Porte Físico</label>
               <input
-                type="text"
-                value={sheet.sizeConcept}
-                onChange={(e) => onChange({ sizeConcept: e.target.value })}
-                placeholder="Ex: Quadrúpede colossal com couraça de pedra-pomes..."
+                type="number"
+                min={0}
+                value={sheet.identity.size}
+                onChange={(e) => changeIdentity("size", Math.max(0, Number(e.target.value) || 0))}
                 className="w-full px-3 py-1.5 text-xs font-medium rounded-lg bg-[#22201D] border border-[#383430]"
               />
             </div>
 
-            {/* Description */}
             <div>
-              <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">
-                Descrição Ecológica
-              </label>
+              <label className="block text-[11px] font-bold uppercase text-[#B0A497] mb-1">Descrição</label>
               <textarea
-                value={sheet.description}
-                onChange={(e) => onChange({ description: e.target.value })}
-                placeholder="Aparência, rugidos, comportamento alimentar..."
-                rows={2}
+                value={sheet.identity.description}
+                onChange={(e) => changeIdentity("description", e.target.value)}
+                rows={3}
                 className="w-full px-3 py-2 text-xs rounded-lg bg-[#22201D] border border-[#383430]"
               />
             </div>
           </div>
 
-          {/* Vigor da Criatura */}
           <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[#383430]">
               <div className="flex items-center gap-2">
                 <Heart className="w-4 h-4 text-[#FC8181]" />
-                <span className="font-serif font-black text-sm uppercase text-[#89B5F7]">
-                  Vigor da Criatura
-                </span>
-                <InfoTooltip
-                  title="Vigor de Monstro"
-                  description="Quando o Vigor do monstro chega a 0, ele entra em colapso e a Caçada é vencida pelos ferais. O Vigor máximo é determinado pelo Estágio do monstro."
-                  category="Combate"
-                />
+                <span className="font-serif font-black text-sm uppercase text-[#89B5F7]">Vigor da Criatura</span>
               </div>
-              <span className="font-mono font-bold text-xs text-[#B0A497]">
-                Base: {config.vigorMax}
-              </span>
+              <span className="font-mono text-xs text-[#B0A497]">Máx. {maxVigor}</span>
             </div>
+            <div className="h-2 rounded-full bg-[#242220] overflow-hidden">
+              <div className="h-full bg-[#9B2C2C]" style={{ width: `${Math.max(0, Math.min(100, (sheet.vigor.current / maxVigor) * 100))}%` }} />
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <button onClick={() => changeVigor(sheet.vigor.current - 5)} className="px-3 py-1.5 rounded-lg bg-[#242220]">-5</button>
+              <button onClick={() => changeVigor(sheet.vigor.current - 1)} className="px-3 py-1.5 rounded-lg bg-[#242220]">-1</button>
+              <span className="font-mono text-xl font-black text-[#89B5F7]">{sheet.vigor.current} / {maxVigor}</span>
+              <button onClick={() => changeVigor(sheet.vigor.current + 1)} className="px-3 py-1.5 rounded-lg bg-[#242220]">+1</button>
+              <button onClick={() => changeVigor(sheet.vigor.current + 5)} className="px-3 py-1.5 rounded-lg bg-[#242220]">+5</button>
+            </div>
+          </div>
 
-            {/* Large Vigor Counter */}
-            <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[#242220] border border-[#383430]">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleVigorChange(sheet.vigor.current - 5)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#22201D] hover:bg-[#33302B] text-xs font-bold border border-[#383430] text-[#FC8181]"
-                  title="Diminuir 5 de Vigor"
-                >
-                  -5
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleVigorChange(sheet.vigor.current - 1)}
-                  className="w-8 h-8 rounded-lg bg-[#22201D] hover:bg-[#33302B] text-sm font-bold border border-[#383430] text-[#FC8181] flex items-center justify-center"
-                >
-                  -1
-                </button>
-              </div>
-
-              <div className="text-center">
-                <div className="font-mono font-black text-2xl text-[#89B5F7]">
-                  {sheet.vigor.current}{" "}
-                  <span className="text-sm font-medium text-[#B0A497]">
-                    / {maxVigor}
-                  </span>
+          <div className="p-5 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#383430]">
+              <span className="font-serif font-bold text-xs uppercase tracking-wider text-[#89B5F7]">Estilos</span>
+              <span className="text-[10px] text-[#B0A497]">Efetivos: estágio {config.label}</span>
+            </div>
+            <div className="space-y-2">
+              {STYLES_INFO.map((style) => (
+                <div key={style.key} className="flex items-center gap-2">
+                  <InfoTooltip title={style.label} description={style.tooltip} />
+                  <div className="w-24">
+                    <div className="text-[10px] font-bold uppercase text-[#89B5F7]">{style.label}</div>
+                    <div className="text-[9px] text-[#B0A497]">{style.desc}</div>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <button onClick={() => changeStyle(style.key, -1)} className="w-6 h-6 rounded bg-[#242220]">-</button>
+                    <span className="font-mono font-bold w-8 text-center">{sheet.styles[style.key]}</span>
+                    <button onClick={() => changeStyle(style.key, 1)} className="w-6 h-6 rounded bg-[#242220]">+</button>
+                    <span className="text-[10px] text-[#B0A497] w-14 text-right">→ {effectiveStyles[style.key]}</span>
+                  </div>
                 </div>
-                <span className="text-[10px] uppercase font-bold text-[#B0A497]">
-                  {sheet.vigor.current === 0
-                    ? "Abatido / Pronto para Banquete"
-                    : "Vigor Restante"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleVigorChange(sheet.vigor.current + 1)}
-                  className="w-8 h-8 rounded-lg bg-[#22201D] hover:bg-[#33302B] text-sm font-bold border border-[#383430] text-[#38C2B3] flex items-center justify-center"
-                >
-                  +1
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleVigorChange(sheet.vigor.current + 5)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#22201D] hover:bg-[#33302B] text-xs font-bold border border-[#383430] text-[#38C2B3]"
-                  title="Aumentar 5 de Vigor"
-                >
-                  +5
-                </button>
-              </div>
-            </div>
-
-            {/* Vigor Bar */}
-            <div className="w-full h-3 rounded-full bg-[#242220] overflow-hidden border border-[#383430]">
-              <div
-                className={`h-full transition-all duration-300 ${
-                  vigorPercent > 50
-                    ? "bg-[#16857A]"
-                    : vigorPercent > 20
-                      ? "bg-[#E66826]"
-                      : "bg-[#9B2C2C]"
-                }`}
-                style={{ width: `${vigorPercent}%` }}
-              />
+              ))}
             </div>
           </div>
 
-          {/* Os 4 Estilos do Monstro */}
-          <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#383430]">
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-black text-sm uppercase text-[#89B5F7]">
-                  Estilos do Monstro
-                </span>
-                <InfoTooltip
-                  title="Estilos de Criatura"
-                  description="Os Estilos determinam a quantidade de Dados de Ação lançados pelo monstro ao atacar ou se defender. O estágio concede um bônus automático a todos os estilos."
-                  category="Estilos"
-                />
-              </div>
-              <span className="text-[11px] font-bold text-[#FF9B42]">
-                Bônus de Estágio: +{config.styleModifier}
-              </span>
+          <div className="p-5 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-[#383430]">
+              <MapPin className="w-4 h-4 text-[#FF9B42]" />
+              <span className="font-serif font-bold text-xs uppercase tracking-wider text-[#89B5F7]">Dieta, Hábitat & Comportamento</span>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {STYLES_INFO.map((st) => {
-                const effVal = effectiveStyles[st.key];
-                const baseVal = sheet.baseStyles[st.key];
-                return (
-                  <div
-                    key={st.key}
-                    className="p-3 rounded-xl bg-[#242220] border border-[#383430] space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-serif font-bold text-xs uppercase text-[#89B5F7]">
-                        {st.label}
-                      </span>
-                      <InfoTooltip
-                        title={st.label}
-                        description={st.tooltip}
-                        category="Estilo"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-center">
-                        <span className="font-mono font-black text-xl text-[#89B5F7]">
-                          +{effVal}
-                        </span>
-                        <span className="block text-[9px] text-[#B0A497] font-semibold">
-                          (Base: {baseVal})
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleBaseStyleChange(st.key, -1)}
-                          disabled={baseVal <= 0}
-                          className="w-6 h-6 rounded bg-[#22201D] hover:bg-[#33302B] text-xs font-bold flex items-center justify-center disabled:opacity-30 border border-[#383430]"
-                        >
-                          -
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleBaseStyleChange(st.key, 1)}
-                          disabled={baseVal >= 5}
-                          className="w-6 h-6 rounded bg-[#22201D] hover:bg-[#33302B] text-xs font-bold flex items-center justify-center disabled:opacity-30 border border-[#383430]"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Condições da Caçada */}
-          <div className="p-5 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#383430]">
-              <span className="font-serif font-bold text-xs uppercase tracking-wider text-[#FC8181] flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Condições da Caçada</span>
-              </span>
-              <span className="text-[11px] text-[#B0A497]">
-                {sheet.conditions.length} ativas
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-1.5">
-              {ALL_CONDITIONS_DATA.map((def) => {
-                const active = isConditionActive(def.name);
-                const lvl = getConditionLevel(def.name);
-                return (
-                  <div
-                    key={def.name}
-                    className={`p-2 rounded-lg border text-xs flex items-center justify-between transition-colors ${
-                      active
-                        ? "bg-[#9B2C2C]/10 border-[#9B2C2C] text-[#FC8181] font-bold"
-                        : "bg-[#22201D] border-[#383430] text-[#B0A497]"
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleToggleCondition(def)}
-                      className="text-left flex-1 truncate pr-1"
-                    >
-                      {def.name}
-                    </button>
-
-                    {active && (
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleConditionLevelDelta(def.name, -1)
-                          }
-                          className="w-4 h-4 rounded bg-[#242220] flex items-center justify-center text-[10px]"
-                        >
-                          -
-                        </button>
-                        <span className="font-mono text-xs">{lvl}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleConditionLevelDelta(def.name, 1)}
-                          className="w-4 h-4 rounded bg-[#242220] flex items-center justify-center text-[10px]"
-                        >
-                          +
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Dieta e Hábitat */}
-          <div className="p-5 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-3">
-            <div className="pb-2 border-b border-[#383430]">
-              <span className="font-serif font-bold text-xs uppercase tracking-wider text-[#89B5F7] flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#FF9B42]" />
-                <span>Dieta & Hábitat Natural</span>
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-[#B0A497] mb-0.5">
-                  Tipo de Dieta
-                </label>
-                <input
-                  type="text"
-                  value={sheet.diet.type}
-                  onChange={(e) =>
-                    onChange({ diet: { ...sheet.diet, type: e.target.value } })
-                  }
-                  placeholder="Ex: Carnívoro, Geófago..."
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-[#22201D] border border-[#383430]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-[#B0A497] mb-0.5">
-                  Região do Hábitat
-                </label>
-                <input
-                  type="text"
-                  value={sheet.habitat.region}
-                  onChange={(e) =>
-                    onChange({
-                      habitat: { ...sheet.habitat, region: e.target.value },
-                    })
-                  }
-                  placeholder="Ex: Penhascos, Floresta..."
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-[#22201D] border border-[#383430]"
-                />
-              </div>
-            </div>
+            <textarea
+              value={sheet.diet}
+              onChange={(e) => onChange({ diet: e.target.value })}
+              placeholder="Dieta da criatura..."
+              rows={2}
+              className="w-full px-3 py-2 text-xs rounded-lg bg-[#22201D] border border-[#383430]"
+            />
+            <textarea
+              value={sheet.habitat}
+              onChange={(e) => onChange({ habitat: e.target.value })}
+              placeholder="Hábitat e região..."
+              rows={2}
+              className="w-full px-3 py-2 text-xs rounded-lg bg-[#22201D] border border-[#383430]"
+            />
+            <textarea
+              value={sheet.behavior}
+              onChange={(e) => onChange({ behavior: e.target.value })}
+              placeholder="Comportamento e instintos..."
+              rows={4}
+              className="w-full px-3 py-2 text-xs rounded-lg bg-[#22201D] border border-[#383430]"
+            />
           </div>
         </section>
 
-        {/* ========================================================= */}
-        {/* COLUNA DIREITA: TABS DE PARTES, HABILIDADES, TRAÇOS & COMPORTAMENTO (7 cols) */}
-        {/* ========================================================= */}
         <section className="lg:col-span-7 space-y-4">
-          {/* Top Tab Navigation Bar for Monster Features */}
-          <div className="bg-[#1A1918] border border-[#383430] rounded-xl p-1.5 shadow-sm flex items-center gap-1 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab("parts")}
-              className={`px-3.5 py-2 rounded-lg font-serif font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${
-                activeTab === "parts"
-                  ? "bg-[#13335C] text-white shadow-sm"
-                  : "text-[#5C4D3C] hover:bg-[#33302B] hover:text-[#89B5F7]"
-              }`}
-            >
-              <Shield className="w-4 h-4 text-[#FF9B42]" />
-              <span>1. Partes ({sheet.parts.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("skills")}
-              className={`px-3.5 py-2 rounded-lg font-serif font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${
-                activeTab === "skills"
-                  ? "bg-[#13335C] text-white shadow-sm"
-                  : "text-[#5C4D3C] hover:bg-[#33302B] hover:text-[#89B5F7]"
-              }`}
-            >
-              <Award className="w-4 h-4 text-[#FF9B42]" />
-              <span>2. Habilidades</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("traits")}
-              className={`px-3.5 py-2 rounded-lg font-serif font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${
-                activeTab === "traits"
-                  ? "bg-[#13335C] text-white shadow-sm"
-                  : "text-[#5C4D3C] hover:bg-[#33302B] hover:text-[#89B5F7]"
-              }`}
-            >
-              <Dna className="w-4 h-4 text-[#38C2B3]" />
-              <span>
-                3. Traços ({sheet.traits.length + sheet.additionalTraits.length}
-                )
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("behavior")}
-              className={`px-3.5 py-2 rounded-lg font-serif font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${
-                activeTab === "behavior"
-                  ? "bg-[#13335C] text-white shadow-sm"
-                  : "text-[#5C4D3C] hover:bg-[#33302B] hover:text-[#89B5F7]"
-              }`}
-            >
-              <Target className="w-4 h-4 text-[#FF9B42]" />
-              <span>4. Comportamento</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("actions")}
-              className={`px-3.5 py-2 rounded-lg font-serif font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${
-                activeTab === "actions"
-                  ? "bg-[#13335C] text-white shadow-sm"
-                  : "text-[#5C4D3C] hover:bg-[#33302B] hover:text-[#89B5F7]"
-              }`}
-            >
-              <Zap className="w-4 h-4 text-[#38C2B3]" />
-              <span>5. Ações Especiais ({sheet.specialActions.length})</span>
-            </button>
+          <div className="overflow-x-auto rounded-xl bg-[#1A1918] border border-[#383430] p-1">
+            <div className="flex min-w-max">
+              {([
+                ["parts","Partes"],
+                ["skills","Habilidades"],
+                ["traits","Traços"],
+                ["behavior","Comportamento"],
+              ] as Array<[CreatureTabKey,string]>).map(([key,label], index) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`px-3.5 py-2 rounded-lg font-serif font-bold text-xs ${
+                    activeTab === key ? "bg-[#13335C] text-white" : "text-[#B0A497]"
+                  }`}
+                >
+                  {index + 1}. {label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* ========================================================= */}
-          {/* TAB 1: PARTES & ANATOMIA MONSTRUOSA */}
-          {/* ========================================================= */}
           {activeTab === "parts" && (
-            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#383430] gap-2">
+            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#383430]">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-serif font-black text-sm text-[#89B5F7] uppercase tracking-wider">
-                      Partes Monstruosas & Durabilidade ({sheet.parts.length})
-                    </h3>
-                    <InfoTooltip
-                      title="Partes de Criatura"
-                      description="Monstros possuem partes anatômicas distintas (Garras, Cauda, Papo, Carapaça). Cada parte possui sua própria Durabilidade e causa efeitos devastadores se quebrada."
-                      category="Anatomia"
-                      onOpenCompendium={onOpenCompendium}
-                    />
-                  </div>
-                  <p className="text-[11px] text-[#B0A497]">
-                    Anatomia de combate, ataques de armas orgânicas, pontos
-                    fracos e efeitos se quebrada.
-                  </p>
+                  <h3 className="font-serif font-black text-sm text-[#89B5F7] uppercase">Partes Monstruosas</h3>
+                  <p className="text-[11px] text-[#B0A497]">{sheet.parts.length} parte(s) cadastrada(s)</p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleAddPart}
-                  className="px-3 py-1.5 rounded-lg bg-[#13335C] hover:bg-[#0E2644] text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5 text-[#FF9B42]" />
-                  <span>Adicionar Parte</span>
+                <button onClick={addPart} className="px-3 py-1.5 rounded-lg bg-[#13335C] text-white text-xs font-bold flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5" /> Adicionar Parte
                 </button>
               </div>
 
-              {/* Parts List */}
               <div className="space-y-3">
                 {effectiveParts.map((part) => {
-                  const isExpanded = expandedPartId === part.id;
-                  const isBroken = part.currentDurability === 0;
-                  const durPercent = Math.min(
-                    100,
-                    Math.max(
-                      0,
-                      (part.currentDurability / part.effectiveMaxDurability) *
-                        100,
-                    ),
-                  );
+                  const original = sheet.parts.find((item) => item.id === part.id)!;
+                  const expanded = expandedPartId === part.id;
+                  const broken = part.durability.current === 0;
+                  const percent = Math.round((part.durability.current / Math.max(1, part.durability.max)) * 100);
 
                   return (
-                    <div
-                      key={part.id}
-                      className={`p-4 rounded-xl border transition-all ${
-                        isBroken
-                          ? "bg-[#9B2C2C]/5 border-[#9B2C2C]/40"
-                          : "bg-[#242220] border-[#383430]"
-                      }`}
-                    >
-                      {/* Summary Row */}
+                    <div key={part.id} className={`p-4 rounded-xl border ${broken ? "border-[#9B2C2C]/40" : "border-[#383430]"}`}>
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setExpandedPartId(isExpanded ? null : part.id)
-                            }
-                            className="text-[#89B5F7] hover:text-[#FF9B42] p-0.5"
-                          >
-                            {isExpanded ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <button onClick={() => setExpandedPartId(expanded ? null : part.id)} className="text-[#89B5F7]">
+                            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                           </button>
-
-                          <span
-                            className={`font-serif font-bold text-sm uppercase truncate ${isBroken ? "text-[#FC8181] line-through" : "text-[#89B5F7]"}`}
-                          >
-                            {part.name}
-                          </span>
-
-                          <div className="flex items-center gap-1 shrink-0">
-                            {part.categories.map((cat) => (
-                              <span
-                                key={cat}
-                                className="px-1.5 py-0.2 rounded bg-[#22201D] text-[9px] font-bold text-[#B0A497] border border-[#383430]"
-                              >
-                                {cat}
-                              </span>
-                            ))}
-                          </div>
+                          <span className={`font-serif font-bold text-sm truncate ${broken ? "text-[#FC8181] line-through" : "text-[#89B5F7]"}`}>{part.name}</span>
+                          {part.categories.map((category) => (
+                            <span key={category} className="px-1.5 py-0.5 rounded bg-[#22201D] text-[9px] text-[#B0A497] border border-[#383430]">
+                              {category}
+                            </span>
+                          ))}
                         </div>
 
-                        {/* Durability Delta Controls */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handlePartDurabilityDelta(part.id, -1)
-                            }
-                            disabled={part.currentDurability <= 0}
-                            className="w-6 h-6 rounded bg-[#22201D] hover:bg-[#33302B] text-xs font-bold flex items-center justify-center border border-[#383430] disabled:opacity-30"
-                          >
-                            -
-                          </button>
-
-                          <span className="font-mono font-bold text-xs w-16 text-center text-[#89B5F7]">
-                            {part.currentDurability} /{" "}
-                            {part.effectiveMaxDurability}
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handlePartDurabilityDelta(part.id, 1)
-                            }
-                            disabled={
-                              part.currentDurability >=
-                              part.effectiveMaxDurability
-                            }
-                            className="w-6 h-6 rounded bg-[#22201D] hover:bg-[#33302B] text-xs font-bold flex items-center justify-center border border-[#383430] disabled:opacity-30"
-                          >
-                            +
-                          </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button onClick={() => changePartDurability(part.id, -1)} disabled={part.durability.current <= 0} className="w-6 h-6 rounded bg-[#22201D] disabled:opacity-30">-</button>
+                          <span className="font-mono text-xs w-16 text-center">{part.durability.current} / {part.durability.max}</span>
+                          <button onClick={() => changePartDurability(part.id, 1)} disabled={part.durability.current >= part.durability.max} className="w-6 h-6 rounded bg-[#22201D] disabled:opacity-30">+</button>
                         </div>
                       </div>
 
-                      {/* Mini Bar */}
-                      <div className="w-full h-1.5 rounded-full bg-white/70 overflow-hidden mt-2 border border-[#D8CEBA]/50">
-                        <div
-                          className={`h-full transition-all ${
-                            isBroken
-                              ? "bg-[#9B2C2C]"
-                              : durPercent > 40
-                                ? "bg-[#16857A]"
-                                : "bg-[#E66826]"
-                          }`}
-                          style={{ width: `${durPercent}%` }}
-                        />
+                      <div className="w-full h-1.5 rounded-full bg-[#242220] overflow-hidden mt-2">
+                        <div className="h-full bg-[#E66826]" style={{ width: `${percent}%` }} />
                       </div>
 
-                      {/* Expanded Part Editor */}
-                      {isExpanded && (
-                        <div className="mt-3 pt-3 border-t border-[#383430] space-y-3 text-xs animate-fadeIn">
+                      {expanded && (
+                        <div className="mt-3 pt-3 border-t border-[#383430] space-y-3 text-xs">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[10px] font-bold uppercase text-[#B0A497] mb-0.5">
-                                Nome da Parte
-                              </label>
-                              <input
-                                type="text"
-                                value={part.name}
-                                onChange={(e) =>
-                                  handleUpdatePart(part.id, {
-                                    name: e.target.value,
-                                  })
-                                }
-                                className="w-full px-2.5 py-1 text-xs font-semibold rounded bg-[#22201D] border border-[#383430]"
-                              />
+                              <label className="block text-[10px] uppercase font-bold text-[#B0A497] mb-1">Nome</label>
+                              <input value={original.name} onChange={(e) => updatePart(part.id, { name: e.target.value })} className="w-full px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430]" />
                             </div>
-
                             <div>
-                              <label className="block text-[10px] font-bold uppercase text-[#B0A497] mb-0.5">
-                                Durabilidade Máxima Base
-                              </label>
+                              <label className="block text-[10px] uppercase font-bold text-[#B0A497] mb-1">Durabilidade Máxima</label>
                               <input
                                 type="number"
-                                value={part.baseMaxDurability}
-                                onChange={(e) =>
-                                  handleUpdatePart(part.id, {
-                                    baseMaxDurability:
-                                      parseInt(e.target.value) || 10,
-                                  })
-                                }
-                                className="w-full px-2.5 py-1 text-xs font-semibold rounded bg-[#22201D] border border-[#383430]"
+                                min={1}
+                                value={original.durability.max}
+                                onChange={(e) => {
+                                  const max = Math.max(1, Number(e.target.value) || 1);
+                                  updatePart(part.id, { durability: { ...original.durability, max, current: Math.min(original.durability.current, max) } });
+                                }}
+                                className="w-full px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430]"
                               />
                             </div>
                           </div>
 
-                          {/* Se Quebrada */}
                           <div>
-                            <label className="block text-[10px] font-bold uppercase text-[#FC8181] mb-0.5">
-                              Se Quebrada (Efeito quando Durabilidade = 0) *
-                            </label>
-                            <textarea
-                              value={part.brokenEffect}
-                              onChange={(e) =>
-                                handleUpdatePart(part.id, {
-                                  brokenEffect: e.target.value,
-                                })
-                              }
-                              placeholder="Ex: Esta parte causa metade do dano. A criatura fica Exposta."
-                              rows={2}
-                              className="w-full px-2.5 py-1.5 text-xs rounded bg-[#22201D] border border-[#383430] focus:ring-1 focus:ring-[#9B2C2C]"
-                            />
+                            <label className="block text-[10px] uppercase font-bold text-[#B0A497] mb-1">Categorias</label>
+                            <div className="flex flex-wrap gap-2">
+                              {PART_CATEGORIES.map((category) => {
+                                const selected = original.categories.includes(category);
+                                return (
+                                  <button
+                                    type="button"
+                                    key={category}
+                                    onClick={() =>
+                                      updatePart(part.id, {
+                                        categories: selected
+                                          ? original.categories.filter((item) => item !== category)
+                                          : [...original.categories, category],
+                                      })
+                                    }
+                                    className={`px-2 py-1 rounded border text-[10px] ${selected ? "bg-[#13335C] border-[#2B6CB0] text-white" : "border-[#383430] text-[#B0A497]"}`}
+                                  >
+                                    {category}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
 
-                          <div className="flex justify-end pt-1">
-                            <button
-                              type="button"
-                              onClick={() => handleRemovePart(part.id)}
-                              className="text-xs font-bold text-[#FC8181] hover:underline flex items-center gap-1"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Remover Parte</span>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-[10px] uppercase font-bold text-[#B0A497] mb-1">Alcance</label>
+                              <input type="number" min={0} value={original.range ?? ""} onChange={(e) => updatePart(part.id, { range: e.target.value === "" ? undefined : Number(e.target.value) })} className="w-full px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430]" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase font-bold text-[#B0A497] mb-1">Habilidade</label>
+                              <select value={original.skills ?? ""} onChange={(e) => updatePart(part.id, { skills: e.target.value ? (e.target.value as SkillKey) : undefined })} className="w-full px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430]">
+                                <option value="">Nenhuma</option>
+                                {SKILLS.map((skill) => <option key={skill.key} value={skill.key}>{skill.label}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase font-bold text-[#B0A497] mb-1">Estilo</label>
+                              <select value={original.styles ?? ""} onChange={(e) => updatePart(part.id, { styles: e.target.value ? (e.target.value as StyleKey) : undefined })} className="w-full px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430]">
+                                <option value="">Nenhum</option>
+                                {STYLES_INFO.map((style) => <option key={style.key} value={style.key}>{style.label}</option>)}
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] uppercase font-bold text-[#B0A497] mb-1">Descrição</label>
+                            <textarea value={original.description} onChange={(e) => updatePart(part.id, { description: e.target.value })} rows={3} className="w-full px-2.5 py-2 rounded bg-[#22201D] border border-[#383430]" />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] uppercase font-bold text-[#FC8181] mb-1">Quando quebrada</label>
+                            <textarea value={original.whenBroken ?? ""} onChange={(e) => updatePart(part.id, { whenBroken: e.target.value || undefined })} rows={2} className="w-full px-2.5 py-2 rounded bg-[#22201D] border border-[#383430]" />
+                          </div>
+
+                          <div className="flex justify-end">
+                            <button onClick={() => removePart(part.id)} className="text-xs font-bold text-[#FC8181] flex items-center gap-1">
+                              <Trash2 className="w-3.5 h-3.5" /> Remover Parte
                             </button>
                           </div>
                         </div>
@@ -1044,381 +500,154 @@ export const CreatureSheetView: React.FC<CreatureSheetViewProps> = ({
             </div>
           )}
 
-          {/* ========================================================= */}
-          {/* TAB 2: AS 12 HABILIDADES DA CRIATURA (+0 A +3) */}
-          {/* ========================================================= */}
           {activeTab === "skills" && (
-            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#383430] gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-serif font-black text-sm text-[#89B5F7] uppercase tracking-wider">
-                      Habilidades da Criatura (+0 a +3)
-                    </h3>
-                    <InfoTooltip
-                      title="Perícias de Monstro"
-                      description="Bônus adicionados diretamente aos Testes da criatura ao caçar presas ou resistir a ferais."
-                      category="Regras"
-                    />
-                  </div>
-                  <p className="text-[11px] text-[#B0A497]">
-                    Bônus de ação aplicados em ataques, escaladas, rastreamento
-                    e rugidos.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                {SKILLS_LIST.map((sk) => {
-                  const val = sheet.skills[sk.key] || 0;
-                  return (
-                    <div
-                      key={sk.key}
-                      className="p-2.5 rounded-lg bg-[#242220] border border-[#383430] flex items-center justify-between gap-2 hover:border-[#173F73]/40 transition-colors"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-serif font-bold text-xs text-[#F5EFEB] truncate uppercase">
-                            {sk.label}
-                          </span>
-                          <InfoTooltip
-                            title={sk.label}
-                            description={sk.tooltip}
-                            category="Habilidade"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleSkillChange(sk.key, -1)}
-                          disabled={val <= 0}
-                          className="w-6 h-6 rounded bg-[#22201D] hover:bg-[#33302B] text-xs font-bold flex items-center justify-center disabled:opacity-30 border border-[#383430] text-[#89B5F7]"
-                        >
-                          −
-                        </button>
-                        <span className="font-mono font-black text-sm w-6 text-center text-[#89B5F7]">
-                          +{val}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleSkillChange(sk.key, 1)}
-                          disabled={val >= 3}
-                          className="w-6 h-6 rounded bg-[#22201D] hover:bg-[#33302B] text-xs font-bold flex items-center justify-center disabled:opacity-30 border border-[#383430] text-[#89B5F7]"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* TAB 3: TRAÇOS DO MONSTRO */}
-          {/* ========================================================= */}
-          {activeTab === "traits" && (
-            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#383430] gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-serif font-black text-sm text-[#38C2B3] uppercase tracking-wider">
-                      Traços de Monstro (
-                      {sheet.traits.length + sheet.additionalTraits.length})
-                    </h3>
-                    <InfoTooltip
-                      title="Traços de Criatura"
-                      description="Habilidades passivas, armaduras orgânicas e reações que tornam cada criatura única no campo de batalha."
-                      category="Traços"
-                    />
-                  </div>
-                  <p className="text-[11px] text-[#B0A497]">
-                    Traços de combate e características biológicas ecológicas.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={onOpenCompendium}
-                    className="px-3 py-1.5 rounded-lg bg-[#242220] hover:bg-[#33302B] text-[#38C2B3] font-bold text-xs flex items-center gap-1.5 border border-[#383430]"
-                  >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>Compêndio</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleAddTrait(false)}
-                    className="px-3 py-1.5 rounded-lg bg-[#16857A] hover:bg-[#126B62] text-white font-bold text-xs flex items-center gap-1.5 shadow-sm"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Adicionar Traço</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Traits List */}
-              <div className="space-y-3">
-                {sheet.traits.map((tr) => (
-                  <div
-                    key={tr.id}
-                    className="p-3.5 rounded-xl bg-[#242220] border border-[#383430] space-y-2"
-                  >
+            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm">
+              <h3 className="font-serif font-black text-sm text-[#89B5F7] uppercase mb-4">Habilidades</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {SKILLS.map((skill) => (
+                  <div key={skill.key} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#242220]">
+                    <span className="text-xs font-bold">{skill.label}</span>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={tr.name}
-                        onChange={(e) =>
-                          onChange({
-                            traits: sheet.traits.map((t) =>
-                              t.id === tr.id
-                                ? { ...t, name: e.target.value }
-                                : t,
-                            ),
-                          })
-                        }
-                        placeholder="Nome do Traço..."
-                        className="font-serif font-bold text-xs uppercase px-2.5 py-1 rounded bg-[#22201D] border border-[#383430] flex-1 text-[#38C2B3]"
-                      />
-                      <input
-                        type="text"
-                        value={tr.cost}
-                        onChange={(e) =>
-                          onChange({
-                            traits: sheet.traits.map((t) =>
-                              t.id === tr.id
-                                ? { ...t, cost: e.target.value }
-                                : t,
-                            ),
-                          })
-                        }
-                        placeholder="Custo (ex: Passiva)"
-                        className="w-28 text-xs px-2 py-1 rounded bg-[#22201D] border border-[#383430]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTrait(tr.id, false)}
-                        className="p-1 text-[#FC8181] hover:bg-[#22201D] rounded"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <button onClick={() => changeSkill(skill.key, -1)} className="w-6 h-6 rounded bg-[#22201D]">-</button>
+                      <span className="font-mono font-bold w-6 text-center">+{sheet.skills[skill.key]}</span>
+                      <button onClick={() => changeSkill(skill.key, 1)} className="w-6 h-6 rounded bg-[#22201D]">+</button>
                     </div>
-
-                    <textarea
-                      value={tr.description}
-                      onChange={(e) =>
-                        onChange({
-                          traits: sheet.traits.map((t) =>
-                            t.id === tr.id
-                              ? { ...t, description: e.target.value }
-                              : t,
-                          ),
-                        })
-                      }
-                      placeholder="Descrição mecânica do traço..."
-                      rows={2}
-                      className="w-full px-2.5 py-1 text-xs rounded bg-[#22201D] border border-[#383430]"
-                    />
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ========================================================= */}
-          {/* TAB 4: COMPORTAMENTO & INSTINTOS */}
-          {/* ========================================================= */}
-          {activeTab === "behavior" && (
-            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4 animate-fadeIn">
-              <div className="pb-3 border-b border-[#383430]">
+          {activeTab === "traits" && (
+            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-serif font-black text-sm text-[#89B5F7] uppercase tracking-wider">
-                    Comportamento & Instintos de Caçada
-                  </h3>
-                  <InfoTooltip
-                    title="Inteligência de Monstro"
-                    description="Instruções para o Guia sobre como o monstro reage, quem ele escolhe como alvo e como se comporta ao entrar em fúria."
-                    category="Guia"
-                  />
+                  <Dna className="w-4 h-4 text-[#38C2B3]" />
+                  <h3 className="font-serif font-black text-sm text-[#89B5F7] uppercase">Traços & Mutações</h3>
                 </div>
-                <p className="text-[11px] text-[#B0A497]">
-                  Critérios de seleção de alvos, padrões de ataque e fases de
-                  perigo.
-                </p>
-              </div>
-
-              {/* Target Selection */}
-              <div>
-                <label className="block text-xs font-bold uppercase text-[#B0A497] mb-1">
-                  Seleção de Alvo Inicial
-                </label>
-                <textarea
-                  value={sheet.behavior.targetSelection}
-                  onChange={(e) =>
-                    onChange({
-                      behavior: {
-                        ...sheet.behavior,
-                        targetSelection: e.target.value,
-                      },
-                    })
-                  }
-                  placeholder="Como o monstro decide quem atacar se ninguém estiver Exposto ou Preso? (Ex: ataca quem se moveu por último)..."
-                  rows={2}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-[#22201D] border border-[#383430]"
-                />
-              </div>
-
-              {/* Combat Instincts */}
-              <div>
-                <label className="block text-xs font-bold uppercase text-[#B0A497] mb-1">
-                  Instintos em Combate
-                </label>
-                <textarea
-                  value={sheet.behavior.instincts}
-                  onChange={(e) =>
-                    onChange({
-                      behavior: {
-                        ...sheet.behavior,
-                        instincts: e.target.value,
-                      },
-                    })
-                  }
-                  placeholder="Como ela se movimenta no terreno? Prefere emboscar do alto ou forçar combate fechado?"
-                  rows={3}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-[#22201D] border border-[#383430]"
-                />
-              </div>
-
-              {/* Wounded Phase */}
-              <div>
-                <label className="block text-xs font-bold uppercase text-[#FC8181] mb-1">
-                  Fase de Fúria / Quando Ferido
-                </label>
-                <textarea
-                  value={sheet.behavior.woundedPhase || ""}
-                  onChange={(e) =>
-                    onChange({
-                      behavior: {
-                        ...sheet.behavior,
-                        woundedPhase: e.target.value,
-                      },
-                    })
-                  }
-                  placeholder="Mudanças de tática quando o Vigor atinge metade ou quando partes vitais são quebradas..."
-                  rows={2}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-[#22201D] border border-[#383430]"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* TAB 5: AÇÕES ESPECIAIS */}
-          {/* ========================================================= */}
-          {activeTab === "actions" && (
-            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#383430] gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-serif font-black text-sm text-[#38C2B3] uppercase tracking-wider">
-                      Habilidades Especiais & Reações (
-                      {sheet.specialActions.length})
-                    </h3>
-                    <InfoTooltip
-                      title="Ações Especiais de Monstro"
-                      description="Poderes ativados durante o turno do monstro, como baforadas de fogo, terremotos ou reações defensivas."
-                      category="Combate"
-                    />
-                  </div>
-                  <p className="text-[11px] text-[#B0A497]">
-                    Ações de alto impacto executadas pela criatura durante os
-                    turnos de caçada.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleAddAction}
-                  className="px-3 py-1.5 rounded-lg bg-[#16857A] hover:bg-[#126B62] text-white font-bold text-xs flex items-center gap-1.5 shadow-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Nova Habilidade</span>
+                <button onClick={() => addTrait(false)} className="px-3 py-1.5 rounded-lg bg-[#13335C] text-white text-xs font-bold">
+                  <Plus className="w-3.5 h-3.5 inline mr-1" /> Novo
                 </button>
               </div>
 
-              {/* Actions List */}
-              <div className="space-y-3">
-                {sheet.specialActions.map((act) => (
-                  <div
-                    key={act.id}
-                    className="p-3.5 rounded-xl bg-[#242220] border border-[#383430] space-y-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={act.name}
-                        onChange={(e) =>
-                          handleUpdateAction(act.id, { name: e.target.value })
-                        }
-                        placeholder="Nome da Habilidade..."
-                        className="font-serif font-bold text-xs px-2.5 py-1 rounded bg-[#22201D] border border-[#383430] flex-1 text-[#38C2B3]"
-                      />
-                      <select
-                        value={act.type}
-                        onChange={(e) =>
-                          handleUpdateAction(act.id, {
-                            type: e.target.value as any,
-                          })
-                        }
-                        className="px-2 py-1 text-xs rounded bg-[#22201D] border border-[#383430]"
-                      >
-                        <option value="Ação">Ação</option>
-                        <option value="Passiva">Passiva</option>
-                        <option value="Reação">Reação</option>
-                        <option value="Outro">Outro</option>
-                      </select>
-                      <input
-                        type="text"
-                        value={act.cost}
-                        onChange={(e) =>
-                          handleUpdateAction(act.id, {
-                            cost: e.target.value as any,
-                          })
-                        }
-                        placeholder="Custo (ex: 2 Ações)"
-                        className="w-28 text-xs px-2 py-1 rounded bg-[#22201D] border border-[#383430]"
-                      />
+              <div className="flex gap-2">
+                <select id="creature-trait-select" className="flex-1 px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430] text-xs">
+                  <option value="">Adicionar do Compêndio...</option>
+                  {ALL_TRAITS_COMPENDIUM.map((trait) => <option key={trait.name} value={trait.name}>{trait.name}</option>)}
+                </select>
+                <button onClick={() => addCompendiumTrait(false)} className="px-3 py-1.5 rounded-lg bg-[#242220] text-xs font-bold">Adicionar</button>
+              </div>
+
+              {sheet.traits.map((trait) => (
+                <div key={trait.id} className="p-3 rounded-xl bg-[#242220] border border-[#383430]">
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <input value={trait.name} onChange={(e) => updateTrait(trait.id, { name: e.target.value })} className="px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430] font-bold text-xs" />
+                    <button onClick={() => onChange({ traits: sheet.traits.filter((item) => item.id !== trait.id) })} className="text-[#FC8181]"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <input type="number" min={1} value={trait.level} onChange={(e) => updateTrait(trait.id, { level: Math.max(1, Number(e.target.value) || 1) })} className="px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430]" />
+                    <input value={trait.cost} onChange={(e) => updateTrait(trait.id, { cost: e.target.value })} className="px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430]" />
+                  </div>
+                  <textarea value={trait.description} onChange={(e) => updateTrait(trait.id, { description: e.target.value })} rows={2} className="w-full mt-2 px-2.5 py-2 rounded bg-[#22201D] border border-[#383430]" />
+                </div>
+              ))}
+
+              <div className="pt-4 border-t border-[#383430]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-[#B0A497]">Traços Adicionais</span>
+                  <button onClick={() => addTrait(true)} className="text-xs text-[#FF9B42] font-bold"><Plus className="w-3.5 h-3.5 inline mr-1" />Novo</button>
+                </div>
+                <select id="creature-additional-trait-select" className="w-full px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430] text-xs mb-2">
+                  <option value="">Adicionar do Compêndio...</option>
+                  {ALL_TRAITS_COMPENDIUM.map((trait) => <option key={`a-${trait.name}`} value={trait.name}>{trait.name}</option>)}
+                </select>
+                <button onClick={() => addCompendiumTrait(true)} className="px-3 py-1.5 rounded-lg bg-[#242220] text-xs font-bold">Adicionar do Compêndio</button>
+
+                <div className="space-y-2 mt-3">
+                  {sheet.additionalTraits.map((trait) => (
+                    <div key={trait.id} className="p-3 rounded-lg bg-[#242220] border border-[#383430] flex gap-2">
+                      <input value={trait.name} onChange={(e) => onChange({ additionalTraits: sheet.additionalTraits.map((item) => item.id === trait.id ? { ...item, name: e.target.value } : item) })} className="flex-1 px-2.5 py-1.5 rounded bg-[#22201D] border border-[#383430] text-xs font-bold" />
+                      <button onClick={() => onChange({ additionalTraits: sheet.additionalTraits.filter((item) => item.id !== trait.id) })} className="text-[#FC8181]"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "behavior" && (
+            <div className="p-5 sm:p-6 rounded-xl bg-[#1A1918] border border-[#383430] shadow-sm space-y-4">
+              <div className="pb-3 border-b border-[#383430]">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-[#FF9B42]" />
+                  <h3 className="font-serif font-black text-sm text-[#89B5F7] uppercase">Comportamento</h3>
+                </div>
+                <p className="text-[11px] text-[#B0A497] mt-1">O novo modelo concentra as instruções comportamentais em um único texto.</p>
+              </div>
+              <textarea
+                value={sheet.behavior}
+                onChange={(e) => onChange({ behavior: e.target.value })}
+                rows={12}
+                className="w-full px-3 py-2 rounded-lg bg-[#22201D] border border-[#383430] text-xs"
+                placeholder="Seleção de alvo, instintos, padrões de ataque e reação quando ferida..."
+              />
+
+              <div className="pt-3 border-t border-[#383430]">
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity className="w-4 h-4 text-[#38C2B3]" />
+                  <span className="font-serif font-black text-sm uppercase text-[#89B5F7]">Condições</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {ALL_CONDITIONS_DATA.map((condition) => {
+                    const active = activeConditions.some((item) => item.name === condition.name);
+                    return (
                       <button
                         type="button"
-                        onClick={() => handleRemoveAction(act.id)}
-                        className="p-1 text-[#FC8181] hover:bg-[#22201D] rounded"
+                        key={condition.name}
+                        onClick={() => toggleCondition(condition)}
+                        className={`p-3 rounded-lg border text-left ${active ? "bg-[#13335C] border-[#2B6CB0] text-white" : "bg-[#242220] border-[#383430] text-[#B0A497]"}`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold">{condition.name}</span>
+                          {active ? <Shield className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                        </div>
+                        <p className="text-[10px] mt-1 opacity-80">{condition.description}</p>
                       </button>
-                    </div>
+                    );
+                  })}
+                </div>
 
-                    <textarea
-                      value={act.description}
-                      onChange={(e) =>
-                        handleUpdateAction(act.id, {
-                          description: e.target.value,
-                        })
-                      }
-                      placeholder="Descrição mecânica da habilidade..."
-                      rows={2}
-                      className="w-full px-2.5 py-1 text-xs rounded bg-[#22201D] border border-[#383430]"
-                    />
+                {sheet.conditions.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {sheet.conditions.map((condition) => (
+                      <div key={condition.id} className="p-3 rounded-lg bg-[#242220] border border-[#383430] flex items-center gap-3">
+                        <span className="text-xs font-bold flex-1">{condition.name}</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={condition.level}
+                          onChange={(e) =>
+                            onChange({
+                              conditions: sheet.conditions.map((item) =>
+                                item.id === condition.id ? { ...item, level: Math.max(1, Number(e.target.value) || 1) } : item,
+                              ),
+                            })
+                          }
+                          className="w-16 px-2 py-1 rounded bg-[#22201D] border border-[#383430] text-xs"
+                        />
+                        <button onClick={() => onChange({ conditions: sheet.conditions.filter((item) => item.id !== condition.id) })} className="text-[#FC8181]">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
         </section>
       </div>
-    </div>
+    </main>
   );
 };

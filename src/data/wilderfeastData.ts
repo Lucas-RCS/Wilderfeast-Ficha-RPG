@@ -1,4 +1,4 @@
-import { FeralSheet } from "../types";
+import type { IFeral } from "../types";
 
 export interface UtensilDefinition {
   name: "Barbante" | "Cutelo" | "Espeto" | "Luvas" | "Maçarico" | "Panela";
@@ -2081,20 +2081,21 @@ export const ORIGIN_TABLE_AMBITION = [
   },
 ];
 
-export const DEFAULT_NEW_CHARACTER: FeralSheet = {
-  id: "char-default-1",
-  version: 1,
-  lastSaved: new Date().toISOString(),
+export const DEFAULT_NEW_FERAL: IFeral = {
+  id: "feral-default-1",
   identity: {
     name: "Feral Sem Nome",
     pronouns: "ele/dele",
     specialty: "Açougueiro",
     packName: "Matilha da Fogueira Solitária",
-    packArchetype: "Matilha Livre",
     appearance:
       "Cabelos revoltos, olhos cor de âmbar selvagem e marcas leves de mutação na pele.",
-    denDescription: "Acampamento móvel de tendas nas bordas da floresta.",
     notes: "Um feral recém-iniciado na trilha da culinária monstruosa.",
+  },
+  harmony: 3,
+  vigor: {
+    current: 20,
+    max: 20,
   },
   styles: {
     ligeiro: 1,
@@ -2149,7 +2150,6 @@ export const DEFAULT_NEW_CHARACTER: FeralSheet = {
       level: 1,
       cost: "Custo: 1 Sucesso",
       description: "Aumente o resultado do Dado de Ação [A] em 1.",
-      isStandard: true,
     },
     {
       id: "trait-tino",
@@ -2157,7 +2157,6 @@ export const DEFAULT_NEW_CHARACTER: FeralSheet = {
       level: 1,
       cost: "Custo: 1 Sucesso",
       description: "Estabeleça um detalhe relevante sobre a situação na cena.",
-      isStandard: true,
     },
     {
       id: "trait-spec-1",
@@ -2166,24 +2165,9 @@ export const DEFAULT_NEW_CHARACTER: FeralSheet = {
       cost: "Passiva",
       description:
         "Você ganha Vantagem em todos os Testes durante a primeira rodada da Caçada caso o lado oponente tenha uma criatura Ferida.",
-      isMonstrous: true,
     },
   ],
-  vigor: {
-    current: 20,
-    max: 20,
-  },
   conditions: [],
-  personality: {
-    adjectives: "Cuidadoso, prático e faminto",
-    drive:
-      "Aprender as técnicas culinárias de cada região e defender seus parças",
-    flaw: "Relutância em recuar mesmo quando os monstros superam o grupo",
-    habits: "Morde a ponta da colher para verificar a temperatura do cozido",
-    youAre: "cuidadoso e prático",
-    butYouTryToBe: "decisivo e corajoso",
-    tags: ["vigilante", "amigo fiel", "faminto por novidades"],
-  },
   familiarBeasts: [
     {
       id: "fb-initial-1",
@@ -2197,32 +2181,8 @@ export const DEFAULT_NEW_CHARACTER: FeralSheet = {
         "Lapu-lapu jovem de lã de aço macia que adora cochilar perto das brasas da fogueira.",
     },
   ],
-  food: {
-    typicalDish: "Gyoza de peixe selvagem com ervas frescas",
-    typicalSeasoning: "Pimenta jao seca em flocos",
-  },
-  origin: {
-    background: "Cozinheiro de guarnição e assistente de forja.",
-    reasonForBecomingFeral:
-      "Cozinhou com amor um monstro abatido para salvar seus irmãos do inverno rigoroso.",
-    missedPast:
-      "O cheiro reconfortante da manteiga derretida na cozinha de sua família.",
-    creation: "Sopa de arroz com vegetais colhidos na encosta do rio.",
-    creationSkill: "procurar",
-    initiation: "Cozinhou com amor um monstro abatido para salvar seus irmãos.",
-    initiationSkill: "curar",
-    ambition: "Provar o banquete de um monstro zênite lendário.",
-    ambitionSkill: "golpear",
-  },
-  connection: {
-    partnerName: "Companheiro de Matilha",
-    dishReference: "Ensopado de inverno compartilhado",
-    description:
-      "Dividiram a última porção de comida durante uma nevasca severa.",
-  },
   feastHistory: [],
-  notes: [],
-  notesList: [
+  notes: [
     {
       id: "note-1",
       createdAt: "Início da Campanha",
@@ -2232,10 +2192,4 @@ export const DEFAULT_NEW_CHARACTER: FeralSheet = {
       category: "Sessão",
     },
   ],
-  packState: {
-    harmony: 3,
-    maxHarmony: 6,
-    currentPernada: 1,
-    currentTerrain: "Chão",
-  },
 };

@@ -10,7 +10,13 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { FeralType, CreatureType, MonsterStage } from "../types";
+import type {
+  IFeralCard,
+  ICreatureCard,
+  MonsterLineage,
+  MonsterStage,
+  UtensilKey,
+} from "../types";
 import { SPECIALTIES_DATA, UTENSILS_DATA } from "../data/wilderfeastData";
 import { MONSTER_LINEAGES } from "../data/creatureData";
 import { CompendiumModal } from "../components/CompendiumModal";
@@ -19,14 +25,14 @@ import { CardCreature } from "../components/CardCreature";
 import { getItem, setItem } from "../lib/storage";
 
 interface HubViewProps {
-  feralSummaries: FeralType[];
-  creatureSummaries: CreatureType[];
+  feralCards: IFeralCard[];
+  creatureCards: ICreatureCard[];
   onOpenFeral: (id: string) => void;
   onCreateFeral: (
     name: string,
     pronouns: string,
     specialty: string,
-    utensil: string,
+    utensil: UtensilKey,
   ) => void;
   onDuplicateFeral: (id: string) => void;
   onRenameFeral: (id: string, newName: string) => void;
@@ -35,7 +41,7 @@ interface HubViewProps {
   onOpenCreature: (id: string) => void;
   onCreateCreature: (
     name: string,
-    lineage: string,
+    lineage: MonsterLineage,
     stage: MonsterStage,
   ) => void;
   onDuplicateCreature: (id: string) => void;
@@ -45,8 +51,8 @@ interface HubViewProps {
 }
 
 export const HubView: React.FC<HubViewProps> = ({
-  feralSummaries,
-  creatureSummaries,
+  feralCards,
+  creatureCards,
   onOpenFeral,
   onCreateFeral,
   onDuplicateFeral,
@@ -90,18 +96,19 @@ export const HubView: React.FC<HubViewProps> = ({
   const [newFeralName, setNewFeralName] = useState("");
   const [newFeralPronouns, setNewFeralPronouns] = useState("ele/dele");
   const [newFeralSpecialty, setNewFeralSpecialty] = useState("Açougueiro");
-  const [newFeralUtensil, setNewFeralUtensil] = useState("Cutelo");
+  const [newFeralUtensil, setNewFeralUtensil] = useState<UtensilKey>("Cutelo");
 
   // New Creature Form
   const [newCreatureName, setNewCreatureName] = useState("");
-  const [newCreatureLineage, setNewCreatureLineage] = useState("Molheiro");
+  const [newCreatureLineage, setNewCreatureLineage] =
+    useState<MonsterLineage>("Molheiro");
   const [newCreatureStage, setNewCreatureStage] =
     useState<MonsterStage>("Adulto");
 
   // Filtered lists in real time
   const normalizedQuery = searchTerm.toLowerCase().trim();
 
-  const filteredFerais = feralSummaries.filter((f) => {
+  const filteredFerals = feralCards.filter((f) => {
     if (!normalizedQuery) return true;
     const nameMatch = f.name?.toLowerCase().includes(normalizedQuery);
     const specMatch = f.specialty?.toLowerCase().includes(normalizedQuery);
@@ -110,7 +117,7 @@ export const HubView: React.FC<HubViewProps> = ({
     return nameMatch || specMatch || utMatch || proMatch;
   });
 
-  const filteredCreatures = creatureSummaries.filter((c) => {
+  const filteredCreatures = creatureCards.filter((c) => {
     if (!normalizedQuery) return true;
     const nameMatch = c.name?.toLowerCase().includes(normalizedQuery);
     const linMatch = c.lineage?.toLowerCase().includes(normalizedQuery);
@@ -295,7 +302,7 @@ export const HubView: React.FC<HubViewProps> = ({
               }`}
             >
               <Utensils className="w-4 h-4 text-[#FF9B42]" />
-              <span>Ferais ({feralSummaries.length})</span>
+              <span>Ferais ({feralCards.length})</span>
             </button>
 
             <button
@@ -309,7 +316,7 @@ export const HubView: React.FC<HubViewProps> = ({
               }`}
             >
               <Flame className="w-4 h-4 text-[#FF9B42]" />
-              <span>Criaturas ({creatureSummaries.length})</span>
+              <span>Criaturas ({creatureCards.length})</span>
             </button>
           </div>
 
@@ -345,7 +352,7 @@ export const HubView: React.FC<HubViewProps> = ({
                 )}
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#B0A497] bg-[#282623] px-2 py-1 rounded-md border border-[#3D3833]">
                   {activeTab === "ferais"
-                    ? `${filteredFerais.length} ${filteredFerais.length === 1 ? "feral" : "ferais"}`
+                    ? `${filteredFerals.length} ${filteredFerals.length === 1 ? "feral" : "ferais"}`
                     : `${filteredCreatures.length} ${filteredCreatures.length === 1 ? "criatura" : "criaturas"}`}
                 </span>
               </div>
@@ -397,7 +404,7 @@ export const HubView: React.FC<HubViewProps> = ({
             </div>
 
             {/* Grid of Feral Sheets or Empty Search */}
-            {feralSummaries.length === 0 ? (
+            {feralCards.length === 0 ? (
               <div className="py-16 text-center rounded-2xl bg-[#1A1918] border-2 border-dashed border-[#383430] p-8 space-y-4">
                 <div className="w-16 h-16 rounded-2xl bg-[#242220] text-[#FF9B42] flex items-center justify-center mx-auto border border-[#383430]">
                   <Utensils className="w-8 h-8" />
@@ -420,7 +427,7 @@ export const HubView: React.FC<HubViewProps> = ({
                   <span>Criar Meu Primeiro Feral</span>
                 </button>
               </div>
-            ) : filteredFerais.length === 0 ? (
+            ) : filteredFerals.length === 0 ? (
               <div className="py-14 text-center rounded-2xl bg-[#1A1918] border border-[#383430] p-8 space-y-3">
                 <div className="w-12 h-12 rounded-xl bg-[#242220] text-[#FF9B42] flex items-center justify-center mx-auto border border-[#383430]">
                   <Search className="w-6 h-6" />
@@ -442,7 +449,7 @@ export const HubView: React.FC<HubViewProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredFerais.map((data) => (
+                {filteredFerals.map((data) => (
                   <CardFeral
                     key={data.id}
                     data={data}
@@ -501,7 +508,7 @@ export const HubView: React.FC<HubViewProps> = ({
             </div>
 
             {/* Grid of Creature Sheets or Empty Search */}
-            {creatureSummaries.length === 0 ? (
+            {creatureCards.length === 0 ? (
               <div className="py-16 text-center rounded-2xl bg-[#1A1918] border-2 border-dashed border-[#383430] p-8 space-y-4">
                 <div className="w-16 h-16 rounded-2xl bg-[#242220] text-[#FF9B42] flex items-center justify-center mx-auto border border-[#383430]">
                   <Flame className="w-8 h-8" />
@@ -632,7 +639,9 @@ export const HubView: React.FC<HubViewProps> = ({
                   </label>
                   <select
                     value={newFeralUtensil}
-                    onChange={(e) => setNewFeralUtensil(e.target.value)}
+                    onChange={(e) =>
+                      setNewFeralUtensil(e.target.value as UtensilKey)
+                    }
                     className="w-full px-2.5 py-1.5 rounded-lg bg-[#242220] border border-[#383430] font-bold text-[#FF9B42]"
                   >
                     {Object.keys(UTENSILS_DATA).map((ut) => (
@@ -698,7 +707,9 @@ export const HubView: React.FC<HubViewProps> = ({
                   </label>
                   <select
                     value={newCreatureLineage}
-                    onChange={(e) => setNewCreatureLineage(e.target.value)}
+                    onChange={(e) =>
+                      setNewCreatureLineage(e.target.value as MonsterLineage)
+                    }
                     className="w-full px-2.5 py-1.5 rounded-lg bg-[#242220] border border-[#383430] font-bold text-[#89B5F7]"
                   >
                     {MONSTER_LINEAGES.map((lin) => (
@@ -720,10 +731,10 @@ export const HubView: React.FC<HubViewProps> = ({
                     }
                     className="w-full px-2.5 py-1.5 rounded-lg bg-[#242220] border border-[#383430] font-bold text-[#FF9B42]"
                   >
-                    <option value="Juvenil">Juvenil (Vigor 20)</option>
-                    <option value="Adulto">Adulto (Vigor 40)</option>
-                    <option value="Ancião">Ancião (Vigor 60)</option>
-                    <option value="Zênite">Zênite (Vigor 80)</option>
+                    <option value="Jovem">Jovem (Vigor 20)</option>
+                    <option value="Adulto">Adulto (Vigor 30)</option>
+                    <option value="Ancião">Ancião (Vigor 40)</option>
+                    <option value="Zênite">Zênite (Vigor 50)</option>
                   </select>
                 </div>
               </div>

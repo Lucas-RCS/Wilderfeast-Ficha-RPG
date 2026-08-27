@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Heart, Shield, Users, AlertTriangle, Plus } from "lucide-react";
-import { FeralSheet, StyleKey, CustomUtensil } from "../types";
+import { IFeral, StyleKey, CustomUtensil, ICondition } from "../types";
 import {
   UTENSILS_DATA,
   SPECIALTIES_DATA,
@@ -10,9 +10,61 @@ import { CustomUtensilModal } from "./CustomUtensilModal";
 import { loadCustomUtensils } from "../lib/storage";
 import { InfoTooltip } from "./InfoTooltip";
 
+const STYLES_LIST: Array<{
+  key: StyleKey;
+  name: string;
+  description: string;
+  tooltip: string;
+  badgeColor: string;
+  borderCol: string;
+  bgCol: string;
+}> = [
+  {
+    key: "ligeiro",
+    name: "LIGEIRO",
+    description: "Velocidade, agilidade, esquiva e destreza acrobática.",
+    tooltip:
+      "Rola dados de Ligeiro ao agir com rapidez, esquivar de investidas de monstros ou saltar entre copas de árvores.",
+    badgeColor: "bg-[#16857A] text-white",
+    borderCol: "border-[#16857A]/40",
+    bgCol: "bg-[#242220]",
+  },
+  {
+    key: "poderoso",
+    name: "PODEROSO",
+    description: "Força bruta, impacto pesado, resistência e vigor físico.",
+    tooltip:
+      "Rola dados de Poderoso ao desferir golpes devastadores com utensílios pesados, quebrar carapaças e bloquear impacto.",
+    badgeColor: "bg-[#9B2C2C] text-white",
+    borderCol: "border-[#9B2C2C]/40",
+    bgCol: "bg-[#242220]",
+  },
+  {
+    key: "preciso",
+    name: "PRECISO",
+    description: "Mira, cirurgia culinária, cortes milimétricos e foco.",
+    tooltip:
+      "Rola dados de Preciso ao mirar em partes e pontos fracos específicos do monstro ou executar cortes limpos de alta acurácia.",
+    badgeColor: "bg-[#E66826] text-white",
+    borderCol: "border-[#E66826]/40",
+    bgCol: "bg-[#242220]",
+  },
+  {
+    key: "sagaz",
+    name: "SAGAZ",
+    description: "Astúcia, armadilhas, percepção, intuição e conhecimento.",
+    tooltip:
+      "Rola dados de Sagaz ao armar emboscadas, ler o comportamento da presa, rastrear pegadas e manipular o ambiente.",
+    badgeColor: "bg-[#13335C] text-white",
+    borderCol: "border-[#173F73]/40",
+    bgCol: "bg-[#242220]",
+  },
+];
+
+
 interface LeftStatusColumnProps {
-  sheet: FeralSheet;
-  onChange: (updated: Partial<FeralSheet>) => void;
+  sheet: IFeral;
+  onChange: (updated: Partial<IFeral>) => void;
   onOpenCompendiumWithTopic?: (topic: string) => void;
 }
 
@@ -22,59 +74,9 @@ export const LeftStatusColumn: React.FC<LeftStatusColumnProps> = ({
 }) => {
   const [isCustomUtensilModalOpen, setIsCustomUtensilModalOpen] =
     useState(false);
-  const customUtensils = loadCustomUtensils();
-
-  // Styles definitions & metadata
-  const stylesList: Array<{
-    key: StyleKey;
-    name: string;
-    description: string;
-    tooltip: string;
-    badgeColor: string;
-    borderCol: string;
-    bgCol: string;
-  }> = [
-    {
-      key: "ligeiro",
-      name: "LIGEIRO",
-      description: "Velocidade, agilidade, esquiva e destreza acrobática.",
-      tooltip:
-        "Rola dados de Ligeiro ao agir com rapidez, esquivar de investidas de monstros ou saltar entre copas de árvores.",
-      badgeColor: "bg-[#16857A] text-white",
-      borderCol: "border-[#16857A]/40",
-      bgCol: "bg-[#242220]",
-    },
-    {
-      key: "poderoso",
-      name: "PODEROSO",
-      description: "Força bruta, impacto pesado, resistência e vigor físico.",
-      tooltip:
-        "Rola dados de Poderoso ao desferir golpes devastadores com utensílios pesados, quebrar carapaças e bloquear impacto.",
-      badgeColor: "bg-[#9B2C2C] text-white",
-      borderCol: "border-[#9B2C2C]/40",
-      bgCol: "bg-[#242220]",
-    },
-    {
-      key: "preciso",
-      name: "PRECISO",
-      description: "Mira, cirurgia culinária, cortes milimétricos e foco.",
-      tooltip:
-        "Rola dados de Preciso ao mirar em partes e pontos fracos específicos do monstro ou executar cortes limpos de alta acurácia.",
-      badgeColor: "bg-[#E66826] text-white",
-      borderCol: "border-[#E66826]/40",
-      bgCol: "bg-[#242220]",
-    },
-    {
-      key: "sagaz",
-      name: "SAGAZ",
-      description: "Astúcia, armadilhas, percepção, intuição e conhecimento.",
-      tooltip:
-        "Rola dados de Sagaz ao armar emboscadas, ler o comportamento da presa, rastrear pegadas e manipular o ambiente.",
-      badgeColor: "bg-[#13335C] text-white",
-      borderCol: "border-[#173F73]/40",
-      bgCol: "bg-[#242220]",
-    },
-  ];
+  const [customUtensils, setCustomUtensils] = useState<CustomUtensil[]>(
+    () => loadCustomUtensils(),
+  );
 
   // Helper to adjust a Style value
   const handleStyleChange = (key: StyleKey, delta: number) => {
@@ -179,6 +181,13 @@ export const LeftStatusColumn: React.FC<LeftStatusColumnProps> = ({
   };
 
   const handleCustomUtensilCreated = (custom: CustomUtensil) => {
+    setCustomUtensils((current) => {
+      const exists = current.some((item) => item.id === custom.id);
+      return exists
+        ? current.map((item) => (item.id === custom.id ? custom : item))
+        : [...current, custom];
+    });
+
     onChange({
       utensil: {
         type: custom.name,
@@ -649,20 +658,17 @@ export const LeftStatusColumn: React.FC<LeftStatusColumnProps> = ({
               type="button"
               onClick={() =>
                 onChange({
-                  packState: {
-                    ...sheet.packState,
-                    harmony: Math.max(0, (sheet.packState.harmony || 0) - 1),
-                  },
+                  harmony: Math.max(0, sheet.harmony - 1),
                 })
               }
-              disabled={(sheet.packState.harmony || 0) <= 0}
+              disabled={(sheet.harmony || 0) <= 0}
               className="w-8 h-8 rounded-lg bg-[#22201D] hover:bg-[#33302B] text-[#F5EFEB] font-bold text-sm flex items-center justify-center disabled:opacity-30 border border-[#383430]"
             >
               −
             </button>
 
             <span className="font-mono font-black text-2xl w-8 text-center text-[#F5EFEB]">
-              {sheet.packState.harmony ?? 3}
+              {sheet.harmony ?? 3}
             </span>
 
             <button
@@ -670,10 +676,7 @@ export const LeftStatusColumn: React.FC<LeftStatusColumnProps> = ({
               type="button"
               onClick={() =>
                 onChange({
-                  packState: {
-                    ...sheet.packState,
-                    harmony: (sheet.packState.harmony || 0) + 1,
-                  },
+                  harmony: sheet.harmony + 1,
                 })
               }
               className="w-8 h-8 rounded-lg bg-[#22201D] hover:bg-[#33302B] text-[#F5EFEB] font-bold text-sm flex items-center justify-center border border-[#383430]"
@@ -703,7 +706,7 @@ export const LeftStatusColumn: React.FC<LeftStatusColumnProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {stylesList.map((st) => {
+          {STYLES_LIST.map((st) => {
             const val = sheet.styles[st.key] || 1;
             return (
               <div

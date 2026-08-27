@@ -1,32 +1,33 @@
 import React, { useState } from "react";
-import {
-  FeralSheet,
-  CreatureSheet,
+import type {
+  IFeral,
+  ICreature,
+  IFeralCard,
+  ICreatureCard,
   MonsterStage,
-  FeralType,
-  CreatureType,
+  MonsterLineage,
+  UtensilKey,
 } from "./types";
 import {
-  loadAllFeralSummaries,
-  loadFeralSheet,
-  saveFeralSheet,
-  deleteFeralSheet,
-  duplicateFeralSheet,
-  renameFeralSheet,
-  loadAllCreatureSummaries,
-  loadCreatureSheet,
-  saveCreatureSheet,
-  deleteCreatureSheet,
-  duplicateCreatureSheet,
-  renameCreatureSheet,
+  loadAllFeralCards,
+  loadFeral,
+  saveFeral,
+  deleteFeral,
+  duplicateFeral,
+  renameFeral,
+  loadAllCreatureCards,
+  loadCreature,
+  saveCreature,
+  deleteCreature,
+  duplicateCreature,
+  renameCreature,
   exportFeralAsJSON,
   importFeralFromJSON,
   exportCreatureAsJSON,
   importCreatureFromJSON,
-  createNewCharacter,
 } from "./lib/storage";
 import { createDefaultCreature } from "./data/creatureData";
-import { UTENSILS_DATA, SPECIALTIES_DATA } from "./data/wilderfeastData";
+import { DEFAULT_NEW_FERAL, UTENSILS_DATA, SPECIALTIES_DATA } from "./data/wilderfeastData";
 import { useUndoRedo } from "./hooks/useUndoRedo";
 
 import { HubView } from "./pages/HubView";
@@ -48,6 +49,11 @@ import {
   ShieldAlert,
 } from "lucide-react";
 
+function createFeralDraft(): IFeral {
+  return JSON.parse(JSON.stringify(DEFAULT_NEW_FERAL)) as IFeral;
+}
+
+
 export function App() {
   // Navigation Module: 'hub' | 'feral' | 'creature'
   const [activeModule, setActiveModule] = useState<
@@ -56,16 +62,16 @@ export function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Summaries list
-  const [feralSummaries, setFeralSummaries] = useState<FeralType[]>(() =>
-    loadAllFeralSummaries(),
+  const [feralCards, setFeralCards] = useState<IFeralCard[]>(() =>
+    loadAllFeralCards(),
   );
-  const [creatureSummaries, setCreatureSummaries] = useState<CreatureType[]>(
-    () => loadAllCreatureSummaries(),
+  const [creatureCards, setCreatureCards] = useState<ICreatureCard[]>(() =>
+    loadAllCreatureCards(),
   );
 
-  // Undo/Redo state managers for active sheets
-  const feralHistory = useUndoRedo<FeralSheet>(createNewCharacter());
-  const creatureHistory = useUndoRedo<CreatureSheet>(
+  // Undo/Redo mantém somente a ficha completa atualmente aberta.
+  const feralHistory = useUndoRedo<IFeral>(createFeralDraft());
+  const creatureHistory = useUndoRedo<ICreature>(
     createDefaultCreature("Nova Criatura", "Molheiro", "Adulto"),
   );
 
@@ -75,9 +81,9 @@ export function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
-  const refreshSummaries = () => {
-    setFeralSummaries(loadAllFeralSummaries());
-    setCreatureSummaries(loadAllCreatureSummaries());
+  const refreshCards = () => {
+    setFeralCards(loadAllFeralCards());
+    setCreatureCards(loadAllCreatureCards());
   };
 
   const showToast = (msg: string) => {
@@ -89,7 +95,7 @@ export function App() {
   // HUB NAVIGATION & ACTIONS (FERAIS)
   // =========================================================
   const handleOpenFeral = (id: string) => {
-    const sheet = loadFeralSheet(id);
+    const sheet = loadFeral(id);
     if (sheet) {
       feralHistory.resetState(sheet);
       setActiveId(id);
@@ -102,9 +108,9 @@ export function App() {
     name: string,
     pronouns: string,
     specialty: string,
-    utensil: string,
+    utensil: UtensilKey,
   ) => {
-    const base = createNewCharacter();
+    const base = createFeralDraft();
     const utDef = UTENSILS_DATA[utensil];
     const specDef = SPECIALTIES_DATA[specialty];
 
@@ -115,10 +121,9 @@ export function App() {
         level: 1,
         cost: t.cost,
         description: t.description,
-        isStandard: false,
       })) || [];
 
-    const newSheet: FeralSheet = {
+    const newSheet: IFeral = {
       ...base,
       id: `feral-${Date.now()}`,
       identity: {
@@ -136,42 +141,41 @@ export function App() {
         currentDurability: utDef?.baseDurability ?? 20,
       },
       traits: [...base.traits, ...initialTraits],
-      lastSaved: new Date().toISOString(),
     };
 
-    saveFeralSheet(newSheet);
-    refreshSummaries();
+    saveFeral(newSheet);
+    refreshCards();
     handleOpenFeral(newSheet.id);
     showToast(`Ficha de "${name}" criada com sucesso!`);
   };
 
   const handleDuplicateFeral = (id: string) => {
-    const duplicated = duplicateFeralSheet(id);
+    const duplicated = duplicateFeral(id);
     if (duplicated) {
-      refreshSummaries();
-      showToast(`Ficha duplicada: "${duplicated.identity?.name || "Feral"}"`);
+      refreshCards();
+      showToast(`Ficha duplicada: "${duplicated.identity.name || "Feral"}"`);
     }
   };
 
   const handleRenameFeral = (id: string, newName: string) => {
-    renameFeralSheet(id, newName);
-    refreshSummaries();
+    renameFeral(id, newName);
+    refreshCards();
     showToast(`Ficha renomeada para "${newName}"`);
   };
 
   const handleDeleteFeral = (id: string) => {
-    deleteFeralSheet(id);
-    refreshSummaries();
+    deleteFeral(id);
+    refreshCards();
     showToast("Ficha de Feral excluída.");
   };
 
   const handleImportFeral = (jsonString: string) => {
     const imported = importFeralFromJSON(jsonString);
     if (imported) {
-      refreshSummaries();
+      refreshCards();
       handleOpenFeral(imported.id);
       showToast(
-        `Ficha importada com sucesso: "${imported.identity?.name || "Feral"}"`,
+        `Ficha importada com sucesso: "${imported.identity.name || "Feral"}"`,
       );
     } else {
       showToast("Erro ao importar JSON. Verifique a formatação do arquivo.");
@@ -182,7 +186,7 @@ export function App() {
   // HUB NAVIGATION & ACTIONS (CRIATURAS)
   // =========================================================
   const handleOpenCreature = (id: string) => {
-    const sheet = loadCreatureSheet(id);
+    const sheet = loadCreature(id);
     if (sheet) {
       creatureHistory.resetState(sheet);
       setActiveId(id);
@@ -193,43 +197,43 @@ export function App() {
 
   const handleCreateCreature = (
     name: string,
-    lineage: string,
+    lineage: MonsterLineage,
     stage: MonsterStage,
   ) => {
     const newMonster = createDefaultCreature(name, lineage, stage);
-    saveCreatureSheet(newMonster);
-    refreshSummaries();
+    saveCreature(newMonster);
+    refreshCards();
     handleOpenCreature(newMonster.id);
     showToast(`Monstro "${name}" criado com sucesso!`);
   };
 
   const handleDuplicateCreature = (id: string) => {
-    const duplicated = duplicateCreatureSheet(id);
+    const duplicated = duplicateCreature(id);
     if (duplicated) {
-      refreshSummaries();
-      showToast(`Criatura duplicada: "${duplicated.name || "Criatura"}"`);
+      refreshCards();
+      showToast(`Criatura duplicada: "${duplicated.identity.name || "Criatura"}"`);
     }
   };
 
   const handleRenameCreature = (id: string, newName: string) => {
-    renameCreatureSheet(id, newName);
-    refreshSummaries();
+    renameCreature(id, newName);
+    refreshCards();
     showToast(`Criatura renomeada para "${newName}"`);
   };
 
   const handleDeleteCreature = (id: string) => {
-    deleteCreatureSheet(id);
-    refreshSummaries();
+    deleteCreature(id);
+    refreshCards();
     showToast("Criatura excluída do bestiário.");
   };
 
   const handleImportCreature = (jsonString: string) => {
     const imported = importCreatureFromJSON(jsonString);
     if (imported) {
-      refreshSummaries();
+      refreshCards();
       handleOpenCreature(imported.id);
       showToast(
-        `Criatura importada com sucesso: "${imported.name || "Criatura"}"`,
+        `Criatura importada com sucesso: "${imported.identity.name || "Criatura"}"`,
       );
     } else {
       showToast("Erro ao importar JSON da criatura.");
@@ -239,34 +243,26 @@ export function App() {
   // =========================================================
   // SHEET EDIT HANDLERS (AUTOSAVE WITH PERSISTENCE)
   // =========================================================
-  const handleFeralChange = (updated: Partial<FeralSheet>) => {
-    const prev = feralHistory.state || createNewCharacter();
-    const nextState = {
-      ...prev,
-      ...updated,
-      lastSaved: new Date().toISOString(),
-    };
+  const handleFeralChange = (updated: Partial<IFeral>) => {
+    const prev = feralHistory.state || createFeralDraft();
+    const nextState: IFeral = { ...prev, ...updated };
     feralHistory.setState(nextState);
-    saveFeralSheet(nextState);
+    saveFeral(nextState);
   };
 
-  const handleCreatureChange = (updated: Partial<CreatureSheet>) => {
+  const handleCreatureChange = (updated: Partial<ICreature>) => {
     const prev =
       creatureHistory.state ||
       createDefaultCreature("Nova Criatura", "Molheiro", "Adulto");
-    const nextState = {
-      ...prev,
-      ...updated,
-      lastSaved: new Date().toISOString(),
-    };
+    const nextState: ICreature = { ...prev, ...updated };
     creatureHistory.setState(nextState);
-    saveCreatureSheet(nextState);
+    saveCreature(nextState);
   };
 
   const handleClearSheet = () => {
     if (activeModule === "feral") {
-      const current = feralHistory.state || createNewCharacter();
-      const cleared = createNewCharacter();
+      const current = feralHistory.state || createFeralDraft();
+      const cleared = createFeralDraft();
       cleared.id = current.id || cleared.id;
       if (current.identity) {
         cleared.identity.name = current.identity.name || "";
@@ -277,7 +273,8 @@ export function App() {
         cleared.utensil.type = current.utensil.type || "Cutelo";
       }
       feralHistory.setImmediate(cleared);
-      saveFeralSheet(cleared);
+      saveFeral(cleared);
+      refreshCards();
       showToast(
         "Ficha limpa! Você pode desfazer esta ação pelo botão Desfazer.",
       );
@@ -286,13 +283,14 @@ export function App() {
         creatureHistory.state ||
         createDefaultCreature("Nova Criatura", "Molheiro", "Adulto");
       const cleared = createDefaultCreature(
-        current.name || "Nova Criatura",
-        current.lineage || "Molheiro",
-        current.stage || "Adulto",
+        current.identity.name || "Nova Criatura",
+        current.identity.lineage || "Molheiro",
+        current.identity.stage || "Adulto",
       );
       cleared.id = current.id || cleared.id;
       creatureHistory.setImmediate(cleared);
-      saveCreatureSheet(cleared);
+      saveCreature(cleared);
+      refreshCards();
       showToast(
         "Criatura restaurada ao padrão! Você pode desfazer pelo botão Desfazer.",
       );
@@ -310,8 +308,8 @@ export function App() {
       const element = document.getElementById(elementId);
       const fileName =
         activeModule === "feral"
-          ? `Wilderfeast_Feral_${feralHistory.state?.identity?.name || "SemNome"}.pdf`
-          : `Wilderfeast_Criatura_${creatureHistory.state?.name || "SemNome"}.pdf`;
+          ? `Wilderfeast_Feral_${feralHistory.state?.identity.name || "SemNome"}.pdf`
+          : `Wilderfeast_Criatura_${creatureHistory.state?.identity.name || "SemNome"}.pdf`;
 
       if (element) {
         const { exportElementToPDF } = await import("./lib/pdfExport");
@@ -338,7 +336,7 @@ export function App() {
 
   const handleExportCurrentJSON = () => {
     if (activeModule === "feral") {
-      const sheet = feralHistory.state || createNewCharacter();
+      const sheet = feralHistory.state || createFeralDraft();
       exportFeralAsJSON(sheet);
       showToast("Ficha de Feral exportada em JSON.");
     } else if (activeModule === "creature") {
@@ -350,7 +348,7 @@ export function App() {
     }
   };
 
-  const currentFeral = feralHistory.state || createNewCharacter();
+  const currentFeral = feralHistory.state || createFeralDraft();
   const currentCreature =
     creatureHistory.state ||
     createDefaultCreature("Nova Criatura", "Molheiro", "Adulto");
@@ -370,8 +368,8 @@ export function App() {
       {/* ========================================================= */}
       {activeModule === "hub" && (
         <HubView
-          feralSummaries={feralSummaries}
-          creatureSummaries={creatureSummaries}
+          feralCards={feralCards}
+          creatureCards={creatureCards}
           onOpenFeral={handleOpenFeral}
           onCreateFeral={handleCreateFeral}
           onDuplicateFeral={handleDuplicateFeral}
@@ -396,7 +394,7 @@ export function App() {
                 id="btn-back-hub"
                 type="button"
                 onClick={() => {
-                  refreshSummaries();
+                  refreshCards();
                   setActiveModule("hub");
                 }}
                 className="px-3 py-1.5 rounded-lg bg-[#242220] hover:bg-[#2E2B28] text-[#89B5F7] font-bold text-xs flex items-center gap-1.5 border border-[#383430] transition-colors cursor-pointer"
@@ -505,7 +503,7 @@ export function App() {
                 id="btn-back-hub-creature"
                 type="button"
                 onClick={() => {
-                  refreshSummaries();
+                  refreshCards();
                   setActiveModule("hub");
                 }}
                 className="px-3 py-1.5 rounded-lg bg-[#242220] hover:bg-[#2E2B28] text-[#89B5F7] font-bold text-xs flex items-center gap-1.5 border border-[#383430] transition-colors cursor-pointer"
@@ -516,10 +514,10 @@ export function App() {
 
               <div className="hidden sm:flex items-center gap-2">
                 <span className="font-serif font-black text-sm text-[#89B5F7] truncate max-w-[200px]">
-                  {currentCreature.name || "Criatura Sem Nome"}
+                  {currentCreature.identity.name || "Criatura Sem Nome"}
                 </span>
                 <span className="text-xs text-[#B0A497]">
-                  • {currentCreature.lineage} ({currentCreature.stage})
+                  • {currentCreature.identity.lineage} ({currentCreature.identity.stage})
                 </span>
                 <span className="text-[11px] font-semibold text-[#38C2B3] flex items-center gap-1 ml-2">
                   <Check className="w-3 h-3" />

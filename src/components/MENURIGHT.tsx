@@ -13,12 +13,12 @@ import {
   Zap,
   Info,
 } from "lucide-react";
-import { FeralSheet, SkillKey } from "../types";
+import type { IFeral, ICondition, ITechnique, ITrait, SkillKey, JournalNote } from "../types";
 import { InfoTooltip } from "./InfoTooltip";
 
 interface RightDetailColumnProps {
-  sheet: FeralSheet;
-  onChange: (updated: Partial<FeralSheet>) => void;
+  sheet: IFeral;
+  onChange: (updated: Partial<IFeral>) => void;
   onOpenCompendium?: () => void;
 }
 
@@ -52,8 +52,6 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
     level: number;
     cost: string;
     description: string;
-    notes?: string;
-    isStandard?: boolean;
   } | null>(null);
 
   const [editingBeast, setEditingBeast] = useState<{
@@ -73,7 +71,6 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
     date: string;
     ingredients: string;
     permanentBenefit: string;
-    packNotes?: string;
   } | null>(null);
 
   const [newNoteTitle, setNewNoteTitle] = useState("");
@@ -309,7 +306,7 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
       title: newNoteTitle.trim() || "Anotação de Caçada",
       content: newNoteContent.trim(),
       category: "Sessão",
-      date: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     onChange({
       notes: [newNote, ...sheet.notes],
