@@ -1,3 +1,7 @@
+// ============================================================================
+// ESTILOS & HABILIDADES
+// ============================================================================
+
 export type StyleKey = "ligeiro" | "poderoso" | "preciso" | "sagaz";
 
 export interface IStyle {
@@ -5,27 +9,6 @@ export interface IStyle {
   poderoso: number;
   preciso: number;
   sagaz: number;
-}
-
-export type UtensilKey =
-  | "Barbante"
-  | "Cutelo"
-  | "Espeto"
-  | "Luvas"
-  | "Maçarico"
-  | "Panela"
-  | string;
-
-export interface IUtensil {
-  type: UtensilKey;
-  customName: string;
-  reach: number;
-  currentDurability: number;
-  maxDurability: number;
-  notes?: string;
-  isCustom?: boolean;
-  style1?: StyleKey;
-  style2?: StyleKey;
 }
 
 export type SkillKey =
@@ -57,6 +40,47 @@ export interface ISkill {
   procurar: number;
 }
 
+// ============================================================================
+// UTENSÍLIOS
+// ============================================================================
+
+export type UtensilKey =
+  | "Barbante"
+  | "Cutelo"
+  | "Espeto"
+  | "Luvas"
+  | "Maçarico"
+  | "Panela"
+  | string;
+
+export interface IUtensil {
+  type: UtensilKey;
+  customName: string;
+  reach: number;
+  currentDurability: number;
+  maxDurability: number;
+  notes?: string;
+  isCustom?: boolean;
+  style1?: StyleKey;
+  style2?: StyleKey;
+}
+
+export interface CustomUtensil {
+  id: string;
+  name: string;
+  description: string;
+  style1: StyleKey;
+  style2: StyleKey;
+  reach: number;
+  maxDurability: number;
+  techniques: Array<ITechnique>;
+  personalitySuggestions?: string[];
+}
+
+// ============================================================================
+// ENTIDADES
+// ============================================================================
+
 export interface ITechnique {
   id: string;
   name: string;
@@ -73,9 +97,6 @@ export interface ITrait {
   level: number;
   cost: string;
   description: string;
-  notes?: string;
-  isStandard?: boolean;
-  isMonstrous?: boolean;
 }
 
 export interface ICondition {
@@ -86,12 +107,20 @@ export interface ICondition {
   notes?: string;
 }
 
-// FERAL SHEET
+export interface JournalNote {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  createdAt: string;
+}
+
+// ============================================================================
+// FICHA DE FERAL
+// ============================================================================
+
 export interface IFeral {
   id: string;
-  version: number;
-  lastSaved: string;
-  harmony: number;
   identity: {
     name: string;
     pronouns: string;
@@ -101,15 +130,16 @@ export interface IFeral {
     avatarUrl?: string;
     notes?: string;
   };
+  harmony: number;
+  vigor: {
+    current: number;
+    max: number;
+  };
   styles: IStyle;
   skills: ISkill;
   utensil: IUtensil;
   techniques: Array<ITechnique>;
   traits: Array<ITrait>;
-  vigor: {
-    current: number;
-    max: number;
-  };
   conditions: Array<ICondition>;
   familiarBeasts: Array<{
     id: string;
@@ -130,42 +160,22 @@ export interface IFeral {
     ingredients?: string;
     permanentBenefit: string;
   }>;
-  connection?: {
-    partnerName: string;
-    dishReference: string;
-    description: string;
-  };
-  notesList: JournalNote[];
-  notes: Array<{
-    id: string;
-    title: string;
-    content: string;
-    category?: string;
-    date?: string;
-  }>;
+  notes: Array<JournalNote>;
 }
 
-export interface CustomUtensil {
+export interface IFeralCard {
   id: string;
   name: string;
-  description: string;
-  style1: StyleKey;
-  style2: StyleKey;
-  reach: number;
-  maxDurability: number;
-  techniques: Array<ITechnique>;
-  personalitySuggestions?: string[];
+  avatarUrl?: string;
+  specialty: string;
+  utensil: string;
+  lastSaved: string;
+  pronouns?: string;
 }
 
-export interface JournalNote {
-  id: string;
-  title: string;
-  category: string;
-  content: string;
-  createdAt: string;
-}
-
-// CREATURE SHEET
+// ============================================================================
+// FICHA DE CRIATURA
+// ============================================================================
 
 export type MonsterStage = "Jovem" | "Adulto" | "Ancião" | "Zênite";
 
@@ -180,117 +190,53 @@ export type MonsterLineage =
   | "Pivoteiro"
   | string;
 
-export type PartCategory = "Arma" | "Ponto Fraco" | "Coisa Esquisita";
+export type PartCategory = "Passiva" | "Alcance" | "Natural" | "Outro";
 
-export interface CreaturePart {
+export interface ICreaturePart {
   id: string;
   name: string;
   categories: PartCategory[];
-  baseMaxDurability: number; // e.g. 10, 20, 30
-  currentDurability: number;
-
-  // Se Arma
-  weaponReach?: number;
-  weaponStyle?: StyleKey;
-  weaponSkill?: SkillKey;
-  weaponEffect?: string;
-
-  // Se Ponto Fraco
-  weakPointEffect?: string;
-
-  specialFeatureEffect?: string;
-
-  // Efeito se quebrada (geral/obrigatório para reproduzir bestiário)
-  brokenEffect: string;
-  notes?: string;
+  range?: number;
+  skills?: SkillKey;
+  styles?: StyleKey;
+  durability: {
+    current: number;
+    max: number;
+  };
+  description: string;
+  whenBroken?: string;
 }
 
-export interface CreatureSpecialAction {
+export interface ICreature {
   id: string;
-  name: string;
-  type: "Passiva" | "Ação" | "Reação" | "Outro";
-  cost:
-    | "Livre"
-    | "1 Ação"
-    | "2 Ações"
-    | "3 Ações"
-    | "Vigor"
-    | "Sucesso"
-    | "Personalizado";
-  customCost?: string;
-  description: string;
-}
-
-export interface CreatureSheet {
-  id: string;
-  version: number;
-  name: string;
-  lineage: MonsterLineage;
-  stage: MonsterStage;
-  sizeConcept: string;
-  description: string;
-  avatarUrl?: string;
-  lastSaved: string;
-
+  identity: {
+    name: string;
+    lineage: MonsterLineage;
+    stage: MonsterStage;
+    size: number;
+    description: string;
+    avatarUrl?: string;
+  };
   vigor: {
     current: number;
     max: number;
   };
-
-  baseStyles: IStyle;
-
+  styles: IStyle;
   skills: ISkill;
-
   traits: Array<ITrait>;
-
   additionalTraits: Array<{
     id: string;
     name: string;
-    level?: number;
     description: string;
   }>;
-
-  diet: {
-    type: "Generalista" | "Seletiva" | "Personalizada" | string;
-    description: string;
-    examples: string;
-  };
-
-  habitat: {
-    region: string; // e.g. "Montanhas (Lakkarakku)"
-    areas: string; // e.g. "Fundão, Antigo Sen Che, Bandejargênteas"
-    notes: string;
-  };
-
-  // Comportamento & Instintos
-  behavior: {
-    targetSelection: string; // "Se nenhuma criatura estiver Exposta, mire..."
-    instincts: string; // "Seu instinto é..."
-    woundedPhase?: string; // Comportamento quando ferido
-    specialRules: Array<{ id: string; name: string; rule: string }>;
-  };
-
-  // Partes Dinâmicas
-  parts: CreaturePart[];
-
-  // Habilidades Especiais / Mecânicas
-  specialActions: CreatureSpecialAction[];
-
+  parts: Array<ICreaturePart>;
+  diet: string;
+  habitat: string;
+  behavior: string; // Comportamento
   conditions: Array<ICondition>;
 }
 
-// SHEET SUMMARIES FOR HUB
-export interface FeralType {
-  id: string;
-  name: string;
-  avatarUrl?: string;
-  specialty: string;
-  utensil: string;
-  lastSaved: string;
-  pronouns?: string;
-}
-
-export interface CreatureType {
+export interface ICreatureCard {
   id: string;
   name: string;
   description: string;
