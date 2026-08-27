@@ -94,7 +94,7 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultRange: 1,
     defaultMaxDurability: 20,
     brokenDescription:
-      "Se estiver quebrado, alcance adicional de Técnicas é perdido, a Parte causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+      "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
   },
   {
     id: "Cutelo",
@@ -102,7 +102,7 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultRange: 1,
     defaultMaxDurability: 20,
     brokenDescription:
-      "Se estiver quebrado, alcance adicional de Técnicas é perdido, a Parte causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+      "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
   },
   {
     id: "Espeto",
@@ -110,7 +110,7 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultRange: 1,
     defaultMaxDurability: 20,
     brokenDescription:
-      "Se estiver quebrado, alcance adicional de Técnicas é perdido, a Parte causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+      "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
   },
   {
     id: "Luvas",
@@ -118,7 +118,7 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultRange: 1,
     defaultMaxDurability: 20,
     brokenDescription:
-      "Se estiver quebrado, alcance adicional de Técnicas é perdido, a Parte causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+      "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
   },
   {
     id: "Maçarico",
@@ -126,7 +126,7 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultRange: 1,
     defaultMaxDurability: 20,
     brokenDescription:
-      "Se estiver quebrado, alcance adicional de Técnicas é perdido, a Parte causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+      "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
   },
   {
     id: "Panela",
@@ -134,7 +134,7 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultRange: 1,
     defaultMaxDurability: 20,
     brokenDescription:
-      "Se estiver quebrado, alcance adicional de Técnicas é perdido, a Parte causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+      "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
   },
 ];
 
@@ -1703,7 +1703,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Botabo",
     lineage: "Pivoteiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "2 - 4 metros de altura",
     description:
       "Um monstro da Linhagem dos Pivoteiros. Tem 2 metros de altura sobre as quatro patas, e o dobro disso ou mais se estiver de pé.",
     vigor: {
@@ -1824,7 +1824,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Chamig",
     lineage: "Padeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "30 metros de comprimento",
     description:
       "Um monstro da Linhagem dos Padeiros. Tem 30 metros de comprimento.",
     vigor: {
@@ -1899,8 +1899,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "PÉS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 30,
+          max: 30,
         },
         description:
           "PÉS. Alcance: 1 (GOLPEAR PODEROSO). Passiva: Você não pode atacar criaturas que estejam em seu CASCO com essa PARTE. Se você se Mover, deve Atacar qualquer criatura no Chão com essa PARTE sem gastar Ações.                 30 ◆ Se Quebrados: Alcance: 1 (GOLPEAR PODEROSO ). Essa PARTE causa metade do Dano. Essa PARTE mantém seu efeito Passivo.",
@@ -1926,7 +1926,8 @@ export const creatureDefinitions: ICreature[] = [
     lineage: "Churrasqueiro",
     stage: "Adulto",
     sizeDescription: "de 4 metros de altura",
-    description: "",
+    description:
+      "Com exceção dos gigantes, Fagurilas são os maiores símios encontrados na Terra Una.",
     vigor: {
       current: 30,
       max: 30,
@@ -1990,8 +1991,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "PUNHOS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "PUNHOS. Alcance: 1 (GOLPEAR PODEROSO ou GOLPEAR LIGEIRO). Passiva: Se você conseguir Atacar uma criatura com essa PARTE, ela fica Presa.                                                                             20 ◆ Se Quebrados: Alcance: 1 (GOLPEAR PODEROSO ). Essa PARTE causa metade do Dano.",
@@ -2017,7 +2018,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Gelaranha Asig",
     lineage: "Amontoeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "4 metros de altura",
     description:
       "Um monstro da Linhagem dos Amontoeiros. Tem 4 metros de altura.",
     vigor: {
@@ -2126,7 +2127,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Golanuvem",
     lineage: "Jardineiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "18 metros de altura",
     description:
       "Um monstro da Linhagem dos Jardineiros. Tem 18 metros de altura.",
     vigor: {
@@ -2205,8 +2206,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "PÉS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "PÉS. Alcance: 1 (GOLPEAR PRECISO). Passiva: Se Atacar com essa PARTE e acertar, você também causa Dano [A] a todas as criaturas da sua escolha que estiverem a 0 Pernada do seu alvo.                                    20 ◆ Se Quebrados: Alcance: 1 (GOLPEAR PRECISO ). Essa PARTE causa metade do Dano.",
@@ -2250,7 +2251,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Hagsechu",
     lineage: "Churrasqueiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "5 metros de comprimento",
     description:
       "Um monstro da Linhagem dos Churrasqueiros. Tem 5 metros de comprimento em média, incluindo a cauda.",
     vigor: {
@@ -2337,8 +2338,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "PERNAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "PERNAS. Alcance: 1 (GOLPEAR SAGAZ). Passiva: Se você conseguir Atacar uma criatura com essa PARTE, ela fica Presa.                                                                                                            20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR SAGAZ ). Essa PARTE causa metade do Dano.",
@@ -2363,7 +2364,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Hutangwa",
     lineage: "Churrasqueiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "3 metros de envergadura média",
     description:
       "Um monstro da Linhagem dos Churrasqueiros. Tem 3 metros de envergadura média.",
     vigor: {
@@ -2418,6 +2419,18 @@ export const creatureDefinitions: ICreature[] = [
     parts: [
       {
         id: 1,
+        name: "ASAS",
+        durability: {
+          current: 20,
+          max: 20,
+        },
+        description: "Essa PARTE não tem efeito adicional.",
+        broken: {
+          description: "Você perde VOAR 3",
+        },
+      },
+      {
+        id: 2,
         name: "BICO",
         durability: {
           current: 10,
@@ -2436,11 +2449,11 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
       {
-        id: 2,
+        id: 3,
         name: "GARRAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "GARRAS. Alcance: 1 (GOLPEAR LIGEIRO). Passiva: Se você Atacar uma criatura com essa PARTE e acertar, ela fica Presa.                                                                                                20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR LIGEIRO ). Essa PARTE causa metade do Dano.",
@@ -2465,8 +2478,8 @@ export const creatureDefinitions: ICreature[] = [
     name: "Jama-Jama",
     lineage: "Molheiro",
     stage: "Adulto",
-    sizeDescription: "",
-    description: "",
+    sizeDescription: "3 metros de comprimento",
+    description: "Uma criatura amfíbia de pele rochosa.",
     vigor: {
       current: 30,
       max: 30,
@@ -2531,10 +2544,22 @@ export const creatureDefinitions: ICreature[] = [
     parts: [
       {
         id: 1,
+        name: "BARRIGA",
+        durability: {
+          current: 10,
+          max: 10,
+        },
+        description: "Essa PARTE não tem efeito adicional.",
+        broken: {
+          description: "Você fica Exposto",
+        },
+      },
+      {
+        id: 2,
         name: "LÍNGUA",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "LÍNGUA. Alcance: 3 (AGARRAR PRECISO). Passiva: Se você Atacar com essa PARTE e acertar, você pode puxar seu alvo para 1 Pernada mais perto.                                                                          20 ◆ Se Quebrada: Alcance: 1 (GOLPEAR PRECISO ). Essa PARTE causa metade do Dano.",
@@ -2549,7 +2574,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
       {
-        id: 2,
+        id: 3,
         name: "MANDÍBULA",
         durability: {
           current: 20,
@@ -2578,7 +2603,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Kakwari",
     lineage: "Açougueiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "4 metros de altura",
     description:
       "Um monstro da Linhagem dos Açougueiros. Tem 4 metros de altura, em média.",
     vigor: {
@@ -2685,7 +2710,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Kala-Kala",
     lineage: "Pivoteiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "2 metros de comprimento",
     description:
       "Um monstro da Linhagem dos Pivoteiros. Tem 2 metros de comprimento, em média.",
     vigor: {
@@ -2738,8 +2763,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "LÍNGUA",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "LÍNGUA. Alcance: 3 (AGARRAR LIGEIRO). Passiva: Se você Atacar uma criatura com essa PARTE e acertar, ela fica Presa. Você não pode Atacar enquanto estiver segurando uma criatura Presa, mas no início de cada um dos seus turnos ela fica Fadigada, e no início de cada um dos seus turnos completos, fica Fadigada 5.                         20 ◆Se Quebrada: Alcance: 1 (AGARRAR LIGEIRO). Essa PARTE causa metade do Dano.",
@@ -2755,6 +2780,18 @@ export const creatureDefinitions: ICreature[] = [
       },
       {
         id: 2,
+        name: "PERNAS",
+        durability: {
+          current: 20,
+          max: 20,
+        },
+        description: "Essa Parte não tem efeitos adicionais.",
+        broken: {
+          description: "Você perde 1 nível de REFLEXOS NATURAIS.",
+        },
+      },
+      {
+        id: 3,
         name: "SACOS VOCAIS",
         durability: {
           current: 10,
@@ -2777,7 +2814,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Ko-Ketak",
     lineage: "Jardineiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "2 metros de altura",
     description:
       "Um monstro da Linhagem dos Jardineiros. Tem 2 metros de altura, em média.",
     vigor: {
@@ -2892,7 +2929,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Lapu-Lapu",
     lineage: "Açougueiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "1,5 metros de altura",
     description:
       "Um monstro da Linhagem dos Açougueiros. Tem 3 metros de altura, em média.",
     vigor: {
@@ -2945,8 +2982,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "INCISIVOS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "INCISIVOS. Alcance: 1 (GOLPEAR LIGEIRO). Passiva: Se você causar Dano com essa PARTE, em vez disso, cause Dano à PARTE.                                                                                                               20 ◆ Se Quebrados: Alcance: 1 (GOLPEAR LIGEIRO ). Essa PARTE causa metade do Dano.",
@@ -2978,8 +3015,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "PERNAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "PERNAS. Alcance: 1 (GOLPEAR PODEROSO). Passiva: Depois de ficar Ferido, mova qualquer criatura 1 Pernada de distância. Então, mova outra criatura 2 Pernadas de distância. Então, mova outra criatura 3 Pernadas de distância.       20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR PODEROSO ). Essa PARTE causa metade do Dano.",
@@ -3004,7 +3041,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Lobo-Diadema",
     lineage: "Açougueiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "3 metros de altura",
     description:
       "Um monstro da Linhagem dos Açougueiros. Tem a média de 3 metros até os ombros.",
     vigor: {
@@ -3058,6 +3095,10 @@ export const creatureDefinitions: ICreature[] = [
         traitId: 73,
         level: 1,
       },
+      {
+        traitId: 60,
+        level: 1,
+      },
     ],
     conditions: [],
     parts: [
@@ -3065,8 +3106,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "DENTES",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "DENTES. Alcance: 1 (GOLPEAR PRECISO). Passiva: Se você causar Dano à Parte em uma PARTE quebrada, seu alvo fica Exposto.                                                                                                20 ◆ Se Quebrados: Alcance: 1 (GOLPEAR PRECISO ). Essa PARTE causa metade do Dano.",
@@ -3111,7 +3152,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Lotangwa",
     lineage: "Amontoeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "6 metros de envergadura média",
     description:
       "Um monstro da Linhagem dos Amontoeiros, com 6 metros de envergadura, em média.",
     vigor: {
@@ -3164,8 +3205,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "ASAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "ASAS. Alcance: 1 (GOLPEAR LIGEIRO). Passiva: Ao final de cada turno completo, você pode se Mover para Mudar o Terreno sem gastar nenhuma das suas Ações.                                                                       20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR LIGEIRO ). Essa PARTE causa metade do Dano.",
@@ -3198,6 +3239,18 @@ export const creatureDefinitions: ICreature[] = [
             "Alcance: 1 (GOLPEAR PODEROSO ). Essa PARTE causa metade do Dano. 30",
         },
       },
+      {
+        id: 3,
+        name: "BICO",
+        durability: {
+          current: 20,
+          max: 20,
+        },
+        description: "Essa PARTE não tem efeito adicional.",
+        broken: {
+          description: "Você perde NADAR",
+        },
+      },
     ],
     diet: "• Monstros aquáticos (Goby Guelrabença, Lulesguicho, Peixe-bobo Marinho)",
     habitat: "• Praias",
@@ -3209,7 +3262,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Mammudo",
     lineage: "Padeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "3 metros de altura",
     description:
       "Um monstro da Linhagem dos Padeiros. Tem 3 metros de altura, em média.",
     vigor: {
@@ -3319,8 +3372,9 @@ export const creatureDefinitions: ICreature[] = [
     name: "Mongpo",
     lineage: "Molheiro",
     stage: "Adulto",
-    sizeDescription: "",
-    description: "",
+    sizeDescription: "2 metros de altura em média",
+    description:
+      "O Mongpo caminha pelo deserto, sugando o ar frio e noturno pelo seu nariz enorme.",
     vigor: {
       current: 30,
       max: 30,
@@ -3404,8 +3458,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "NARIZ",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "NARIZ. Alcance: 2 (ATIRAR SAGAZ). Passiva: até o início do seu próximo turno, a criatura atingida por essa PARTE deve gastar 1 Ação adicional para Mover-se.                                                                      20 ◆ Se Quebrado: Alcance: 1 (ATIRAR SAGAZ ). Essa PARTE causa metade do Dano.",
@@ -3430,7 +3484,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Myotak",
     lineage: "Padeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "4 metros de altura em média",
     description:
       "Um monstro da Linhagem dos Padeiros. Tem 4 metros de altura em média.",
     vigor: {
@@ -3518,8 +3572,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "CHIFRES",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "CHIFRES. Alcance: 1 (GOLPEAR PODEROSO). Passiva: Você tem Vantagem para Atacar com essa PARTE após fazer uma INVESTIDA.                                                                                                    20 ◆S e Quebrados: Alcance: 1 (GOLPEAR PODEROSO). Essa PARTE causa metade do Dano.",
@@ -3541,7 +3595,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Onagung",
     lineage: "Molheiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "Varia de 1 a 3 metros de altura",
     description:
       "Um monstro da Linhagem dos Molheiros. Aparecem em uma grande variedade de tamanhos.",
     vigor: {
@@ -3598,8 +3652,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "GELECA",
         durability: {
-          current: 20,
-          max: 20,
+          current: 80,
+          max: 80,
         },
         description:
           "GELECA. Alcance: 2 (ATIRAR SAGAZ). Passiva: Se você ATIRAR com essa PARTE, uma das suas outras PARTES perde 1d6 de Durabilidade.                                                                                80 ◆ Se Quebrado: Você morre.",
@@ -3610,6 +3664,20 @@ export const creatureDefinitions: ICreature[] = [
         },
         broken: {
           description: "Você morre.",
+        },
+      },
+      {
+        id: 2,
+        name: "PARTES ADICIONAIS",
+        durability: {
+          current: 0,
+          max: 0,
+        },
+        description:
+          "PARTES ADICIONAIS. Se estiver digerindo uma criatura, você tem todas as PARTES dele. Se estiver digerindo várias criaturas, você tem uma PARTE de cada um deles.",
+        broken: {
+          description:
+            "Depende das PARTES que você tem. Se você não tiver PARTES, você morre.",
         },
       },
     ],
@@ -3623,7 +3691,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Peliçalce",
     lineage: "Jardineiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "3 metros de altura em média",
     description:
       "Um monstro da Linhagem dos Jardineiros. Tem, em média, 3 metros de altura até os ombros.",
     vigor: {
@@ -3676,8 +3744,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "CHIFRES",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "CHIFRES. Alcance: 1 (GOLPEAR LIGEIRO). Passiva: Se você usar INVESTIDA, dobre o Dano causado à outra criatura, mas não a si mesmo. Além disso, você tem Vantagem ao atacar até o fim do seu turno.                              20 ◆ Se Quebrados: Alcance: 1 (GOLPEAR LIGEIRO ). Essa PARTE causa metade do Dano.",
@@ -3721,7 +3789,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Pitangwa",
     lineage: "Padeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "3 metros de envergadura média",
     description:
       "Um monstro da Linhagem dos Padeiros. Tem uma envergadura média de 3 metros.",
     vigor: {
@@ -3812,8 +3880,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "BICO",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "BICO. Alcance: 1 (GOLPEAR PRECISO). Passiva: Se você causar Dano à Parte em uma PARTE quebrada, seu alvo fica Atordoado.                                                                                              20 ◆ Se Quebrado: Alcance: 1 (GOLPEAR PRECISO ). Esta PARTE causa metade do Dano.",
@@ -3902,8 +3970,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "GARRAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "GARRAS. Alcance: 1 (GOLPEAR PRECISO ou GOLPEAR LIGEIRO). Aumente o Alcance desta PARTE em 1 em sua forma longa.                                                                                              20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR PRECISO ). Esta PARTE causa metade do Dano.",
@@ -3921,8 +3989,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "PRESAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 10,
+          max: 10,
         },
         description:
           "PRESAS. Alcance: 1 (GOLPEAR PODEROSO). ◆ Se Quebradas: Alcance: 1 (GOLPEAR PODEROSO ). Esta PARTE causa metade do Dano. Você perde 10 1 nível de ESCAVAR.",
@@ -4265,8 +4333,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "DENTES",
         durability: {
-          current: 1,
-          max: 1,
+          current: 10,
+          max: 10,
         },
         description:
           "DENTES. Alcance: 1 (GOLPEAR). Passiva: Enquanto estiver Escondido, outras criaturas não sabem a que distância estão de você, e você não anuncia o que está fazendo quando gastar Ações para Mover ou Preparar. ◆ Se Quebrados: Alcance: 1 (GOLPEAR ). Esta PARTE causa metade do Dano. Você perde VENENO. Cada 10 vez que esta PARTE sofrer Dano à Parte depois de quebrada, você perde 1 nível de BIOLUMINESCÊNCIA. Na quarta vez que esta PARTE sofrer Dano à Parte depois de quebrada (isto é, quando tiver perdido todos os níveis de BIOLUMINESCÊNCIA), você perde CAMUFLAGEM.",
@@ -4287,9 +4355,10 @@ export const creatureDefinitions: ICreature[] = [
     name: "Shakoi",
     lineage: "Peixeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription:
+      "Entre 3 e 6 metros de comprimento (não contando os bicos)",
     description:
-      "Um monstro da Linhagem dos Peixeiros. Os machos têm em média 3 metros de comprimento, e as fêmeas, até 6 (não contando seus",
+      "Um monstro da Linhagem dos Peixeiros. Os machos têm em média 3 metros de comprimento, e as fêmeas, até 6 (não contando seus bicos).",
     vigor: {
       current: 30,
       max: 30,
@@ -4344,8 +4413,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "BICO",
         durability: {
-          current: 1,
-          max: 1,
+          current: 30,
+          max: 30,
         },
         description:
           "BICO. Alcance: 1 (GOLPEAR PRECISO ou GOLPEAR LIGEIRO). Passiva: Se fizer uma INVESTIDA, você pode Atacar com esta PARTE sem gastar Ações. Se não acertar, você se Move 3 Pernadas para longe de seu alvo.                 30 ◆ Se Quebrado: Alcance: 1 ( GOLPEAR LIGEIRO ). Esta PARTE causa metade do Dano.",
@@ -4440,8 +4509,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "SINO",
         durability: {
-          current: 5,
-          max: 5,
+          current: 20,
+          max: 20,
         },
         description:
           "SINO. Passiva: Gaste 1 Ação para transferir uma criatura Presa por seus Tentáculos para seu SINO. No começo de cada rodada, criaturas Presas por seu SINO sofrem 10 de Dano.                                                        20 ◆ Se Quebrado: Você perde NÃO-ME-TOQUE 5.",
@@ -4453,8 +4522,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "SHULU WON",
         durability: {
-          current: 1,
-          max: 1,
+          current: 30,
+          max: 30,
         },
         description:
           "SHULU WON. Passiva: Criaturas sem VOAR precisam gastar 2 de Vigor para se Mover, além de outros custos. Além disso, criaturas podem entrar no Céu escalando.                                                                         30 ◆ Se Quebrado: Harmonia é reduzida em 1.",
@@ -4553,8 +4622,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "BARBATANAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "BARBATANAS. Passiva: Se você estiver a até 0 Pernada de uma criatura, ela o arrasta junto toda vez que se Mover (Você pode escolher a qual criatura está agarrado se houver múltiplas a 0 Pernada).                                   20 ◆ Se Quebradas: Você perde ESCALAR e 1 nível em NADAR.",
@@ -4566,8 +4635,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "ESPINHAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "ESPINHAS. Alcance: 2 (ATIRAR SAGAZ ). Passiva: Se você Atacar com esta PARTE e acertar, a PARTE em que mirou fica Queimada.                                                                                                  20 ◆ Se Quebradas: Alcance: 1 (ATIRAR SAGAZ ). Esta PARTE causa metade do Dano.",
@@ -4592,7 +4661,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Syowari",
     lineage: "Amontoeiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "6 metros de envergadura média",
     description:
       "Um monstro da Linhagem dos Amontoeiros. Tem uma envergadura média de 6 metros.",
     vigor: {
@@ -4686,8 +4755,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "GARRAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 30,
+          max: 30,
         },
         description:
           "GARRAS. Alcance: 1 (GOLPEAR SAGAZ). Passiva: Se você Atacar uma criatura com esta PARTE e acertar, pode usar LADRÃO para roubar seu UTENSÍLIO. Você pode usar o Utensílio como usaria uma de suas próprias PARTES. O UTENSÍLIO mantém qualquer Alcance ou Durabilidade que receba de Técnicas. Você só pode segurar um UTENSÍLIO de cada vez.                                                                                                     30 ◆ Se Quebradas: Alcance: 1 (GOLPEAR SAGAZ ). Esta PARTE causa metade do Dano. Se estiver segurando um UTENSÍLIO, você o derruba.",
@@ -4780,10 +4849,23 @@ export const creatureDefinitions: ICreature[] = [
     parts: [
       {
         id: 1,
+        name: "LAMA",
+        durability: {
+          current: 30,
+          max: 30,
+        },
+        description:
+          "LAMA. Passiva: Você não pode ficar EXPOSTO. Esta PARTE sofre o dobro de Dano se estiver QUEIMADA ou se você estiver Debaixo d'agua.",
+        broken: {
+          description: "Você perde ARMADURA NATURAL, mas recebe +1 LIGEIRO",
+        },
+      },
+      {
+        id: 2,
         name: "PERNAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "PERNAS. Alcance: 1 (GOLPEAR PODEROSO). Passiva: Se sua LAMA não estiver quebrada, reduza à metade qualquer Dano à Parte sofrido por esta PARTE.                                                                        20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR PODEROSO ). Esta PARTE causa metade do Dano.",
@@ -4798,7 +4880,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
       {
-        id: 2,
+        id: 3,
         name: "PRESAS",
         durability: {
           current: 10,
@@ -4828,7 +4910,7 @@ export const creatureDefinitions: ICreature[] = [
     name: "Tatangwa",
     lineage: "Pivoteiro",
     stage: "Adulto",
-    sizeDescription: "",
+    sizeDescription: "3 metros de envergadura média",
     description:
       "Um monstro da Linhagem dos Pivoteiros. Tem uma envergadura média de 3 metros.",
     vigor: {
@@ -4885,8 +4967,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "ASAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "ASAS. Alcance: 1 (GOLPEAR LIGEIRO). Passiva: Você pode Atacar usando o Estilo LIGEIRO múltiplas vezes no mesmo turno.                                                                                                       20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR LIGEIRO). Esta PARTE causa metade do Dano.",
@@ -4904,8 +4986,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "BICO",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "BICO. Alcance: 1 (GOLPEAR SAGAZ ). 20 ◆ Se Quebrado: Alcance: 1 (GOLPEAR SAGAZ). Esta PARTE causa metade do Dano.",
@@ -5014,8 +5096,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "TENTÁCULOS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "TENTÁCULOS. Alcance: 2 (GOLPEAR PRECISO). Se você causar Dano a uma criatura com esta PARTE, aquela criatura fica Presa.                                                                                                        20 ◆   Se Quebrados: Alcance: 1 (GOLPEAR PRECISO). Esta PARTE causa metade do Dano.",
@@ -5033,8 +5115,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "TSIAN WON",
         durability: {
-          current: 1,
-          max: 1,
+          current: 30,
+          max: 30,
         },
         description:
           "TSIAN WON. Passiva: No início de cada rodada, todas as PARTES de todas as Criaturas sem VOAR ficam Queimadas. Além disso, criaturas podem entrar no Céu escalando.                                                                        30 ◆ Se Quebrado: Harmonia é reduzida em 1.",
@@ -5331,8 +5413,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 1,
         name: "ASAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 25,
+          max: 25,
         },
         description:
           "ASAS. Alcance: 1 (CHAMAR). Passiva: Se você Atacar com esta PARTE enquanto Expandido e acertar, seu alvo fica Preso. No começo de cada rodada, criaturas Presas por você sofrem 10 de Dano.                                       25 ◆ Se Quebrado: Alcance: 1 (CHAMAR ). Esta PARTE causa metade do Dano.",
@@ -5429,8 +5511,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "BICO",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "BICO. Alcance: 1 (GOLPEAR LIGEIRO). Passiva: Se você causar Dano com esta PARTE, cause Dano à Parte em vez disso. Se você quebrar uma PARTE com esta PARTE, jogue seu alvo 3 Pernadas para longe.                             20 ◆ Se Quebrado: Alcance: 1 ( GOLPEAR LIGEIRO ). Esta PARTE causa metade do Dano.",
@@ -5575,8 +5657,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "PRESAS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "PRESAS. Alcance: 1 (GOLPEAR PODEROSO). Passiva: Se realizar um GOLPEAR com esta PARTE e acertar, você pode usar CHOQUE ELÉTRICO imediatamente sem gastar ações. Se o fizer, só a criatura atingida por suas PRESAS fica Atordoada.                                                                                        20 ◆ Se Quebradas: Alcance: 1 (GOLPEAR PODEROSO ). Esta PARTE causa metade do Dano.",
@@ -5681,8 +5763,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 2,
         name: "TENTÁCULOS",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "TENTÁCULOS. Alcance: 2 (GOLPEAR PRECISO). Se Atacar com essa PARTE e acertar, você pode puxar seu alvo 1 Pernada para perto.                                                                                               20 ◆ Se Quebrados: Alcance: 1 (GOLPEAR PRECISO ). Esta PARTE causa metade do Dano. Você perde",
@@ -5888,8 +5970,8 @@ export const creatureDefinitions: ICreature[] = [
         id: 3,
         name: "PROBÓSCIDE",
         durability: {
-          current: 1,
-          max: 1,
+          current: 20,
+          max: 20,
         },
         description:
           "PROBÓSCIDE. Alcance: 1 (GOLPEAR PRECISO ou GOLPEAR SAGAZ). Passiva: Se você causar Dano a uma criatura com esta PARTE, pode usar Sanguessuga contra ela sem gastar Ações ou fazer um Teste.                                   20 ◆ Se Quebrado: Alcance: 1 (GOLPEAR PRECISO ). Esta PARTE causa metade do Dano.",

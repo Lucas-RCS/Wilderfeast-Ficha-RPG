@@ -1,6 +1,6 @@
 import { Clock, Copy, Edit3, Skull, Trash2, ArrowRight } from "lucide-react";
-import type { ICreatureCard } from "../types";
-import { formatRelativeTime } from "../hooks/useUtils";
+import type { ICreatureCard } from "../../types";
+import { formatRelativeTime } from "../../hooks/useUtils";
 
 type SheetType = "feral" | "creature";
 type RenameHandler = (id: string, currentName: string, type: SheetType) => void;

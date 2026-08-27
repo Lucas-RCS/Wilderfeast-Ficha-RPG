@@ -1,19 +1,17 @@
 import React from "react";
 import { BookOpen } from "lucide-react";
 
-interface FloatingControlsProps {
-  onOpenCompendium: () => void;
+interface RulesButtonProps {
+  onOpen: () => void;
 }
 
-export const FloatingControls: React.FC<FloatingControlsProps> = ({
-  onOpenCompendium,
-}) => {
+export const RulesButton: React.FC<RulesButtonProps> = ({ onOpen }) => {
   return (
     <div className="fixed bottom-6 right-6 z-40 print:hidden flex items-center gap-2">
       <button
         id="btn-floating-compendium"
         type="button"
-        onClick={onOpenCompendium}
+        onClick={onOpen}
         className="px-4 py-2.5 rounded-full bg-[#13335C] hover:bg-[#0E2644] text-white font-bold text-xs flex items-center gap-2 shadow-xl border border-[#2B6CB0] transition-all hover:scale-105"
         title="Consultar Regras e Compêndio"
       >

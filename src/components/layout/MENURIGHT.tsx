@@ -20,8 +20,8 @@ import type {
   ITrait,
   SkillKey,
   JournalNote,
-} from "../types";
-import { InfoTooltip } from "./InfoTooltip";
+} from "../../types";
+import { InfoTooltip } from "../ui/Tooltip";
 
 interface RightDetailColumnProps {
   sheet: IFeral;

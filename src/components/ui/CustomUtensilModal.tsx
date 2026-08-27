@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Plus, Trash2, Wrench, Sparkles, AlertCircle } from "lucide-react";
-import type { StyleKey, CustomUtensil, ITechnique } from "../types";
-import { saveCustomUtensil } from "../lib/storage";
+import type { StyleKey, CustomUtensil, ITechnique } from "../../types";
+import { saveCustomUtensil } from "../../lib/storage";
 
 interface CustomUtensilModalProps {
   isOpen: boolean;

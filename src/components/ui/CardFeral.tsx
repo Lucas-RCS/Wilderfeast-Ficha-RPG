@@ -1,4 +1,4 @@
-import { formatRelativeTime } from "../hooks/useUtils";
+import { formatRelativeTime } from "../../hooks/useUtils";
 
 import {
   Clock,
@@ -10,7 +10,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import type { IFeralCard } from "../types";
+import type { IFeralCard } from "../../types";
 
 type SheetType = "feral" | "creature";
 type RenameHandler = (id: string, currentName: string, type: SheetType) => void;

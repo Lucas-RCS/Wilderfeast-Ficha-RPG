@@ -19,9 +19,9 @@ import type {
 } from "../types";
 import { SPECIALTIES_DATA, UTENSILS_DATA } from "../data/wilderfeastData";
 import { MONSTER_LINEAGES } from "../data/creatureData";
-import { CompendiumModal } from "../components/CompendiumModal";
-import { CardFeral } from "../components/CardFeral";
-import { CardCreature } from "../components/CardCreature";
+import { CompendiumModal } from "../components/ui/RulesModal";
+import { CardFeral } from "../components/ui/CardFeral";
+import { CardCreature } from "../components/ui/CardCreature";
 import { getItem, setItem } from "../lib/storage";
 
 interface HubViewProps {

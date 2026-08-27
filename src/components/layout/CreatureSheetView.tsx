@@ -8,7 +8,7 @@ import type {
   MonsterLineage,
   MonsterStage,
   PartCategory,
-} from "../types";
+} from "../../types";
 import {
   calculateEffectiveStats,
   MONSTER_LINEAGES,
@@ -17,8 +17,8 @@ import {
 import {
   ALL_CONDITIONS_DATA,
   ALL_TRAITS_COMPENDIUM,
-} from "../data/wilderfeastData";
-import { InfoTooltip } from "./InfoTooltip";
+} from "../../data/wilderfeastData";
+import { InfoTooltip } from "../ui/Tooltip";
 import {
   Activity,
   AlertTriangle,

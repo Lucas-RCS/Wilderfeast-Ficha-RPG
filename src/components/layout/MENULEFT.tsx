@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Heart, Shield, Users, AlertTriangle, Plus } from "lucide-react";
-import { IFeral, StyleKey, CustomUtensil, ICondition } from "../types";
+import { IFeral, StyleKey, CustomUtensil, ICondition } from "../../types";
 import {
   UTENSILS_DATA,
   SPECIALTIES_DATA,
   ALL_CONDITIONS_DATA,
-} from "../data/wilderfeastData";
-import { CustomUtensilModal } from "./CustomUtensilModal";
-import { loadCustomUtensils } from "../lib/storage";
-import { InfoTooltip } from "./InfoTooltip";
+} from "../../data/wilderfeastData";
+import { CustomUtensilModal } from "../ui/CustomUtensilModal";
+import { loadCustomUtensils } from "../../lib/storage";
+import { InfoTooltip } from "../ui/Tooltip";
 
 const STYLES_LIST: Array<{
   key: StyleKey;
