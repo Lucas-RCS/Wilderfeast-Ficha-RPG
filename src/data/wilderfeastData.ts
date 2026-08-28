@@ -6,14 +6,18 @@
 // ============================================================================
 
 import type {
+  FeralStyles,
   IConditionDefinition,
   ICreature,
+  ID,
   ISpecialtyDefinition,
   ITechniqueDefinition,
+  ITechniqueState,
   ITraitDefinition,
   IUtensilDefinition,
   SkillKey,
   StyleKey,
+  UtensilKey,
 } from "../types";
 
 export const STYLES: Record<StyleKey, { name: string; description: string }> = {
@@ -59,7 +63,7 @@ export const SKILLS: Record<SkillKey, { name: string; description: string }> = {
   chamar: {
     name: "CHAMAR",
     description:
-      "Comunicar-se com monstros, vocalizar e usar determinados Traços sobrenaturais.",
+      "Comunicar-se com criaturas, vocalizar e usar determinados Traços sobrenaturais.",
   },
   curar: {
     name: "CURAR",
@@ -95,6 +99,13 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultMaxDurability: 20,
     brokenDescription:
       "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+    initialStyleOptions: [
+      { main: "ligeiro", secondary: "sagaz" },
+      { main: "sagaz", secondary: "ligeiro" },
+    ],
+    // Inicial: RÉDIA CURTA (3). Opções: ARMADILHA (1), CHICOTADA (2), REPAROS EM CAMPO (4).
+    initialTechniqueId: 3,
+    techniqueOptionIds: [1, 2, 4],
   },
   {
     id: "Cutelo",
@@ -103,6 +114,13 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultMaxDurability: 20,
     brokenDescription:
       "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+    initialStyleOptions: [
+      { main: "poderoso", secondary: "preciso" },
+      { main: "preciso", secondary: "poderoso" },
+    ],
+    // Inicial: CORTE LIMPO (10). Opções: ESPADA GRANDE PRA CARA*** (11), SEM DESPERDÍCIO (12), TREINAMENTO MÉDICO (13).
+    initialTechniqueId: 10,
+    techniqueOptionIds: [11, 12, 13],
   },
   {
     id: "Espeto",
@@ -111,6 +129,13 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultMaxDurability: 20,
     brokenDescription:
       "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+    initialStyleOptions: [
+      { main: "preciso", secondary: "ligeiro" },
+      { main: "ligeiro", secondary: "preciso" },
+    ],
+    // Inicial: SEQUÊNCIA DE MOVIMENTOS (22). Opções: AGULHA E LINHA (19), DESATOLAR (20), ETIQUETA GASTRONÔMICA (21).
+    initialTechniqueId: 22,
+    techniqueOptionIds: [19, 20, 21],
   },
   {
     id: "Luvas",
@@ -119,6 +144,13 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultMaxDurability: 20,
     brokenDescription:
       "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+    initialStyleOptions: [
+      { main: "poderoso", secondary: "ligeiro" },
+      { main: "ligeiro", secondary: "poderoso" },
+    ],
+    // Inicial: DE PERTINHO (29). Opções: ALCANCE ENCOURAÇADO (28), MÃOS LARGAS, PEGADA FORTE (30), TÔ CONTIGO (31).
+    initialTechniqueId: 29,
+    techniqueOptionIds: [28, 30, 31],
   },
   {
     id: "Maçarico",
@@ -127,6 +159,13 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultMaxDurability: 20,
     brokenDescription:
       "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+    initialStyleOptions: [
+      { main: "preciso", secondary: "sagaz" },
+      { main: "sagaz", secondary: "preciso" },
+    ],
+    // Inicial: LINHA DE FOGO (38). Opções: IGNIÇÃO RÁPIDA (37), LUZ GUIA (39), PREAQUECIMENTO (40).
+    initialTechniqueId: 38,
+    techniqueOptionIds: [37, 39, 40],
   },
   {
     id: "Panela",
@@ -135,6 +174,13 @@ export const utensilDefinitions: IUtensilDefinition[] = [
     defaultMaxDurability: 20,
     brokenDescription:
       "Se estiver quebrado, alcance adicional de Técnicas é perdido, o Utensílio causa metade do Dano e as Técnicas que exigirem o acesso ao utensílio ficam indisponíveis até recuperá-lo.",
+    initialStyleOptions: [
+      { main: "poderoso", secondary: "sagaz" },
+      { main: "sagaz", secondary: "poderoso" },
+    ],
+    // Inicial: ESCUDO DE AÇO (46). Opções: LANÇAMENTO RICOCHETE (47), POSTURA APRUMADA (48), SUPERFÍCIE ESPELHADA (49).
+    initialTechniqueId: 46,
+    techniqueOptionIds: [47, 48, 49],
   },
 ];
 
@@ -750,7 +796,7 @@ export const traitDefinitions: ITraitDefinition[] = [
     id: 80,
     name: "CORPO EM CHAMAS",
     description:
-      "Traço específico de certos monstros: gera calor ou dano em curta distância e pode queimar Utensílios, conforme a ficha do monstro.",
+      "Traço específico de certos criaturas: gera calor ou dano em curta distância e pode queimar Utensílios, conforme a ficha do criatura.",
     maxLevel: null,
   },
 ];
@@ -778,7 +824,7 @@ export const conditionDefinitions: IConditionDefinition[] = [
     id: 4,
     name: "Convalescente",
     description:
-      "Condição exclusiva de monstros. A criatura se recupera de trauma, ignora outras Condições e não recupera Vigor naturalmente. Remova 1 nível quando comida recuperar seu Vigor ao máximo; se ainda restar Convalescente, o Vigor volta a 0 e apenas o excedente da refeição é aplicado.",
+      "Condição exclusiva de criaturas. A criatura se recupera de trauma, ignora outras Condições e não recupera Vigor naturalmente. Remova 1 nível quando comida recuperar seu Vigor ao máximo; se ainda restar Convalescente, o Vigor volta a 0 e apenas o excedente da refeição é aplicado.",
     maxLevel: 6,
   },
   {
@@ -992,7 +1038,7 @@ export const techniqueDefinitions: ITechniqueDefinition[] = [
     name: "ESTUDANTE DE OSSOS",
     level: "Intermediária",
     description:
-      "ESTUDANTE DE OSSOS. (Passiva) Você tem Vantagem quando Ataca qualquer monstro que sua matilha matou durante a Jornada anterior (discuta com a Guia se você recebe esse bônus contra monstros que matou na sua origem.)",
+      "ESTUDANTE DE OSSOS. (Passiva) Você tem Vantagem quando Ataca qualquer criatura que sua matilha matou durante a Jornada anterior (discuta com a Guia se você recebe esse bônus contra criaturas que matou na sua origem.)",
     utensils: ["Cutelo"],
   },
   {
@@ -1164,7 +1210,7 @@ export const techniqueDefinitions: ITechniqueDefinition[] = [
     name: "TÔ CONTIGO",
     level: "Iniciante",
     description:
-      "TÔ CONTIGO. (Custo: 2 de Vigor) Escolha uma criatura Convalescente ou Ferida a até 0 Pernada. Você a carrega. Enquanto estiver carregando essa criatura, você não pode Atacar e, se ela sofrer Dano, você sofre o Dano em seu lugar. Você pode colocar a criatura no chão a qualquer momento. Se a criatura for um monstro, essa técnica tem um custo adicional de 3 de Vigor.",
+      "TÔ CONTIGO. (Custo: 2 de Vigor) Escolha uma criatura Convalescente ou Ferida a até 0 Pernada. Você a carrega. Enquanto estiver carregando essa criatura, você não pode Atacar e, se ela sofrer Dano, você sofre o Dano em seu lugar. Você pode colocar a criatura no chão a qualquer momento. Se a criatura for um criatura, essa técnica tem um custo adicional de 3 de Vigor.",
     cost: {
       type: "vigor",
       amount: 2,
@@ -1192,7 +1238,7 @@ export const techniqueDefinitions: ITechniqueDefinition[] = [
     name: "PEGADA FIRME",
     level: "Intermediária",
     description:
-      "PEGADA FIRME. (Passiva) Se você estiver a 0 Pernada de um monstro, ele não pode se distanciar de você. Se ele se Mover, puxa você junto, a menos que você decida soltar-se.",
+      "PEGADA FIRME. (Passiva) Se você estiver a 0 Pernada de um criatura, ele não pode se distanciar de você. Se ele se Mover, puxa você junto, a menos que você decida soltar-se.",
     utensils: ["Luvas"],
   },
   {
@@ -1507,7 +1553,7 @@ export const specialtyDefinitions: ISpecialtyDefinition[] = [
     id: "Açougueiro",
     name: "Açougueiro",
     description:
-      "Especialidade ligada a monstros com protuberâncias metálicas ou minerais; tende a lidar confortavelmente com a morte e com o peso do golpe final.",
+      "Especialidade ligada a criaturas com protuberâncias metálicas ou minerais; tende a lidar confortavelmente com a morte e com o peso do golpe final.",
     firstTraitOptions: [14, 5, 11],
     importantMonsterOptions: [13, 14, 27, 1, 10],
   },
@@ -1515,7 +1561,7 @@ export const specialtyDefinitions: ISpecialtyDefinition[] = [
     id: "Amontoeiro",
     name: "Amontoeiro",
     description:
-      "Especialidade ligada a monstros que acumulam comida em reservas, ninhos ou covis; enfatiza conservação e preparação cuidadosa.",
+      "Especialidade ligada a criaturas que acumulam comida em reservas, ninhos ou covis; enfatiza conservação e preparação cuidadosa.",
     firstTraitOptions: [17, 28, 41],
     importantMonsterOptions: [15, 29, 30, 22, 5],
   },
@@ -1531,7 +1577,7 @@ export const specialtyDefinitions: ISpecialtyDefinition[] = [
     id: "Jardineiro",
     name: "Jardineiro",
     description:
-      "Especialidade ligada a monstros que administram a flora; favorece mobilidade e menor derramamento de sangue, com uso de frutas-ferais e mushi quando apropriado.",
+      "Especialidade ligada a criaturas que administram a flora; favorece mobilidade e menor derramamento de sangue, com uso de frutas-ferais e mushi quando apropriado.",
     firstTraitOptions: [78, 28, 44],
     importantMonsterOptions: [12, 20, 9, 6, 39],
   },
@@ -1547,7 +1593,7 @@ export const specialtyDefinitions: ISpecialtyDefinition[] = [
     id: "Padeiro",
     name: "Padeiro",
     description:
-      "Especialidade ligada a monstros longevos, frequentemente polinizadores e consumidores de mel, néctar ou seiva; ferais dessa linhagem tendem à paciência e confeitaria.",
+      "Especialidade ligada a criaturas longevos, frequentemente polinizadores e consumidores de mel, néctar ou seiva; ferais dessa linhagem tendem à paciência e confeitaria.",
     firstTraitOptions: [29, 57, 66],
     importantMonsterOptions: [18, 3, 35, 16, 21],
   },
@@ -1555,7 +1601,7 @@ export const specialtyDefinitions: ISpecialtyDefinition[] = [
     id: "Peixeiro",
     name: "Peixeiro",
     description:
-      "Especialidade ligada a monstros de mares, lagos e rios, incluindo leviatãs; explora ambientes aquáticos e mutações associadas à água.",
+      "Especialidade ligada a criaturas de mares, lagos e rios, incluindo leviatãs; explora ambientes aquáticos e mutações associadas à água.",
     firstTraitOptions: [15, 26, 51],
     importantMonsterOptions: [33, 36, 34, 26, 37],
   },
@@ -1577,7 +1623,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "15 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Açougueiros. Tem em média 15 metros de comprimento.",
+      "Um criatura da Linhagem dos Açougueiros. Tem em média 15 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -1705,7 +1751,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "2 - 4 metros de altura",
     description:
-      "Um monstro da Linhagem dos Pivoteiros. Tem 2 metros de altura sobre as quatro patas, e o dobro disso ou mais se estiver de pé.",
+      "Um criatura da Linhagem dos Pivoteiros. Tem 2 metros de altura sobre as quatro patas, e o dobro disso ou mais se estiver de pé.",
     vigor: {
       current: 30,
       max: 30,
@@ -1813,7 +1859,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros terrestres, monstros voadores, monstros aquáticos (Goby Guelrabença), ovos (Ovos de Katang), carcaça, frutas, sementes e grãos (maioria dos Pratos Típicos)",
+    diet: "• Monstros terrestres, criaturas voadores, criaturas aquáticos (Goby Guelrabença), ovos (Ovos de Katang), carcaça, frutas, sementes e grãos (maioria dos Pratos Típicos)",
     habitat:
       "• Costa (Ladeirabaixo, Cidade-Estação Tesouromar), Deserto (Cidade-Estação Bhusag)",
     behavior:
@@ -1826,7 +1872,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "30 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Padeiros. Tem 30 metros de comprimento.",
+      "Um criatura da Linhagem dos Padeiros. Tem 30 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -2020,7 +2066,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de altura",
     description:
-      "Um monstro da Linhagem dos Amontoeiros. Tem 4 metros de altura.",
+      "Um criatura da Linhagem dos Amontoeiros. Tem 4 metros de altura.",
     vigor: {
       current: 30,
       max: 30,
@@ -2117,7 +2163,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros terrestres (Geleca de Onagung, Wooda Selvagem), monstros voadores",
+    diet: "• Monstros terrestres (Geleca de Onagung, Wooda Selvagem), criaturas voadores",
     habitat: "• Montanha (Antigo Sen Che)",
     behavior:
       "Se nenhuma criatura estiver Presa ou Exposta, mire a última criatura que atacou sua TEIA, já que você prefere manter suas armadilhas de teia intactas. Seu instinto é preparar sua armadilha de teia e esperar pacientemente no seu centro. Se estiver confusa sobre como sua TEIA funciona, faça o que fizer sentido narrativamente falando.",
@@ -2129,7 +2175,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "18 metros de altura",
     description:
-      "Um monstro da Linhagem dos Jardineiros. Tem 18 metros de altura.",
+      "Um criatura da Linhagem dos Jardineiros. Tem 18 metros de altura.",
     vigor: {
       current: 30,
       max: 30,
@@ -2253,7 +2299,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "5 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Churrasqueiros. Tem 5 metros de comprimento em média, incluindo a cauda.",
+      "Um criatura da Linhagem dos Churrasqueiros. Tem 5 metros de comprimento em média, incluindo a cauda.",
     vigor: {
       current: 30,
       max: 30,
@@ -2366,7 +2412,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de envergadura média",
     description:
-      "Um monstro da Linhagem dos Churrasqueiros. Tem 3 metros de envergadura média.",
+      "Um criatura da Linhagem dos Churrasqueiros. Tem 3 metros de envergadura média.",
     vigor: {
       current: 30,
       max: 30,
@@ -2468,7 +2514,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros terrestres (Asaginga, Wooda Selvagem), monstros voadores",
+    diet: "• Monstros terrestres (Asaginga, Wooda Selvagem), criaturas voadores",
     habitat: "• Praia (Mesalta), Arvoredo",
     behavior:
       "Se nenhuma criatura estiver Presa ou Exposta, mire a criatura que estiver Ferida, já que você é um assassino eficiente e brutal. Seu instinto é capturar uma criatura com suas GARRAS e alçar voo com VELOCIDADE, depois estripá-la com seus BICO. Você é flexível e inteligente, então, se alguma coisa estiver dando errado com seu plano, você se adapta rapidamente. Se ficar Ferido, fuja. Para representar sua tendência incendiária, use esta regra opcional: se for inverno, a área para a qual você recuou recebe os efeitos do Traço Incêndio de Towon Seha. Você tem experiência suficiente com fogo para passar por ele com segurança, mas quem o seguir não estará tão preparado.",
@@ -2605,7 +2651,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de altura",
     description:
-      "Um monstro da Linhagem dos Açougueiros. Tem 4 metros de altura, em média.",
+      "Um criatura da Linhagem dos Açougueiros. Tem 4 metros de altura, em média.",
     vigor: {
       current: 30,
       max: 30,
@@ -2712,7 +2758,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "2 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Pivoteiros. Tem 2 metros de comprimento, em média.",
+      "Um criatura da Linhagem dos Pivoteiros. Tem 2 metros de comprimento, em média.",
     vigor: {
       current: 30,
       max: 30,
@@ -2807,7 +2853,7 @@ export const creatureDefinitions: ICreature[] = [
     diet: "• Monstros terrestres (Vermes), microalgas (Alga Noturna)",
     habitat: "• Arvoredo",
     behavior:
-      "Se nenhuma criatura estiver Presa ou Exposta, mire a última criatura a se Mover, já que você caça baseado em movimentação. Seu instinto é encontrar um lugar seguro para usar seu MIMETISMO VOCAL e então agarrar o alvo com sua LÍNGUA. Você odeia ficar cercado, então está sempre tentando criar distância entre qualquer criatura que não esteja tentando comer. O efeito adicional dos seus SACOS VOCAIS raramente acontece, mas aproveite o caos caso ocorra. Para dicas sobre como executar A Caçada com múltiplos monstros, veja a p. 275.",
+      "Se nenhuma criatura estiver Presa ou Exposta, mire a última criatura a se Mover, já que você caça baseado em movimentação. Seu instinto é encontrar um lugar seguro para usar seu MIMETISMO VOCAL e então agarrar o alvo com sua LÍNGUA. Você odeia ficar cercado, então está sempre tentando criar distância entre qualquer criatura que não esteja tentando comer. O efeito adicional dos seus SACOS VOCAIS raramente acontece, mas aproveite o caos caso ocorra. Para dicas sobre como executar A Caçada com múltiplos criaturas, veja a p. 275.",
   },
   {
     id: 12,
@@ -2816,7 +2862,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "2 metros de altura",
     description:
-      "Um monstro da Linhagem dos Jardineiros. Tem 2 metros de altura, em média.",
+      "Um criatura da Linhagem dos Jardineiros. Tem 2 metros de altura, em média.",
     vigor: {
       current: 30,
       max: 30,
@@ -2931,7 +2977,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "1,5 metros de altura",
     description:
-      "Um monstro da Linhagem dos Açougueiros. Tem 3 metros de altura, em média.",
+      "Um criatura da Linhagem dos Açougueiros. Tem 3 metros de altura, em média.",
     vigor: {
       current: 30,
       max: 30,
@@ -3043,7 +3089,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de altura",
     description:
-      "Um monstro da Linhagem dos Açougueiros. Tem a média de 3 metros até os ombros.",
+      "Um criatura da Linhagem dos Açougueiros. Tem a média de 3 metros até os ombros.",
     vigor: {
       current: 30,
       max: 30,
@@ -3154,7 +3200,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "6 metros de envergadura média",
     description:
-      "Um monstro da Linhagem dos Amontoeiros, com 6 metros de envergadura, em média.",
+      "Um criatura da Linhagem dos Amontoeiros, com 6 metros de envergadura, em média.",
     vigor: {
       current: 30,
       max: 30,
@@ -3264,7 +3310,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de altura",
     description:
-      "Um monstro da Linhagem dos Padeiros. Tem 3 metros de altura, em média.",
+      "Um criatura da Linhagem dos Padeiros. Tem 3 metros de altura, em média.",
     vigor: {
       current: 30,
       max: 30,
@@ -3474,10 +3520,10 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros Terrestres (Insetoíche, Larva de Insetoíche), monstros voadores (Asaginga, Votra), sementes e grãos (Trigotérreo, Frutescama)",
+    diet: "• Monstros Terrestres (Insetoíche, Larva de Insetoíche), criaturas voadores (Asaginga, Votra), sementes e grãos (Trigotérreo, Frutescama)",
     habitat: "• Deserto",
     behavior:
-      "Se nenhuma criatura estiver Exposta, mire uma criatura que não estiver Amedrontada, já que predadores corajosos são suas maiores ameaças. Seu instinto é farejar e fugir. Mesmo afetado pelo frenesi, você é um monstro covarde e seus mísseis de meleca o ajudam a manter a distância do seu alvo. O efeito passivo da sua CAUDA permite-lhe enganar a morte e sobreviver a um golpe que, de outra forma, o mataria. Então, você pode puxar o tapete dos ferais, revelando que ainda está vivo. O novo combate provavelmente não vai durar muito, já que você está a um passo da morte, mas acrescenta uma etapa extra que torna sua luta surpreendente e memorável.",
+      "Se nenhuma criatura estiver Exposta, mire uma criatura que não estiver Amedrontada, já que predadores corajosos são suas maiores ameaças. Seu instinto é farejar e fugir. Mesmo afetado pelo frenesi, você é um criatura covarde e seus mísseis de meleca o ajudam a manter a distância do seu alvo. O efeito passivo da sua CAUDA permite-lhe enganar a morte e sobreviver a um golpe que, de outra forma, o mataria. Então, você pode puxar o tapete dos ferais, revelando que ainda está vivo. O novo combate provavelmente não vai durar muito, já que você está a um passo da morte, mas acrescenta uma etapa extra que torna sua luta surpreendente e memorável.",
   },
   {
     id: 18,
@@ -3486,7 +3532,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de altura em média",
     description:
-      "Um monstro da Linhagem dos Padeiros. Tem 4 metros de altura em média.",
+      "Um criatura da Linhagem dos Padeiros. Tem 4 metros de altura em média.",
     vigor: {
       current: 30,
       max: 30,
@@ -3597,7 +3643,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "Varia de 1 a 3 metros de altura",
     description:
-      "Um monstro da Linhagem dos Molheiros. Aparecem em uma grande variedade de tamanhos.",
+      "Um criatura da Linhagem dos Molheiros. Aparecem em uma grande variedade de tamanhos.",
     vigor: {
       current: 30,
       max: 30,
@@ -3684,7 +3730,7 @@ export const creatureDefinitions: ICreature[] = [
     diet: "• Monstros terrestres, carniça (Detritos)",
     habitat: "• Praia (Celário do Gigante), Montanha",
     behavior:
-      "Se nenhuma criatura estiver Exposta, mire uma criatura que estiver Queimada, ou tenha um Traço ou Técnica que pode infligir QUEIMADO, já que calor chama a sua atenção. Seu instinto é imitar o(s) monstro(s) que está digerindo, até que não tenha outra opção a não ser disparar seus ossos como se fossem balas. Caçadas contra você costumam variar, sempre dependendo de sua última refeição, mas podem se tornar especialmente bizarras se você começar a misturar e combinar as PARTES e TRAÇOS de vários monstros. As regras para monstros diferentes nem sempre funcionam conforme estão escritas, então seja flexível e siga o que faz sentido no contexto.",
+      "Se nenhuma criatura estiver Exposta, mire uma criatura que estiver Queimada, ou tenha um Traço ou Técnica que pode infligir QUEIMADO, já que calor chama a sua atenção. Seu instinto é imitar o(s) criatura(s) que está digerindo, até que não tenha outra opção a não ser disparar seus ossos como se fossem balas. Caçadas contra você costumam variar, sempre dependendo de sua última refeição, mas podem se tornar especialmente bizarras se você começar a misturar e combinar as PARTES e TRAÇOS de vários criaturas. As regras para criaturas diferentes nem sempre funcionam conforme estão escritas, então seja flexível e siga o que faz sentido no contexto.",
   },
   {
     id: 20,
@@ -3693,7 +3739,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de altura em média",
     description:
-      "Um monstro da Linhagem dos Jardineiros. Tem, em média, 3 metros de altura até os ombros.",
+      "Um criatura da Linhagem dos Jardineiros. Tem, em média, 3 metros de altura até os ombros.",
     vigor: {
       current: 30,
       max: 30,
@@ -3791,7 +3837,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de envergadura média",
     description:
-      "Um monstro da Linhagem dos Padeiros. Tem uma envergadura média de 3 metros.",
+      "Um criatura da Linhagem dos Padeiros. Tem uma envergadura média de 3 metros.",
     vigor: {
       current: 30,
       max: 30,
@@ -3909,7 +3955,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "2 metros de altura e comprimento variável",
     description:
-      "Um monstro da Linhagem dos Amontoeiros. Tem em média 2 metros de altura e comprimento variável.",
+      "Um criatura da Linhagem dos Amontoeiros. Tem em média 2 metros de altura e comprimento variável.",
     vigor: {
       current: 30,
       max: 30,
@@ -4018,7 +4064,7 @@ export const creatureDefinitions: ICreature[] = [
     sizeDescription:
       "2 metros de diâmetro, com o mais velho chegando a 12 metros",
     description:
-      "Um monstro da Linhagem dos Molheiros. Tem em média 2 metros de diâmetro, com o mais velho chegando a 12 metros.",
+      "Um criatura da Linhagem dos Molheiros. Tem em média 2 metros de diâmetro, com o mais velho chegando a 12 metros.",
     vigor: {
       current: 30,
       max: 30,
@@ -4137,7 +4183,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Pivoteiros. Tem em média 3 metros de comprimento.",
+      "Um criatura da Linhagem dos Pivoteiros. Tem em média 3 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -4241,7 +4287,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "10 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Molheiros. Tem em média 10 metros de comprimento.",
+      "Um criatura da Linhagem dos Molheiros. Tem em média 10 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -4344,7 +4390,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros terrestres (Geleca de Onagung, Wooda Selvagem), monstros aquáticos (Girinos de Sposu), carniça.",
+    diet: "• Monstros terrestres (Geleca de Onagung, Wooda Selvagem), criaturas aquáticos (Girinos de Sposu), carniça.",
     habitat:
       "• Montanha (Amethaninamizzet, Leylinha Sessão 1115, Bandejargênteas)",
     behavior:
@@ -4358,7 +4404,7 @@ export const creatureDefinitions: ICreature[] = [
     sizeDescription:
       "Entre 3 e 6 metros de comprimento (não contando os bicos)",
     description:
-      "Um monstro da Linhagem dos Peixeiros. Os machos têm em média 3 metros de comprimento, e as fêmeas, até 6 (não contando seus bicos).",
+      "Um criatura da Linhagem dos Peixeiros. Os machos têm em média 3 metros de comprimento, e as fêmeas, até 6 (não contando seus bicos).",
     vigor: {
       current: 30,
       max: 30,
@@ -4454,7 +4500,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de comprimento, incluindo os tentáculos",
     description:
-      "Um monstro da Linhagem dos Açougueiros. Tem em média 4 metros de comprimento, incluindo os tentáculos.",
+      "Um criatura da Linhagem dos Açougueiros. Tem em média 4 metros de comprimento, incluindo os tentáculos.",
     vigor: {
       current: 30,
       max: 30,
@@ -4551,7 +4597,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros terrestres (Verme), monstros aquáticos (Inalalama Menor, Goby Guelrabença)",
+    diet: "• Monstros terrestres (Verme), criaturas aquáticos (Inalalama Menor, Goby Guelrabença)",
     habitat: "• Praias",
     behavior:
       "Se nenhuma criatura estiver Presa ou Exposta, escolha como alvo uma criatura Ferida, uma vez que o cheiro de sangue é como você encontra comida. Seu instinto é flutuar passivamente acima do campo de batalha, deixando que sua armadura vítrea, seus estômagos ácidos e perigos ambientais enfraqueçam sua presa. Você é frequentemente encontrado acima de shulu wons, os corais de vidro de onde sua espécie nasce — ferais sem VOAR podem usar estas torres contra você, escalando-as para alcançá-lo no Céu. Mesmo que você esteja em frenesi, os shulu wons não estão, e ferais que danifiquem os corais arriscam causar sérios prejuízos ao ecossistema.",
@@ -4563,7 +4609,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Churrasqueiros. Tem em média 3 metros de comprimento.",
+      "Um criatura da Linhagem dos Churrasqueiros. Tem em média 3 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -4663,7 +4709,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "6 metros de envergadura média",
     description:
-      "Um monstro da Linhagem dos Amontoeiros. Tem uma envergadura média de 6 metros.",
+      "Um criatura da Linhagem dos Amontoeiros. Tem uma envergadura média de 6 metros.",
     vigor: {
       current: 30,
       max: 30,
@@ -4796,7 +4842,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de altura",
     description:
-      "Um monstro da Linhagem dos Amontoeiros. Tem em média 4 metros de altura.",
+      "Um criatura da Linhagem dos Amontoeiros. Tem em média 4 metros de altura.",
     vigor: {
       current: 30,
       max: 30,
@@ -4912,7 +4958,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de envergadura média",
     description:
-      "Um monstro da Linhagem dos Pivoteiros. Tem uma envergadura média de 3 metros.",
+      "Um criatura da Linhagem dos Pivoteiros. Tem uma envergadura média de 3 metros.",
     vigor: {
       current: 30,
       max: 30,
@@ -5019,7 +5065,7 @@ export const creatureDefinitions: ICreature[] = [
     diet: "• Monstros terrestres (Asaginga, Lapuni Selvagem), carniça",
     habitat: "• Arvoredo (Bosque das Testemunhas)",
     behavior:
-      "Se nenhuma criatura estiver Exposta, escolha como alvo uma criatura Ferida, já que você é um caçador experiente e prático. Seu instinto é esgueirar-se o mais próximo que puder de seu alvo e dar o bote. Você não perde tempo exibindo-se ou fazendo ameaças — simplesmente ataca para matar, e isso o torna ainda mais assustador. Use CAMUFLAGEM com a maior frequência possível. Se suas PENAS quebrarem, mude de caçador furtivo para ágil, priorizando GOLPEAR LIGEIRO para que possa encerrar A Caçada antes que fique sem Vigor. Você é um inimigo muito mais desafiador do que outros monstros do seu Nível, e aqueles que desejem caçá-lo devem preparar-se adequadamente.",
+      "Se nenhuma criatura estiver Exposta, escolha como alvo uma criatura Ferida, já que você é um caçador experiente e prático. Seu instinto é esgueirar-se o mais próximo que puder de seu alvo e dar o bote. Você não perde tempo exibindo-se ou fazendo ameaças — simplesmente ataca para matar, e isso o torna ainda mais assustador. Use CAMUFLAGEM com a maior frequência possível. Se suas PENAS quebrarem, mude de caçador furtivo para ágil, priorizando GOLPEAR LIGEIRO para que possa encerrar A Caçada antes que fique sem Vigor. Você é um inimigo muito mais desafiador do que outros criaturas do seu Nível, e aqueles que desejem caçá-lo devem preparar-se adequadamente.",
   },
   {
     id: 32,
@@ -5028,7 +5074,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de comprimento, incluindo os tentáculos",
     description:
-      "Um monstro da Linhagem dos Churrasqueiros. Tem em média 3 metros de comprimento, incluindo os tentáculos.",
+      "Um criatura da Linhagem dos Churrasqueiros. Tem em média 3 metros de comprimento, incluindo os tentáculos.",
     vigor: {
       current: 30,
       max: 30,
@@ -5125,7 +5171,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros terrestres (Cauda de Rakuzar, Wooda Selvagem), monstros voadores (Votra)",
+    diet: "• Monstros terrestres (Cauda de Rakuzar, Wooda Selvagem), criaturas voadores (Votra)",
     habitat: "• Deserto (Dunas Estrondosas, Maratsia, Mirante Memorial)",
     behavior:
       "Se nenhuma criatura estiver Presa ou Exposta, escolha como alvo uma criatura com uma PARTE Queimada, uma vez que você é atraído pelo cheiro de carne queimando. Seu instinto é flutuar para posicionar-se acima de sua presa antes de liberar toda a força de seu SOPRO DE FOGO contra o alvo abaixo de você. Agarrar seu alvo com seus TENTÁCULOS deixa isso ainda mais fácil, mas priorize usar seu SOPRO DE FOGO se você não tiver Ações suficientes para os dois. Sua Parte TSIAN WON não é parte do seu corpo. Em vez disso, ela representa os corais parecidos com magma sobre os quais você normalmente pode ser encontrado. Embora mais rasteiras do que as colônias de pólipos de seus primos, os shulu wons, os tsian wons ainda são altos o bastante para que criaturas possam escalá-las para alcançar você no Céu.",
@@ -5137,7 +5183,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "2 metros de altura",
     description:
-      "Um monstro da Linhagem dos Peixeiros. Tem em média 2 metros de altura.",
+      "Um criatura da Linhagem dos Peixeiros. Tem em média 2 metros de altura.",
     vigor: {
       current: 30,
       max: 30,
@@ -5236,7 +5282,7 @@ export const creatureDefinitions: ICreature[] = [
         },
       },
     ],
-    diet: "• Monstros terrestres (Vermes), monstros voadores, monstros aquáticos (Goby Guelrabença, Pratanguejo), carniça.",
+    diet: "• Monstros terrestres (Vermes), criaturas voadores, criaturas aquáticos (Goby Guelrabença, Pratanguejo), carniça.",
     habitat: "• Praia, Montanha (Cataratas do Yhayhe)",
     behavior:
       "Se nenhuma criatura estiver Exposta, escolha como alvo uma criatura que tenha usado Mover ou o Estilo LIGEIRO na última rodada, já que seus olhos complexos são excelentes para rastrear movimento. Seu instinto é aproveitar ao máximo seu arsenal atual. Para ser claro, sua GARRA DIREITA não “quebra” de verdade. Em vez disso, você a arranca quando ela atingir 0 de Durabilidade, e a faz crescer novamente, em uma forma mais rígida essencialmente imune a Dano à Parte. Já a sua GARRA ESQUERDA, as regras para ela não cobrem todos os casos. Deixe que a ficção venha primeiro e decida o que será melhor se os ferais forem criativos.",
@@ -5248,7 +5294,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "6 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Peixeiros. Tem em média 6 metros de comprimento.",
+      "Um criatura da Linhagem dos Peixeiros. Tem em média 6 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -5350,7 +5396,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de diâmetro em coletivo",
     description:
-      "Um monstro da Linhagem dos Padeiros. Tem em média 3 metros de diâmetro em coletivo.",
+      "Um criatura da Linhagem dos Padeiros. Tem em média 3 metros de diâmetro em coletivo.",
     vigor: {
       current: 30,
       max: 30,
@@ -5448,7 +5494,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "3 metros de diâmetro quando inflado",
     description:
-      "Um monstro da Linhagem dos Peixeiros. Tem em média 3 metros de diâmetro quando inflado.",
+      "Um criatura da Linhagem dos Peixeiros. Tem em média 3 metros de diâmetro quando inflado.",
     vigor: {
       current: 30,
       max: 30,
@@ -5571,7 +5617,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Peixeiros. Tem em média 4 metros de comprimento.",
+      "Um criatura da Linhagem dos Peixeiros. Tem em média 4 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -5685,7 +5731,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de comprimento com tentáculos estendidos",
     description:
-      "Um monstro da Linhagem dos Pivoteiros. Tem em média 4 metros de comprimento com tentáculos estendidos.",
+      "Um criatura da Linhagem dos Pivoteiros. Tem em média 4 metros de comprimento com tentáculos estendidos.",
     vigor: {
       current: 30,
       max: 30,
@@ -5783,7 +5829,7 @@ export const creatureDefinitions: ICreature[] = [
     habitat:
       "• Praia (Cidade-estação Tesouromar), Arvoredo, Deserto (Cidade-estação Bhusag)",
     behavior:
-      "Se nenhuma criatura estiver Exposta, escolha como alvo uma criatura que esteja Envenenada, já que você reconhece quando sua mordida enfraquece uma criatura. Seu instinto é observar e aprender, já que sua inteligência o permite ser mais estratégico do que a maioria dos monstros. Mantenha-se nas copas ou topos das árvores, onde criaturas que não podem ESCALAR têm dificuldade para alcançá-lo, e vá exaurindo suas presas. Tipicamente, você não usará APOSEMÁTICO até que esteja Ferido, não por razões práticas, mas por preferir não ficar Exposto, a menos que a situação seja séria. Uma vez que comece a usar APOSEMÁTICO, combine-a, se possível, com sua CAMUFLAGEM para mitigar suas desvantagens.",
+      "Se nenhuma criatura estiver Exposta, escolha como alvo uma criatura que esteja Envenenada, já que você reconhece quando sua mordida enfraquece uma criatura. Seu instinto é observar e aprender, já que sua inteligência o permite ser mais estratégico do que a maioria dos criaturas. Mantenha-se nas copas ou topos das árvores, onde criaturas que não podem ESCALAR têm dificuldade para alcançá-lo, e vá exaurindo suas presas. Tipicamente, você não usará APOSEMÁTICO até que esteja Ferido, não por razões práticas, mas por preferir não ficar Exposto, a menos que a situação seja séria. Uma vez que comece a usar APOSEMÁTICO, combine-a, se possível, com sua CAMUFLAGEM para mitigar suas desvantagens.",
   },
   {
     id: 39,
@@ -5792,7 +5838,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "4 metros de altura",
     description:
-      "Um monstro da Linhagem dos Jardineiros. Tem em média 4 metros de altura.",
+      "Um criatura da Linhagem dos Jardineiros. Tem em média 4 metros de altura.",
     vigor: {
       current: 30,
       max: 30,
@@ -5884,7 +5930,7 @@ export const creatureDefinitions: ICreature[] = [
     stage: "Adulto",
     sizeDescription: "2 metros de comprimento",
     description:
-      "Um monstro da Linhagem dos Molheiros. Tem em média 2 metros de comprimento.",
+      "Um criatura da Linhagem dos Molheiros. Tem em média 2 metros de comprimento.",
     vigor: {
       current: 30,
       max: 30,
@@ -5989,7 +6035,7 @@ export const creatureDefinitions: ICreature[] = [
     diet: "• Sangue, néctar (Néctar de Taçaflauta)",
     habitat: "• Arvoredo",
     behavior:
-      "Se nenhuma criatura estiver Exposta, escolha como alvo uma criatura que esteja Ferida, já que você é atraído pelo cheiro de sangue. Seu instinto é normalmente ser furtivo, bebendo sangue discretamente e voando para longe antes que seu hospedeiro perceba. Mas contra criaturas tão pequenas quanto ferais, você não se contém quanto a usar seu tamanho superior para prendê-los no chão e sugá- los até o fim. Use SANGUESSUGA com frequência, tanto para pegar suas presas desprevenidas com seus próprios TRAÇOS quanto para deixá-las Amedrontadas. Dependendo das circunstâncias, você pode começar A Caçada com um TRAÇO de qualquer monstro local, como um resquício de sua última refeição.",
+      "Se nenhuma criatura estiver Exposta, escolha como alvo uma criatura que esteja Ferida, já que você é atraído pelo cheiro de sangue. Seu instinto é normalmente ser furtivo, bebendo sangue discretamente e voando para longe antes que seu hospedeiro perceba. Mas contra criaturas tão pequenas quanto ferais, você não se contém quanto a usar seu tamanho superior para prendê-los no chão e sugá- los até o fim. Use SANGUESSUGA com frequência, tanto para pegar suas presas desprevenidas com seus próprios TRAÇOS quanto para deixá-las Amedrontadas. Dependendo das circunstâncias, você pode começar A Caçada com um TRAÇO de qualquer criatura local, como um resquício de sua última refeição.",
   },
 ];
 
@@ -6005,6 +6051,80 @@ export const techniquesById = Object.fromEntries(
 export const utensilsById = Object.fromEntries(
   utensilDefinitions.map((item) => [item.id, item]),
 );
+
+// ============================================================================
+// ESTILOS INICIAIS A PARTIR DO UTENSÍLIO
+// ============================================================================
+
+const ALL_STYLE_KEYS: StyleKey[] = ["ligeiro", "poderoso", "preciso", "sagaz"];
+
+/**
+ * Monta o objeto `FeralStyles` (3/2/1/1) completo a partir do Utensílio
+ * escolhido e da opção de distribuição (0 ou 1) selecionada pelo jogador na
+ * criação do Feral. Use isso para já preencher `IFeral.styles` antes de
+ * chamar `saveFeral`.
+ *
+ * Caso o Utensílio informado não possua `initialStyleOptions` definidas,
+ * retorna todos os Estilos em nível 1 como fallback seguro.
+ */
+export function buildFeralStylesFromUtensil(
+  utensilId: UtensilKey,
+  optionIndex: 0 | 1,
+): FeralStyles {
+  const utensil = utensilsById[utensilId] as IUtensilDefinition | undefined;
+  const option = utensil?.initialStyleOptions?.[optionIndex];
+
+  const styles = {} as FeralStyles;
+  for (const styleKey of ALL_STYLE_KEYS) {
+    if (option && styleKey === option.main) {
+      styles[styleKey] = 3;
+    } else if (option && styleKey === option.secondary) {
+      styles[styleKey] = 2;
+    } else {
+      styles[styleKey] = 1;
+    }
+  }
+
+  return styles;
+}
+
+// ============================================================================
+// TÉCNICAS INICIAIS A PARTIR DO UTENSÍLIO
+// ============================================================================
+
+/**
+ * Monta a lista de `ITechniqueState` iniciais do Feral a partir do Utensílio
+ * escolhido: a Técnica que o Utensílio sempre concede + a Técnica opcional
+ * escolhida pelo jogador dentre `techniqueOptionIds`. Use isso para já
+ * preencher `IFeral.techniques` antes de chamar `saveFeral`.
+ *
+ * `chosenOptionTechniqueId` deve ser um dos ids presentes em
+ * `techniqueOptionIds` do Utensílio; caso contrário (ou se o Utensílio não
+ * tiver essas informações definidas), apenas a Técnica inicial é retornada,
+ * quando existir.
+ */
+export function buildFeralTechniquesFromUtensil(
+  utensilId: UtensilKey,
+  chosenOptionTechniqueId?: ID,
+): ITechniqueState[] {
+  const utensil = utensilsById[utensilId] as IUtensilDefinition | undefined;
+  if (!utensil) return [];
+
+  const techniques: ITechniqueState[] = [];
+
+  if (utensil.initialTechniqueId !== undefined) {
+    techniques.push({ techniqueId: utensil.initialTechniqueId });
+  }
+
+  if (
+    chosenOptionTechniqueId !== undefined &&
+    utensil.techniqueOptionIds?.includes(chosenOptionTechniqueId)
+  ) {
+    techniques.push({ techniqueId: chosenOptionTechniqueId });
+  }
+
+  return techniques;
+}
 export const specialtiesById = Object.fromEntries(
   specialtyDefinitions.map((item) => [item.id, item]),
 );

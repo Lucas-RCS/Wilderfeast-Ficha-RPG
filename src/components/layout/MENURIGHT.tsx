@@ -84,14 +84,14 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
       name: "AGARRAR",
       description: "Imobilizar, escalar e segurar presas ou fendas",
       tooltipHelp:
-        "Usado para conter monstros, escalar partes do corpo de criaturas colossais, agarrar galhos ou prender presas no combate.",
+        "Usado para conter criaturas, escalar partes do corpo de criaturas colossais, agarrar galhos ou prender presas no combate.",
     },
     {
       key: "armazenar",
       name: "ARMAZENAR",
       description: "Conservar carne, guardar provisões e transportar peso",
       tooltipHelp:
-        "Capacidade de empacotar provisões, salgar e secar carnes de monstros caçados, suportar cargas pesadas na marcha.",
+        "Capacidade de empacotar provisões, salgar e secar carnes de criaturas caçados, suportar cargas pesadas na marcha.",
     },
     {
       key: "assegurar",
@@ -118,9 +118,9 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
     {
       key: "chamar",
       name: "CHAMAR",
-      description: "Emitir rugidos, atrair monstros e coordenar a matilha",
+      description: "Emitir rugidos, atrair criaturas e coordenar a matilha",
       tooltipHelp:
-        "Usado para atrair monstros com imitações de acasalamento/desafio, emitir comandos à matilha e inspirar companheiros.",
+        "Usado para atrair criaturas com imitações de acasalamento/desafio, emitir comandos à matilha e inspirar companheiros.",
     },
     {
       key: "curar",
@@ -132,7 +132,7 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
     {
       key: "estudar",
       name: "ESTUDAR",
-      description: "Analisar anatomia de monstros, fraquezas e botânica",
+      description: "Analisar anatomia de criaturas, fraquezas e botânica",
       tooltipHelp:
         "Examinar carcaças, descobrir pontos fracos e vulnerabilidades de criaturas, identificar ervas medicinais e cogumelos.",
     },
@@ -529,8 +529,8 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
             <p className="text-[11px] text-[#5C4D3C] leading-relaxed">
               <strong>Dica de Caçador Feral:</strong> Na criação de personagem,
               distribua seus pontos entre as perícias que melhor representam seu
-              passado humano e sua afinidade de monstro. Especialidades concedem
-              bônus específicos em perícias como <em>Golpear</em>,{" "}
+              passado humano e sua afinidade de criatura. Especialidades
+              concedem bônus específicos em perícias como <em>Golpear</em>,{" "}
               <em>Atravessar</em> ou <em>Curar</em>.
             </p>
           </div>
@@ -674,14 +674,14 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
                 </h3>
                 <InfoTooltip
                   title="Traços Ferais"
-                  description="Poderes e mutações orgânicas obtidas ao se alimentar da carne de monstros sagrados nos Banquetes. Concedem imunidades, garras, armaduras naturais ou sentidos aguçados."
+                  description="Poderes e mutações orgânicas obtidas ao se alimentar da carne de criaturas sagrados nos Banquetes. Concedem imunidades, garras, armaduras naturais ou sentidos aguçados."
                   category="Mutação"
                   onOpenCompendium={onOpenCompendium}
                 />
               </div>
               <p className="text-[11px] text-[#B0A497]">
                 Poderes sobrenaturais e mutações corporais herdadas do consumo
-                de monstros.
+                de criaturas.
               </p>
             </div>
 
@@ -724,7 +724,7 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
                 </p>
                 <p className="text-[11px] text-[#B0A497] max-w-sm mx-auto">
                   Participe de um Banquete culinário após uma caçada para
-                  incorporar a essência de monstros e desbloquear mutações
+                  incorporar a essência de criaturas e desbloquear mutações
                   ferais.
                 </p>
               </div>
@@ -906,13 +906,13 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
                   </h3>
                   <InfoTooltip
                     title="O Ritual do Banquete"
-                    description="Após uma caçada bem-sucedida, a matilha prepara um banquete com carne de monstro e temperos locais. Comer a presa concede novas mutações biológicas e fortalece os laços."
+                    description="Após uma caçada bem-sucedida, a matilha prepara um banquete com carne de criatura e temperos locais. Comer a presa concede novas mutações biológicas e fortalece os laços."
                     category="Culinária"
                     onOpenCompendium={onOpenCompendium}
                   />
                 </div>
                 <p className="text-[11px] text-[#B0A497]">
-                  Pratos preparados com a carne de monstros abatidos e
+                  Pratos preparados com a carne de criaturas abatidos e
                   benefícios adquiridos.
                 </p>
               </div>
@@ -1028,7 +1028,7 @@ export const RightDetailColumn: React.FC<RightDetailColumnProps> = ({
               </h3>
               <InfoTooltip
                 title="Diário de Caçada"
-                description="Seu bloco de notas pessoal para registrar pistas de monstros, temperos secretos, dívidas de honra e anotações de sessões de Wilderfeast."
+                description="Seu bloco de notas pessoal para registrar pistas de criaturas, temperos secretos, dívidas de honra e anotações de sessões de Wilderfeast."
                 category="Campanha"
               />
             </div>

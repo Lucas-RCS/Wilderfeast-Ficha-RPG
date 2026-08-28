@@ -559,7 +559,7 @@ export function App() {
                 type="button"
                 onClick={() => setIsClearConfirmOpen(true)}
                 className="p-2 rounded-lg text-[#FC8181] hover:bg-[#9B2C2C]/30 transition-colors cursor-pointer"
-                title="Restaurar monstro ao padrão"
+                title="Restaurar criatura ao padrão"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -599,13 +599,6 @@ export function App() {
           </div>
         </div>
       )}
-
-      <FloatingControls onOpenCompendium={() => setIsCompendiumOpen(true)} />
-
-      <CompendiumModal
-        isOpen={isCompendiumOpen}
-        onClose={() => setIsCompendiumOpen(false)}
-      />
 
       {isClearConfirmOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">

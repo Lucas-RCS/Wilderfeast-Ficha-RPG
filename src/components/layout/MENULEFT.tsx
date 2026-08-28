@@ -24,7 +24,7 @@ const STYLES_LIST: Array<{
     name: "LIGEIRO",
     description: "Velocidade, agilidade, esquiva e destreza acrobática.",
     tooltip:
-      "Rola dados de Ligeiro ao agir com rapidez, esquivar de investidas de monstros ou saltar entre copas de árvores.",
+      "Rola dados de Ligeiro ao agir com rapidez, esquivar de investidas de criaturas ou saltar entre copas de árvores.",
     badgeColor: "bg-[#16857A] text-white",
     borderCol: "border-[#16857A]/40",
     bgCol: "bg-[#242220]",
@@ -44,7 +44,7 @@ const STYLES_LIST: Array<{
     name: "PRECISO",
     description: "Mira, cirurgia culinária, cortes milimétricos e foco.",
     tooltip:
-      "Rola dados de Preciso ao mirar em partes e pontos fracos específicos do monstro ou executar cortes limpos de alta acurácia.",
+      "Rola dados de Preciso ao mirar em partes e pontos fracos específicos do criatura ou executar cortes limpos de alta acurácia.",
     badgeColor: "bg-[#E66826] text-white",
     borderCol: "border-[#E66826]/40",
     bgCol: "bg-[#242220]",
@@ -243,7 +243,7 @@ export const LeftStatusColumn: React.FC<LeftStatusColumnProps> = ({
           </span>
           <InfoTooltip
             title="O Feral"
-            description="Ferais são caçadores-cozinheiros mutados que comem carne de monstros para adquirir suas habilidades biológicas e restaurar o equilíbrio do ecossistema."
+            description="Ferais são caçadores-cozinheiros mutados que comem carne de criaturas para adquirir suas habilidades biológicas e restaurar o equilíbrio do ecossistema."
             category="Identidade"
           />
         </div>

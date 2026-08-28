@@ -85,7 +85,8 @@ export type UtensilKey =
   | "Espeto"
   | "Luvas"
   | "Maçarico"
-  | "Panela";
+  | "Panela"
+  | string;
 
 export interface ITechniqueDefinition {
   id: ID;
@@ -109,12 +110,31 @@ export interface ITechniqueTraining {
 // UTENSÍLIOS
 // ============================================================================
 
+// Uma das duas opções de distribuição de Estilos iniciais que um Utensílio
+// oferece. O Estilo `main` recebe nível 3 e o `secondary` recebe nível 2.
+// Os dois Estilos restantes (não citados) sempre recebem nível 1 cada.
+export interface IUtensilStyleOption {
+  main: StyleKey;
+  secondary: StyleKey;
+}
+
 export interface IUtensilDefinition {
   id: UtensilKey;
   name: string;
   defaultRange: number;
   defaultMaxDurability: number;
   brokenDescription: string;
+
+  // As duas opções de distribuição de Estilos iniciais oferecidas pelo
+  // Utensílio na criação do Feral (3/2/1/1). Opcional para não quebrar
+  // definições que ainda não tenham essa informação preenchida.
+  initialStyleOptions?: [IUtensilStyleOption, IUtensilStyleOption];
+
+  // Técnica que o Utensílio sempre concede de graça na criação do Feral.
+  initialTechniqueId?: ID;
+
+  // Técnicas adicionais entre as quais o jogador escolhe 1 na criação do Feral.
+  techniqueOptionIds?: ID[];
 }
 
 export interface IFeralUtensil {
@@ -138,7 +158,8 @@ export type SpecialtyKey =
   | "Molheiro"
   | "Padeiro"
   | "Peixeiro"
-  | "Pivoteiro";
+  | "Pivoteiro"
+  | string;
 
 export interface ISpecialtyDefinition {
   id: SpecialtyKey;
@@ -163,7 +184,7 @@ export interface IOriginDish {
   description: string;
   skillBonus: SkillKey;
 
-  // Usado principalmente na Iniciação, que descreve o monstro do primeiro
+  // Usado principalmente na Iniciação, que descreve o criatura do primeiro
   // Banquete Feral.
   monsterId?: ID;
 
@@ -278,8 +299,6 @@ export interface IFeral {
 
   feastHistory: IFeastRecord[];
   notes: IJournalNote[];
-
-  packId?: ID;
 }
 
 // ============================================================================
@@ -293,7 +312,6 @@ export interface IFeralCard {
   avatarUrl?: string;
   specialtyId: SpecialtyKey;
   utensilId: UtensilKey;
-  packId?: ID;
   lastSaved: string;
 }
 

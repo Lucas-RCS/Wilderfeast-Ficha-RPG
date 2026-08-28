@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useToast } from "./hooks/useToast";
 import { RulesButton } from "./components/ui/RulesButton";
 import RulesModal from "./components/ui/RulesModal";
+import Hub from "./page/Hub";
 
 export default function App() {
   const { showToast } = useToast();
@@ -16,7 +17,7 @@ export default function App() {
 
   return (
     <div className="w-full min-h-screen bg-[#121110] text-[#F5EFEB] flex flex-col font-sans">
-      {activeModule === "hub" && <></>}
+      {activeModule === "hub" && <Hub />}
       {activeModule === "feral" && <></>}
       {activeModule === "creature" && <></>}
 

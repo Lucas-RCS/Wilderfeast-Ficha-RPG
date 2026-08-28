@@ -144,7 +144,7 @@ export const CustomUtensilModal: React.FC<CustomUtensilModalProps> = ({
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Como essa ferramenta foi adaptada dos reis verdes para a caçada e o preparo de monstros?"
+                placeholder="Como essa ferramenta foi adaptada dos reis verdes para a caçada e o preparo de criaturas?"
                 rows={2}
                 className="w-full px-3 py-2 text-xs rounded-lg bg-[#25221F] border border-[#3E3A34] focus:outline-none focus:ring-2 focus:ring-[#E2A053]"
               />

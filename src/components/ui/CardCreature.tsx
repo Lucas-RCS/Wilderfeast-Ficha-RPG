@@ -1,4 +1,4 @@
-import { Clock, Copy, Edit3, Skull, Trash2, ArrowRight } from "lucide-react";
+import { Clock, Copy, Edit3, PawPrint, Trash2, ArrowRight } from "lucide-react";
 import type { ICreatureCard } from "../../types";
 import { formatRelativeTime } from "../../hooks/useUtils";
 
@@ -53,7 +53,7 @@ export function CardCreature({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <Skull className="h-10 w-10 text-[#8A4A4A]" />
+            <PawPrint className="h-10 w-10 text-[#8A4A4A]" />
           </div>
         )}
 
@@ -68,13 +68,13 @@ export function CardCreature({
             backdrop-blur-sm
           "
         >
-          <Skull className="h-2.5 w-2.5 text-[#FC8181]" />
+          <PawPrint className="h-2.5 w-2.5 text-[#FC8181]" />
           <span className="text-[9px] font-bold uppercase tracking-wider text-white">
             Estágio {data.stage}
           </span>
         </div>
 
-        {/* Vignette overlay — darker/redder than Feral for a monstrous feel */}
+        {/* Vignette overlay — darker/redder than Feral for a criaturaus feel */}
         <div
           className="
             absolute inset-0

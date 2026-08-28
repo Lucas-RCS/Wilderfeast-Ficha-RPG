@@ -10,16 +10,15 @@ import {
   X,
   Utensils,
   Users,
-  Skull,
+  PawPrint,
   Heart,
   Route,
-  Bone,
+  Beef,
   Wheat,
   Flame,
   Fish,
   Sprout,
   Droplets,
-  RotateCw,
   Layers,
   MapPin,
   Ruler,
@@ -56,17 +55,17 @@ interface RulesModalProps {
   onClose: () => void;
 }
 
-type CompendiumTab =
+type RuleTab =
   | "regras"
   | "utensilios"
+  | "especialidades"
   | "tecnicas"
   | "tracos"
   | "condicoes"
-  | "especialidades"
   | "criaturas";
 
 interface TabDefinition {
-  id: CompendiumTab;
+  id: RuleTab;
   label: string;
   icon: React.ReactNode;
   description: string;
@@ -84,6 +83,12 @@ const TABS: TabDefinition[] = [
     label: "Utensílios",
     icon: <Utensils className="h-4 w-4" />,
     description: "Equipamentos",
+  },
+  {
+    id: "especialidades",
+    label: "Especialidades",
+    icon: <Users className="h-4 w-4" />,
+    description: "Especializações dos ferais",
   },
   {
     id: "tecnicas",
@@ -104,15 +109,9 @@ const TABS: TabDefinition[] = [
     description: "Estados e efeitos",
   },
   {
-    id: "especialidades",
-    label: "Especialidades",
-    icon: <Users className="h-4 w-4" />,
-    description: "Especializações dos ferais",
-  },
-  {
     id: "criaturas",
     label: "Criaturas",
-    icon: <Skull className="h-4 w-4" />,
+    icon: <PawPrint className="h-4 w-4" />,
     description: "Bestiário",
   },
 ];
@@ -169,7 +168,7 @@ const RULE_HIGHLIGHTS = [
     accentBg: "bg-teal-500/10",
     accentBorder: "border-teal-500/20",
     description:
-      "A Jornada tem três fases: A Trilha (viagem, forrageamento e pistas), A Caçada (combate visceral contra o monstro frenético) e O Banquete & Recesso (purificação, cozinhar a carne e adquirir novas mutações e técnicas).",
+      "A Jornada tem três fases: A Trilha (viagem, forrageamento e pistas), A Caçada (combate visceral contra o criatura frenético) e O Banquete & Recesso (purificação, cozinhar a carne e adquirir novas mutações e técnicas).",
   },
 ] as const;
 
@@ -193,7 +192,7 @@ const LINEAGE_META: Record<
   }
 > = {
   Açougueiro: {
-    icon: <Bone className="h-4 w-4" />,
+    icon: <Beef className="h-4 w-4" />,
     text: "text-red-300",
     bg: "bg-red-500/10",
     border: "border-red-500/20",
@@ -235,7 +234,7 @@ const LINEAGE_META: Record<
     border: "border-cyan-500/20",
   },
   Pivoteiro: {
-    icon: <RotateCw className="h-4 w-4" />,
+    icon: <Dna className="h-4 w-4" />,
     text: "text-violet-300",
     bg: "bg-violet-500/10",
     border: "border-violet-500/20",
@@ -243,7 +242,7 @@ const LINEAGE_META: Record<
 };
 
 const DEFAULT_LINEAGE_META = {
-  icon: <Skull className="h-4 w-4" />,
+  icon: <PawPrint className="h-4 w-4" />,
   text: "text-zinc-300",
   bg: "bg-zinc-500/10",
   border: "border-zinc-500/20",
@@ -683,7 +682,7 @@ function SpecialtiesTab({ search }: { search: string }) {
 
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wide text-orange-400">
-                Monstros importantes
+                Criaturas importantes
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {(specialty.importantMonsterOptions ?? []).map((creatureId) => (
@@ -1125,19 +1124,19 @@ function CreaturesTab({ search }: { search: string }) {
 }
 
 const TAB_CONTENT: Record<
-  Exclude<CompendiumTab, "regras">,
+  Exclude<RuleTab, "regras">,
   (props: { search: string }) => React.ReactNode
 > = {
   utensilios: UtensilsTab,
+  especialidades: SpecialtiesTab,
   tecnicas: TechniquesTab,
   tracos: TraitsTab,
   condicoes: ConditionsTab,
-  especialidades: SpecialtiesTab,
   criaturas: CreaturesTab,
 };
 
 export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<CompendiumTab>("regras");
+  const [activeTab, setActiveTab] = useState<RuleTab>("regras");
   const [search, setSearch] = useState("");
 
   useEffect(() => {

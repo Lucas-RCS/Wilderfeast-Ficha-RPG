@@ -19,7 +19,7 @@ import type {
 } from "../types";
 import { SPECIALTIES_DATA, UTENSILS_DATA } from "../data/wilderfeastData";
 import { MONSTER_LINEAGES } from "../data/creatureData";
-import { CompendiumModal } from "../components/ui/RulesModal";
+import { CompendiumModal } from "../components/ui/CompendiumModal";
 import { CardFeral } from "../components/ui/CardFeral";
 import { CardCreature } from "../components/ui/CardCreature";
 import { getItem, setItem } from "../lib/storage";
@@ -269,7 +269,7 @@ export const HubView: React.FC<HubViewProps> = ({
                   <span>2. A Trilha & A Caçada</span>
                 </div>
                 <p className="text-[#B0A497] leading-relaxed">
-                  Rastreie a presa pela Trilha e enfrente o monstro em combate
+                  Rastreie a presa pela Trilha e enfrente o criatura em combate
                   tático quebrando suas partes corporais.
                 </p>
               </div>
@@ -334,7 +334,7 @@ export const HubView: React.FC<HubViewProps> = ({
                 placeholder={
                   activeTab === "ferais"
                     ? "Buscar feral por nome, especialidade, utensílio ou pronome..."
-                    : "Buscar monstro por nome, linhagem ou estágio de vida..."
+                    : "Buscar criatura por nome, linhagem ou estágio de vida..."
                 }
                 className="w-full pl-11 pr-24 py-3 rounded-xl bg-[#1E1D1B] border border-[#383430] hover:border-[#4D4741] focus:border-[#FF9B42] focus:ring-1 focus:ring-[#FF9B42] text-sm text-[#F5EFEB] placeholder-[#7A7065] font-medium transition-all shadow-inner outline-none"
               />
@@ -537,7 +537,7 @@ export const HubView: React.FC<HubViewProps> = ({
                   <Search className="w-6 h-6" />
                 </div>
                 <h3 className="font-serif font-bold text-base text-[#F5EFEB]">
-                  Nenhum monstro encontrado
+                  Nenhum criatura encontrado
                 </h3>
                 <p className="text-xs text-[#B0A497] max-w-sm mx-auto">
                   Nenhuma criatura corresponde ao termo de busca "
