@@ -48,7 +48,7 @@ import type {
   ITechniqueDefinition,
   ITraitDefinition,
   IUtensilDefinition,
-} from "../../types";
+} from "../../types/types";
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -1227,7 +1227,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="shrink-0 rounded-lg p-1.5 text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
+                  className="cursor-pointer shrink-0 rounded-lg p-1.5 text-zinc-300 transition-colors hover:bg-white/10 hover:text-white"
                   aria-label="Fechar compêndio"
                 >
                   <X className="h-5 w-5" />

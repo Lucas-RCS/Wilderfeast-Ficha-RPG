@@ -20,7 +20,7 @@ import type {
   ITrait,
   SkillKey,
   JournalNote,
-} from "../../types";
+} from "../../types/types";
 import { InfoTooltip } from "../ui/Tooltip";
 
 interface RightDetailColumnProps {

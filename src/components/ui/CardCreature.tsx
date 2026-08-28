@@ -1,10 +1,16 @@
-import { Clock, Copy, Edit3, PawPrint, Trash2, ArrowRight } from "lucide-react";
-import type { ICreatureCard } from "../../types";
-import { formatRelativeTime } from "../../hooks/useUtils";
+import { ArrowRight, Clock, Copy, Edit3, PawPrint, Trash2 } from "lucide-react";
 
-type SheetType = "feral" | "creature";
-type RenameHandler = (id: string, currentName: string, type: SheetType) => void;
-type DeleteTarget = { id: string; name: string; type: SheetType };
+import { formatRelativeTime } from "../../hooks/useUtils";
+import type { ICreatureCard, ID } from "../../types/types";
+import type { DeleteTarget, RenameHandler } from "../../types/cardTypes";
+
+interface CardCreatureProps {
+  data: ICreatureCard;
+  handleOpenRename: RenameHandler;
+  onDuplicateCreature: (id: ID) => void;
+  setDeleteTarget: (target: DeleteTarget) => void;
+  onOpenCreature: (id: ID) => void;
+}
 
 export function CardCreature({
   data,
@@ -12,16 +18,9 @@ export function CardCreature({
   onDuplicateCreature,
   onOpenCreature,
   setDeleteTarget,
-}: {
-  data: ICreatureCard;
-  handleOpenRename: RenameHandler;
-  onDuplicateCreature: (id: string) => void;
-  setDeleteTarget: (target: DeleteTarget) => void;
-  onOpenCreature: (id: string) => void;
-}) {
+}: CardCreatureProps) {
   return (
     <div
-      key={data.id}
       className="
         group
         overflow-hidden
@@ -35,7 +34,7 @@ export function CardCreature({
         hover:shadow-lg hover:shadow-black/20
       "
     >
-      {/* avatarUrl */}
+      {/* Avatar / capa */}
       <div className="relative h-36 overflow-hidden bg-[#201A19]">
         {data.avatarUrl ? (
           <img
@@ -57,7 +56,7 @@ export function CardCreature({
           </div>
         )}
 
-        {/* Stage badge */}
+        {/* Badge de estágio */}
         <div
           className="
             absolute left-2 top-2
@@ -74,7 +73,6 @@ export function CardCreature({
           </span>
         </div>
 
-        {/* Vignette overlay — darker/redder than Feral for a criaturaus feel */}
         <div
           className="
             absolute inset-0
@@ -85,7 +83,7 @@ export function CardCreature({
           "
         />
 
-        {/* Character information */}
+        {/* Identidade */}
         <div className="absolute inset-x-0 bottom-0 p-3">
           <h3
             className="
@@ -109,8 +107,13 @@ export function CardCreature({
         </div>
       </div>
 
-      {/* Content */}
+      {/* Conteúdo */}
       <div className="p-3">
+        {/* Descrição — não existia no card original, mas o tipo já a exigia */}
+        <p className="text-[11px] leading-relaxed text-[#A79E93] line-clamp-2 min-h-[2.2em]">
+          {data.description || "Sem descrição registrada."}
+        </p>
+
         <div className="mt-2.5 flex items-center text-[10px] text-[#8C847A]">
           <Clock className="mr-1 h-3 w-3" />
           <span className="font-mono">
@@ -118,7 +121,7 @@ export function CardCreature({
           </span>
         </div>
 
-        {/* Actions */}
+        {/* Ações */}
         <div className="mt-3 flex items-center justify-between border-t border-[#2B2825] pt-3">
           <div className="flex items-center gap-0.5">
             <button

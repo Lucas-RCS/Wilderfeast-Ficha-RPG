@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Heart, Shield, Users, AlertTriangle, Plus } from "lucide-react";
-import { IFeral, StyleKey, CustomUtensil, ICondition } from "../../types";
+import { IFeral, StyleKey, CustomUtensil, ICondition } from "../../types/types";
 import {
   UTENSILS_DATA,
   SPECIALTIES_DATA,

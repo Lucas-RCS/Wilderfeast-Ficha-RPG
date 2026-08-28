@@ -4,12 +4,14 @@ import type {
   IFeral,
   IFeralCard,
   ID,
-} from "../types";
+  IMatilha,
+} from "../types/types";
 
 /** Chaves usadas no localStorage. */
 const STORAGE_KEYS = {
   ferais: "wilderfeast:ferais",
   criaturas: "wilderfeast:criaturas",
+  matilhas: "wilderfeast:matilhas",
 } as const;
 
 interface StoredEntry<T> {
@@ -219,6 +221,42 @@ export function getAllCreatureCards(): ICreatureCard[] {
 export function getCreatureCardById(id: ID): ICreatureCard | undefined {
   const entry = getEntryById<ICreature>(STORAGE_KEYS.criaturas, id);
   return entry ? toCreatureCard(entry.data, entry.lastSaved) : undefined;
+}
+
+// ============================================================================
+// MATILHAS
+// ============================================================================
+
+export function getAllMatilhas(): IMatilha[] {
+  return getAllEntries<IMatilha>(STORAGE_KEYS.matilhas).map(
+    (entry) => entry.data,
+  );
+}
+
+export function getMatilhaById(id: ID): IMatilha | undefined {
+  return getEntryById<IMatilha>(STORAGE_KEYS.matilhas, id)?.data;
+}
+
+export function saveMatilha(matilha: IMatilha): IMatilha {
+  return saveEntry(STORAGE_KEYS.matilhas, matilha);
+}
+
+export function deleteMatilha(id: ID): boolean {
+  return deleteEntry(STORAGE_KEYS.matilhas, id);
+}
+
+export function addFeralToMatilha(
+  matilhaId: ID,
+  feralId: ID,
+): IMatilha | undefined {
+  const matilha = getMatilhaById(matilhaId);
+  if (!matilha) return undefined;
+  if (matilha.memberIds.includes(feralId)) return matilha;
+
+  return saveMatilha({
+    ...matilha,
+    memberIds: [...matilha.memberIds, feralId],
+  });
 }
 
 // ============================================================================

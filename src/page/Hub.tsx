@@ -11,24 +11,17 @@ import {
   PawPrint,
   CookingPot,
 } from "lucide-react";
-import type {
-  IFeralCard,
-  ICreatureCard,
-  SpecialtyKey,
-  UtensilKey,
-  MonsterLineage,
-  ICreature,
-  IFeral,
-} from "../types";
-import { specialtiesById, utensilsById } from "../data/wilderfeastData";
+import type { IFeralCard, ICreatureCard } from "../types/types";
 import {
   getAllCreatureCards,
   getAllFeralCards,
   getItem,
-  saveFeral,
-  saveCreature,
   setItem,
 } from "../lib/storage";
+import { FeralCreateModal } from "../components/creation/FeralCreateModal";
+import { CreatureCreateModal } from "../components/creation/CreatureCreateModal";
+import { CardCreature } from "../components/ui/CardCreature";
+import { CardFeral } from "../components/ui/CardFeral";
 
 export default function Hub() {
   const [showQuickGuide, setShowQuickGuide] = useState<boolean>(
@@ -48,31 +41,9 @@ export default function Hub() {
   const [isNewCreatureModalOpen, setIsNewCreatureModalOpen] =
     useState<boolean>(false);
 
-  const [newFeral, setNewFeral] = useState<IFeralCard>({
-    id: 0,
-    name: "",
-    pronouns: "",
-    avatarUrl: "",
-    specialtyId: "",
-    utensilId: "",
-    lastSaved: "",
-  });
-  const [newCreature, setNewCreature] = useState<ICreatureCard>({
-    id: 0,
-    name: "",
-    description: "",
-    avatarUrl: "",
-    lineage: "Açougueiro",
-    stage: "Adulto",
-    lastSaved: "",
-  });
-
   useEffect(() => {
     setFeralCards(getAllFeralCards());
     setCreatureCards(getAllCreatureCards());
-
-    saveFeral(exampleFeral);
-    saveCreature(exampleCreature);
   }, []);
 
   useEffect(() => {
@@ -95,9 +66,7 @@ export default function Hub() {
 
   return (
     <main className="w-full min-h-screen bg-[#121110] text-[#F5EFEB] flex flex-col font-sans pb-16">
-      {/* Main Hub Content Area - 100% Fluid Width */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-6 sm:pt-10 flex-1 flex flex-col">
-        {/* Editorial Title Block */}
         <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#242220] border border-[#383430] text-xs font-bold text-[#FF9B42] uppercase tracking-widest mb-3">
             <Sparkles className="w-3.5 h-3.5" />
@@ -283,7 +252,7 @@ export default function Hub() {
                 <button
                   id="hub-btn-new-feral"
                   type="button"
-                  onClick={() => {}}
+                  onClick={() => setIsNewFeralModalOpen(true)}
                   className="px-4 py-2 rounded-lg bg-[#13335C] hover:bg-[#0E2644] text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors border border-[#2B6CB0]/40 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-[#FF9B42]" />
@@ -294,7 +263,10 @@ export default function Hub() {
 
             {/* Grid of Feral Sheets or Empty Search */}
             {feralCards.length === 0 ? (
-              <div className="py-16 text-center rounded-2xl bg-[#1A1918] border-2 border-dashed border-[#383430] p-8 space-y-4">
+              <div
+                key="no-feral"
+                className="py-16 text-center rounded-2xl bg-[#1A1918] border-2 border-dashed border-[#383430] p-8 space-y-4"
+              >
                 <div className="w-16 h-16 rounded-2xl bg-[#242220] text-[#FF9B42] flex items-center justify-center mx-auto border border-[#383430]">
                   <Utensils className="w-8 h-8" />
                 </div>
@@ -339,7 +311,14 @@ export default function Hub() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredFerals.map((data) => (
-                  <></>
+                  <CardFeral
+                    key={data.id}
+                    data={data}
+                    handleOpenRename={() => {}}
+                    onDuplicateFeral={() => {}}
+                    setDeleteTarget={() => {}}
+                    onOpenFeral={() => {}}
+                  />
                 ))}
               </div>
             )}
@@ -380,7 +359,7 @@ export default function Hub() {
                 <button
                   id="hub-btn-new-creature"
                   type="button"
-                  onClick={() => {}}
+                  onClick={() => setIsNewCreatureModalOpen(true)}
                   className="px-4 py-2 rounded-lg bg-[#13335C] hover:bg-[#0E2644] text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors border border-[#2B6CB0]/40 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-[#FF9B42]" />
@@ -391,7 +370,10 @@ export default function Hub() {
 
             {/* Grid of Creature Sheets or Empty Search */}
             {creatureCards.length === 0 ? (
-              <div className="py-16 text-center rounded-2xl bg-[#1A1918] border-2 border-dashed border-[#383430] p-8 space-y-4">
+              <div
+                key="no-creature"
+                className="py-16 text-center rounded-2xl bg-[#1A1918] border-2 border-dashed border-[#383430] p-8 space-y-4"
+              >
                 <div className="w-16 h-16 rounded-2xl bg-[#242220] text-[#FF9B42] flex items-center justify-center mx-auto border border-[#383430]">
                   <Swords className="w-8 h-8" />
                 </div>
@@ -436,228 +418,37 @@ export default function Hub() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filteredCreatures.map((data) => (
-                  <></>
+                  <CardCreature
+                    key={data.id}
+                    data={data}
+                    handleOpenRename={() => {}}
+                    onDuplicateCreature={() => {}}
+                    setDeleteTarget={() => {}}
+                    onOpenCreature={() => {}}
+                  />
                 ))}
               </div>
             )}
           </div>
         )}
       </div>
+
+      <FeralCreateModal
+        isOpen={isNewFeralModalOpen}
+        onClose={() => setIsNewFeralModalOpen(false)}
+        onCreated={() => {
+          setFeralCards(getAllFeralCards());
+          setIsNewFeralModalOpen(false);
+        }}
+      />
+      <CreatureCreateModal
+        isOpen={isNewCreatureModalOpen}
+        onClose={() => setIsNewCreatureModalOpen(false)}
+        onCreated={() => {
+          setCreatureCards(getAllCreatureCards());
+          setIsNewCreatureModalOpen(false);
+        }}
+      />
     </main>
   );
 }
-
-export const exampleFeral: IFeral = {
-  id: 101,
-  name: "Kaia Dente-de-Ferro",
-  pronouns: "ela/dela",
-  appearance:
-    "Baixa e musculosa, com cicatrizes nos braços e um Cutelo sempre preso às costas.",
-  avatarUrl: "",
-
-  specialtyId: "Açougueiro",
-
-  utensil: {
-    utensilId: "Cutelo",
-    range: 1,
-    durability: {
-      current: 20,
-      max: 20,
-    },
-  },
-
-  personality: {
-    is: "Direta e destemida",
-    strivesToBe: "Alguém em quem a Matilha confie de olhos fechados",
-  },
-
-  origin: {
-    creation: {
-      type: "criacao",
-      description:
-        "Aprendeu a cortar carne ainda criança, ajudando a família a preparar caças grandes.",
-      skillBonus: "golpear",
-    },
-    initiation: {
-      type: "iniciacao",
-      description:
-        "Seu primeiro Banquete Feral foi contra Asewa, ao lado da Matilha que a acolheu.",
-      skillBonus: "agarrar",
-      monsterId: 1,
-      notes: "Guarda um dente de Asewa como talismã.",
-    },
-    ambition: {
-      type: "ambicao",
-      description:
-        "Quer um dia enfrentar um criatura Zênite sozinha, sem apoio da Matilha.",
-      skillBonus: "estudar",
-    },
-    homeland: "Vale dos Ossos Partidos",
-    typicalIngredient: "Carne de caça grossa",
-    typicalSeasoning: "Sal defumado",
-    connection: {
-      dish: "iniciacao",
-      partnerFeralId: 102,
-      description:
-        "Lutaram lado a lado no primeiro Banquete e desde então se cobrem em combate.",
-    },
-  },
-
-  importantMonster: {
-    monsterId: 1,
-    description: "Asewa, a primeira criatura que abateu ao lado da Matilha.",
-  },
-
-  styles: {
-    ligeiro: 2,
-    poderoso: 3,
-    preciso: 2,
-    sagaz: 1,
-  },
-
-  skills: {
-    agarrar: 1,
-    armazenar: 0,
-    assegurar: 1,
-    atirar: 0,
-    atravessar: 1,
-    chamar: 0,
-    curar: 0,
-    estudar: 1,
-    exibir: 0,
-    golpear: 2,
-    manufaturar: 1,
-    procurar: 0,
-  },
-
-  vigor: {
-    current: 18,
-    max: 18,
-  },
-
-  techniques: [{ techniqueId: 11 }, { techniqueId: 12 }],
-
-  techniqueTraining: {
-    techniqueId: 15,
-    sessions: 2,
-  },
-
-  traits: [
-    { traitId: 14, level: 1 },
-    { traitId: 5, level: 1 },
-  ],
-
-  conditions: [{ conditionId: 5, level: 1 }],
-
-  feastHistory: [
-    {
-      id: 1,
-      monsterId: 1,
-      dishName: "Costela de Asewa ao ponto",
-      date: "2026-01-10",
-      permanentReward: { type: "style", key: "poderoso" },
-    },
-  ],
-
-  notes: [
-    {
-      id: 1,
-      title: "Rota até o Vale",
-      category: "Exploração",
-      content: "A travessia pelo desfiladeiro é mais curta na maré baixa.",
-      createdAt: "2026-02-01T10:00:00.000Z",
-    },
-  ],
-};
-
-export const exampleCreature: ICreature = {
-  id: 201,
-  name: "Corvo-Fanha",
-  lineage: "Molheiro",
-  stage: "Jovem",
-  sizeDescription: "1,5 metro de envergadura",
-  description:
-    "Um criatura jovem da Linhagem dos Molheiros, com penas que secretam um óleo levemente tóxico.",
-  avatarUrl: "",
-
-  vigor: {
-    current: 12,
-    max: 12,
-  },
-
-  styles: {
-    ligeiro: 3,
-    poderoso: 0,
-    preciso: 1,
-    sagaz: 2,
-  },
-
-  skills: {
-    agarrar: 0,
-    armazenar: 0,
-    assegurar: 0,
-    atirar: 1,
-    atravessar: 2,
-    chamar: 1,
-    curar: 0,
-    estudar: 0,
-    exibir: 0,
-    golpear: 1,
-    manufaturar: 0,
-    procurar: 1,
-  },
-
-  traits: [
-    { traitId: 21, level: 1 },
-    { traitId: 32, level: 1 },
-  ],
-
-  additionalTraits: [],
-
-  conditions: [],
-
-  parts: [
-    {
-      id: 1,
-      name: "PENAS OLEOSAS",
-      durability: {
-        current: 15,
-        max: 15,
-      },
-      description:
-        "PENAS OLEOSAS. Alcance: 2 (ATIRAR SAGAZ). Criaturas atingidas ficam Envenenadas 1.",
-      attack: {
-        range: 2,
-        skill: "atirar",
-        style: "sagaz",
-      },
-      broken: {
-        description:
-          "Alcance: 2 (ATIRAR SAGAZ). Esta PARTE causa metade do Dano e não Envenena mais.",
-      },
-    },
-    {
-      id: 2,
-      name: "BICO",
-      durability: {
-        current: 10,
-        max: 10,
-      },
-      description: "BICO. Alcance: 1 (GOLPEAR LIGEIRO).",
-      attack: {
-        range: 1,
-        skill: "golpear",
-        style: "ligeiro",
-      },
-      broken: {
-        description:
-          "Alcance: 1 (GOLPEAR LIGEIRO). Esta PARTE causa metade do Dano.",
-      },
-    },
-  ],
-
-  diet: "Pequenos répteis e frutas-ferais fermentadas",
-  habitat: "Pântanos e manguezais",
-  behavior:
-    "Territorial, mas evita conflito direto quando não está encurralado",
-};

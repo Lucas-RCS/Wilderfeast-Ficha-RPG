@@ -1,20 +1,25 @@
-import { formatRelativeTime } from "../../hooks/useUtils";
-
 import {
+  ArrowRight,
   Clock,
   Copy,
   Edit3,
-  Trash2,
-  Target,
   Hammer,
-  ArrowRight,
+  Target,
+  Trash2,
 } from "lucide-react";
 
-import type { IFeralCard } from "../../types";
+import { formatRelativeTime } from "../../hooks/useUtils";
+import { specialtiesById, utensilsById } from "../../data/wilderfeastData";
+import type { ID, IFeralCard } from "../../types/types";
+import type { DeleteTarget, RenameHandler } from "../../types/cardTypes";
 
-type SheetType = "feral" | "creature";
-type RenameHandler = (id: string, currentName: string, type: SheetType) => void;
-type DeleteTarget = { id: string; name: string; type: SheetType };
+interface CardFeralProps {
+  data: IFeralCard;
+  onOpenFeral: (id: ID) => void;
+  onDuplicateFeral: (id: ID) => void;
+  handleOpenRename: RenameHandler;
+  setDeleteTarget: (target: DeleteTarget) => void;
+}
 
 export function CardFeral({
   data,
@@ -22,16 +27,15 @@ export function CardFeral({
   onDuplicateFeral,
   handleOpenRename,
   setDeleteTarget,
-}: {
-  data: IFeralCard;
-  onOpenFeral: (id: string) => void;
-  onDuplicateFeral: (id: string) => void;
-  handleOpenRename: RenameHandler;
-  setDeleteTarget: (target: DeleteTarget) => void;
-}) {
+}: CardFeralProps) {
+  // `specialtyId`/`utensilId` guardam a chave (ex.: "Cutelo"), não o nome de
+  // exibição — resolvemos aqui para não vazar chaves internas para a UI.
+  const specialtyName =
+    specialtiesById[data.specialtyId]?.name ?? data.specialtyId;
+  const utensilName = utensilsById[data.utensilId]?.name ?? data.utensilId;
+
   return (
     <div
-      key={data.id}
       className="
         group
         overflow-hidden
@@ -45,7 +49,7 @@ export function CardFeral({
         hover:shadow-lg hover:shadow-black/20
       "
     >
-      {/* avatarUrl */}
+      {/* Avatar / capa */}
       <div className="relative h-36 overflow-hidden bg-[#1A1918]">
         {data.avatarUrl ? (
           <img
@@ -68,7 +72,6 @@ export function CardFeral({
           </div>
         )}
 
-        {/* Overlay */}
         <div
           className="
             absolute inset-0
@@ -79,7 +82,7 @@ export function CardFeral({
           "
         />
 
-        {/* Character information */}
+        {/* Identidade */}
         <div className="absolute inset-x-0 bottom-0 p-3">
           <h3
             className="
@@ -98,15 +101,15 @@ export function CardFeral({
           </h3>
 
           <span className="mt-0.5 block text-[11px] font-medium text-white/65">
-            {data.pronouns || "Não informado"}
+            {data.pronouns || "Pronomes não informados"}
           </span>
         </div>
       </div>
 
-      {/* Content */}
+      {/* Conteúdo */}
       <div className="p-3">
         <div className="grid grid-cols-2 gap-1.5">
-          {/* Specialty */}
+          {/* Especialidade */}
           <div
             className="
               flex items-center gap-2
@@ -126,12 +129,12 @@ export function CardFeral({
                 Especialidade
               </span>
               <span className="block truncate text-[11px] font-bold text-white">
-                {data.specialty || "—"}
+                {specialtyName}
               </span>
             </div>
           </div>
 
-          {/* Utensil */}
+          {/* Utensílio */}
           <div
             className="
               flex items-center gap-2
@@ -151,13 +154,13 @@ export function CardFeral({
                 Utensílio
               </span>
               <span className="block truncate text-[11px] font-bold text-white">
-                {data.utensil || "—"}
+                {utensilName}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Last saved */}
+        {/* Última atualização */}
         <div className="mt-2.5 flex items-center text-[10px] text-[#8C847A]">
           <Clock className="mr-1 h-3 w-3" />
           <span className="font-mono">
@@ -171,10 +174,9 @@ export function CardFeral({
           <div className="h-px flex-1 bg-[#2B2825]" />
         </div>
 
-        {/* Actions */}
+        {/* Ações */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-0.5">
-            {/* Rename */}
             <button
               type="button"
               onClick={() => handleOpenRename(data.id, data.name, "feral")}
@@ -192,7 +194,6 @@ export function CardFeral({
               <Edit3 className="h-3.5 w-3.5" />
             </button>
 
-            {/* Duplicate */}
             <button
               type="button"
               onClick={() => onDuplicateFeral(data.id)}
@@ -210,7 +211,6 @@ export function CardFeral({
               <Copy className="h-3.5 w-3.5" />
             </button>
 
-            {/* Delete */}
             <button
               type="button"
               onClick={() =>
@@ -234,7 +234,6 @@ export function CardFeral({
             </button>
           </div>
 
-          {/* Open */}
           <button
             type="button"
             onClick={() => onOpenFeral(data.id)}

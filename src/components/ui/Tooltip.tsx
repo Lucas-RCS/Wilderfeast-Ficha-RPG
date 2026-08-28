@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { HelpCircle, X, BookOpen } from "lucide-react";
+import { HelpCircle, X } from "lucide-react";
 
 interface InfoTooltipProps {
   title: string;
@@ -13,7 +13,6 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
   title,
   description,
   category,
-  onOpenCompendium,
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);

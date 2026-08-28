@@ -8,7 +8,7 @@ import type {
   MonsterLineage,
   MonsterStage,
   PartCategory,
-} from "../../types";
+} from "../../types/types";
 import {
   calculateEffectiveStats,
   MONSTER_LINEAGES,

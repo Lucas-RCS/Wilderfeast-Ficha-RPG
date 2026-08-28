@@ -1,5 +1,5 @@
 import React from "react";
-import type { ICreature, SkillKey, StyleKey } from "../../types";
+import type { ICreature, SkillKey, StyleKey } from "../../types/types";
 import { calculateEffectiveStats } from "../data/creatureData";
 
 interface CreaturePrintViewProps {

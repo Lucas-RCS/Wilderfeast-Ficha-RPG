@@ -18,7 +18,7 @@ import type {
   SkillKey,
   StyleKey,
   UtensilKey,
-} from "../types";
+} from "../types/types";
 
 export const STYLES: Record<StyleKey, { name: string; description: string }> = {
   ligeiro: {
