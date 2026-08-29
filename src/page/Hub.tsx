@@ -11,7 +11,7 @@ import {
   PawPrint,
   CookingPot,
 } from "lucide-react";
-import type { IFeralCard, ICreatureCard } from "../types/types";
+import type { IFeralCard, ICreatureCard, ID } from "../types/types";
 import {
   getAllCreatureCards,
   getAllFeralCards,
@@ -23,7 +23,12 @@ import { CreatureCreateModal } from "../components/creation/CreatureCreateModal"
 import { CardCreature } from "../components/ui/CardCreature";
 import { CardFeral } from "../components/ui/CardFeral";
 
-export default function Hub() {
+interface HubProps {
+  onOpenFeral: (id: ID) => void;
+  onOpenCreature: (id: ID) => void;
+}
+
+export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
   const [showQuickGuide, setShowQuickGuide] = useState<boolean>(
     () => getItem("showQuickGuide") !== "false",
   );
@@ -317,7 +322,7 @@ export default function Hub() {
                     handleOpenRename={() => {}}
                     onDuplicateFeral={() => {}}
                     setDeleteTarget={() => {}}
-                    onOpenFeral={() => {}}
+                    onOpenFeral={onOpenFeral}
                   />
                 ))}
               </div>
@@ -424,7 +429,7 @@ export default function Hub() {
                     handleOpenRename={() => {}}
                     onDuplicateCreature={() => {}}
                     setDeleteTarget={() => {}}
-                    onOpenCreature={() => {}}
+                    onOpenCreature={onOpenCreature}
                   />
                 ))}
               </div>

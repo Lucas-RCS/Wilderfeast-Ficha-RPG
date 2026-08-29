@@ -259,6 +259,21 @@ export function addFeralToMatilha(
   });
 }
 
+/** Remove um Feral dos membros de uma Matilha, se ele estiver nela. */
+export function removeFeralFromMatilha(
+  matilhaId: ID,
+  feralId: ID,
+): IMatilha | undefined {
+  const matilha = getMatilhaById(matilhaId);
+  if (!matilha) return undefined;
+  if (!matilha.memberIds.includes(feralId)) return matilha;
+
+  return saveMatilha({
+    ...matilha,
+    memberIds: matilha.memberIds.filter((id) => id !== feralId),
+  });
+}
+
 // ============================================================================
 // UTILITÁRIOS GERAIS
 // ============================================================================
