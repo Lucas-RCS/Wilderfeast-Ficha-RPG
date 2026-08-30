@@ -10,9 +10,14 @@ import {
   X,
   PawPrint,
   CookingPot,
+  Trash2,
 } from "lucide-react";
 import type { IFeralCard, ICreatureCard, ID } from "../types/types";
 import {
+  copyCreature,
+  copyFeral,
+  deleteFeral,
+  deleteCreature,
   getAllCreatureCards,
   getAllFeralCards,
   getItem,
@@ -22,6 +27,7 @@ import { FeralCreateModal } from "../components/creation/FeralCreateModal";
 import { CreatureCreateModal } from "../components/creation/CreatureCreateModal";
 import { CardCreature } from "../components/ui/CardCreature";
 import { CardFeral } from "../components/ui/CardFeral";
+import type { DeleteTarget } from "../types/cardTypes";
 
 interface HubProps {
   onOpenFeral: (id: ID) => void;
@@ -40,6 +46,22 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
   const [filteredCreatures, setFilteredCreatures] = useState<ICreatureCard[]>(
     [],
   );
+
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+
+  const handleDeleteTarget = () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === "feral") {
+      deleteFeral(deleteTarget.id);
+      setFeralCards(getAllFeralCards());
+    } else {
+      deleteCreature(deleteTarget.id);
+      setCreatureCards(getAllCreatureCards());
+    }
+
+    setDeleteTarget(null);
+  };
 
   const [isNewFeralModalOpen, setIsNewFeralModalOpen] =
     useState<boolean>(false);
@@ -319,9 +341,11 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                   <CardFeral
                     key={data.id}
                     data={data}
-                    handleOpenRename={() => {}}
-                    onDuplicateFeral={() => {}}
-                    setDeleteTarget={() => {}}
+                    onDuplicateFeral={(e) => {
+                      copyFeral(e);
+                      setFeralCards(getAllFeralCards());
+                    }}
+                    setDeleteTarget={(e) => setDeleteTarget(e)}
                     onOpenFeral={onOpenFeral}
                   />
                 ))}
@@ -426,9 +450,13 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                   <CardCreature
                     key={data.id}
                     data={data}
-                    handleOpenRename={() => {}}
-                    onDuplicateCreature={() => {}}
-                    setDeleteTarget={() => {}}
+                    onDuplicateCreature={(e) => {
+                      copyCreature(e);
+                      setCreatureCards(getAllCreatureCards());
+                    }}
+                    setDeleteTarget={(e) => {
+                      setDeleteTarget(e);
+                    }}
                     onOpenCreature={onOpenCreature}
                   />
                 ))}
@@ -454,6 +482,43 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
           setIsNewCreatureModalOpen(false);
         }}
       />
+
+      {/* Modal delete feral e creature */}
+      {deleteTarget && (
+        <div
+          id="hub-modal-delete"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        >
+          <div className="bg-[#1A1918] border border-[#383430] rounded-2xl p-6 max-w-sm w-full text-center space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              <Trash2 className="w-6 h-6 text-[#FC8181]" />
+              <h3 className="font-serif font-black text-lg text-[#FC8181]">
+                Excluir Ficha
+              </h3>
+            </div>
+            <p className="text-xs text-[#B0A497]">
+              Tem certeza que deseja excluir esta ficha? Esta ação não pode ser
+              desfeita.
+            </p>
+            <div className="flex items-center justify-center gap-4 pt-3">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg bg-[#242220] hover:bg-[#2E2B27] text-xs font-bold text-[#FF9B42] border border-[#383430] transition-colors cursor-pointer"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg bg-[#FC8181] hover:bg-[#9B2C2C] text-xs font-bold text-white border border-[#9B2C2C] transition-colors cursor-pointer"
+                onClick={handleDeleteTarget}
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

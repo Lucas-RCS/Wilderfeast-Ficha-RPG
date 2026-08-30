@@ -147,6 +147,19 @@ export function deleteFeral(id: ID): boolean {
   return deleteEntry(STORAGE_KEYS.ferais, id);
 }
 
+/** Cria uma cópia de um Feral existente e retorna o novo registro salvo. */
+export function copyFeral(id: ID): IFeral | undefined {
+  const original = getFeralById(id);
+  if (!original) return undefined;
+
+  const copy: IFeral = {
+    ...original,
+    id: generateId(),
+    name: `${original.name} (cópia)`,
+  };
+  return saveFeral(copy);
+}
+
 function toFeralCard(feral: IFeral, lastSaved: string): IFeralCard {
   return {
     id: feral.id,
@@ -196,6 +209,19 @@ export function saveCreature(criatura: ICreature): ICreature {
 /** Remove uma Creature pelo ID. Retorna `true` se algo foi removido. */
 export function deleteCreature(id: ID): boolean {
   return deleteEntry(STORAGE_KEYS.criaturas, id);
+}
+
+/** Cria uma cópia de uma Creature existente e retorna o novo registro salvo. */
+export function copyCreature(id: ID): ICreature | undefined {
+  const original = getCreatureById(id);
+  if (!original) return undefined;
+
+  const copy: ICreature = {
+    ...original,
+    id: generateId(),
+    name: `${original.name} (cópia)`,
+  };
+  return saveCreature(copy);
 }
 
 function toCreatureCard(creature: ICreature, lastSaved: string): ICreatureCard {

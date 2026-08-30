@@ -1,23 +1,14 @@
-import {
-  ArrowRight,
-  Clock,
-  Copy,
-  Edit3,
-  Hammer,
-  Target,
-  Trash2,
-} from "lucide-react";
+import { ArrowRight, Clock, Copy, Hammer, Target, Trash2 } from "lucide-react";
 
 import { formatRelativeTime } from "../../hooks/useUtils";
 import { specialtiesById, utensilsById } from "../../data/wilderfeastData";
 import type { ID, IFeralCard } from "../../types/types";
-import type { DeleteTarget, RenameHandler } from "../../types/cardTypes";
+import type { DeleteTarget } from "../../types/cardTypes";
 
 interface CardFeralProps {
   data: IFeralCard;
   onOpenFeral: (id: ID) => void;
   onDuplicateFeral: (id: ID) => void;
-  handleOpenRename: RenameHandler;
   setDeleteTarget: (target: DeleteTarget) => void;
 }
 
@@ -25,11 +16,8 @@ export function CardFeral({
   data,
   onOpenFeral,
   onDuplicateFeral,
-  handleOpenRename,
   setDeleteTarget,
 }: CardFeralProps) {
-  // `specialtyId`/`utensilId` guardam a chave (ex.: "Cutelo"), não o nome de
-  // exibição — resolvemos aqui para não vazar chaves internas para a UI.
   const specialtyName =
     specialtiesById[data.specialtyId]?.name ?? data.specialtyId;
   const utensilName = utensilsById[data.utensilId]?.name ?? data.utensilId;
@@ -179,23 +167,6 @@ export function CardFeral({
           <div className="flex items-center gap-0.5">
             <button
               type="button"
-              onClick={() => handleOpenRename(data.id, data.name, "feral")}
-              className="
-                rounded-lg
-                p-1.5
-                text-[#B0A497]
-                transition-all
-                hover:bg-[#242220]
-                hover:text-[#89B5F7]
-                cursor-pointer
-              "
-              title="Renomear Feral"
-            >
-              <Edit3 className="h-3.5 w-3.5" />
-            </button>
-
-            <button
-              type="button"
               onClick={() => onDuplicateFeral(data.id)}
               className="
                 rounded-lg
@@ -216,7 +187,6 @@ export function CardFeral({
               onClick={() =>
                 setDeleteTarget({
                   id: data.id,
-                  name: data.name,
                   type: "feral",
                 })
               }

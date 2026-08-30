@@ -1,12 +1,11 @@
-import { ArrowRight, Clock, Copy, Edit3, PawPrint, Trash2 } from "lucide-react";
+import { ArrowRight, Clock, Copy, PawPrint, Trash2 } from "lucide-react";
 
-import { formatRelativeTime } from "../../hooks/useUtils";
-import type { ICreatureCard, ID } from "../../types/types";
-import type { DeleteTarget, RenameHandler } from "../../types/cardTypes";
+import { formatRelativeTime, SPECIALTY_COLOR } from "../../hooks/useUtils";
+import type { ICreatureCard, ID, MonsterLineage } from "../../types/types";
+import type { DeleteTarget } from "../../types/cardTypes";
 
 interface CardCreatureProps {
   data: ICreatureCard;
-  handleOpenRename: RenameHandler;
   onDuplicateCreature: (id: ID) => void;
   setDeleteTarget: (target: DeleteTarget) => void;
   onOpenCreature: (id: ID) => void;
@@ -14,28 +13,31 @@ interface CardCreatureProps {
 
 export function CardCreature({
   data,
-  handleOpenRename,
   onDuplicateCreature,
   onOpenCreature,
   setDeleteTarget,
 }: CardCreatureProps) {
+  const lineage = data.lineage as MonsterLineage;
+  const colors = SPECIALTY_COLOR[lineage];
+
   return (
     <div
-      className="
+      className={`
         group
         overflow-hidden
         rounded-2xl
-        border border-[#3A2323]
+        border
+        ${colors.border}
         bg-[#161211]
-        shadow-sm
-        transition-all duration-300
-        hover:-translate-y-0.5
-        hover:border-[#5A3535]
-        hover:shadow-lg hover:shadow-black/20
-      "
+        transition-[transform,border-color,box-shadow]
+        duration-300
+        ease-out
+        hover:-translate-y-[2px]
+        ${colors.hoverBorder}
+      `}
     >
       {/* Avatar / capa */}
-      <div className="relative h-36 overflow-hidden bg-[#201A19]">
+      <div className={`relative h-36 overflow-hidden ${colors.bg}`}>
         {data.avatarUrl ? (
           <img
             src={data.avatarUrl}
@@ -47,56 +49,59 @@ export function CardCreature({
               grayscale-[15%]
               transition-transform
               duration-500
+              ease-out
               group-hover:scale-105
             "
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <PawPrint className="h-10 w-10 text-[#8A4A4A]" />
+            <PawPrint className={`h-10 w-10 ${colors.text}`} />
           </div>
         )}
 
         {/* Badge de estágio */}
         <div
-          className="
+          className={`
             absolute left-2 top-2
             flex items-center gap-1
             rounded-full
-            bg-black/70
+            border
+            ${colors.border}
+            ${colors.bgStrong}
             px-2 py-0.5
             backdrop-blur-sm
-          "
+          `}
         >
-          <PawPrint className="h-2.5 w-2.5 text-[#FC8181]" />
+          <PawPrint className={`h-2.5 w-2.5 ${colors.text}`} />
           <span className="text-[9px] font-bold uppercase tracking-wider text-white">
             Estágio {data.stage}
           </span>
         </div>
 
+        {/* Gradiente da lineage */}
         <div
-          className="
+          className={`
             absolute inset-0
             bg-gradient-to-t
-            from-[#1a0d0d]/95
+            ${colors.gradient}
             via-black/10
             to-transparent
-          "
+          `}
         />
 
         {/* Identidade */}
         <div className="absolute inset-x-0 bottom-0 p-3">
           <h3
-            className="
+            className={`
               font-serif
               text-base
               font-bold
               leading-tight
-              text-white
               transition-colors
               duration-200
-              group-hover:text-[#FF9B42]
+              ${colors.text}
               line-clamp-1
-            "
+            `}
           >
             {data.name || "Criatura Sem Nome"}
           </h3>
@@ -109,8 +114,7 @@ export function CardCreature({
 
       {/* Conteúdo */}
       <div className="p-3">
-        {/* Descrição — não existia no card original, mas o tipo já a exigia */}
-        <p className="text-[11px] leading-relaxed text-[#A79E93] line-clamp-2 min-h-[2.2em]">
+        <p className="min-h-[2.2em] line-clamp-2 text-[11px] leading-relaxed text-[#A79E93]">
           {data.description || "Sem descrição registrada."}
         </p>
 
@@ -126,33 +130,16 @@ export function CardCreature({
           <div className="flex items-center gap-0.5">
             <button
               type="button"
-              onClick={() => handleOpenRename(data.id, data.name, "creature")}
-              className="
-                rounded-lg
-                p-1.5
-                text-[#B0A497]
-                transition-all
-                hover:bg-[#242220]
-                hover:text-[#FF9B42]
-                cursor-pointer
-              "
-              title="Renomear Criatura"
-            >
-              <Edit3 className="h-3.5 w-3.5" />
-            </button>
-
-            <button
-              type="button"
               onClick={() => onDuplicateCreature(data.id)}
-              className="
+              className={`
+                cursor-pointer
                 rounded-lg
                 p-1.5
                 text-[#B0A497]
-                transition-all
+                transition-[background-color,color]
                 hover:bg-[#242220]
-                hover:text-[#FF9B42]
-                cursor-pointer
-              "
+                ${colors.hoverText}
+              `}
               title="Duplicar Monstro"
             >
               <Copy className="h-3.5 w-3.5" />
@@ -163,17 +150,16 @@ export function CardCreature({
               onClick={() =>
                 setDeleteTarget({
                   id: data.id,
-                  name: data.name,
                   type: "creature",
                 })
               }
               className="
+                cursor-pointer
                 rounded-lg
                 p-1.5
                 text-[#FC8181]
-                transition-all
+                transition-[background-color]
                 hover:bg-[#9B2C2C]/20
-                cursor-pointer
               "
               title="Excluir Criatura"
             >
@@ -184,25 +170,25 @@ export function CardCreature({
           <button
             type="button"
             onClick={() => onOpenCreature(data.id)}
-            className="
+            className={`
               flex
               items-center
               gap-1
               rounded-lg
-              border border-[#9B2C2C]/40
-              bg-[#4A1F1F]
+              border
+              ${colors.border}
+              ${colors.bgStrong}
               px-3
               py-1.5
               text-[11px]
               font-bold
               text-white
-              shadow-sm
-              transition-all
-              hover:bg-[#5C2626]
-              hover:border-[#C9524F]/50
+              transition-[background-color,border-color,transform]
               active:scale-95
               cursor-pointer
-            "
+              ${colors.hoverBg}
+              ${colors.hoverBorder}
+            `}
           >
             <span>Abrir</span>
             <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
