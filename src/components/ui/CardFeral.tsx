@@ -187,6 +187,7 @@ export function CardFeral({
               onClick={() =>
                 setDeleteTarget({
                   id: data.id,
+                  name: data.name,
                   type: "feral",
                 })
               }

@@ -150,6 +150,7 @@ export function CardCreature({
               onClick={() =>
                 setDeleteTarget({
                   id: data.id,
+                  name: data.name,
                   type: "creature",
                 })
               }

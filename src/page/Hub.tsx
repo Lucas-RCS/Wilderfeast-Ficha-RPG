@@ -174,7 +174,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
         )}
 
         {/* Big Solid Selector: [ FERAIS ] vs [ CRIATURAS ] */}
-        <div className="w-full flex flex-col items-center mb-6">
+        <div className="w-full flex flex-col items-center mb-6 ">
           <div className="p-1.5 rounded-xl bg-[#1E1D1B] border border-[#383430] flex items-center gap-1.5 shadow-sm max-w-md w-full">
             <button
               id="hub-tab-ferais"
@@ -445,7 +445,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 ">
                 {filteredCreatures.map((data) => (
                   <CardCreature
                     key={data.id}
@@ -487,32 +487,72 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
       {deleteTarget && (
         <div
           id="hub-modal-delete"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
         >
-          <div className="bg-[#1A1918] border border-[#383430] rounded-2xl p-6 max-w-sm w-full text-center space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <Trash2 className="w-6 h-6 text-[#FC8181]" />
-              <h3 className="font-serif font-black text-lg text-[#FC8181]">
-                Excluir Ficha
-              </h3>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[#383430] bg-[#1A1918] shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center gap-3 border-b border-[#383430] p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3A1F1F] text-[#FC8181]">
+                <Trash2 className="h-5 w-5" />
+              </div>
+
+              <div>
+                <h3 className="font-serif text-lg font-black text-[#F5EFEB]">
+                  Excluir ficha
+                </h3>
+
+                <p className="mt-0.5 text-xs text-[#7A7065]">
+                  Esta ação não pode ser desfeita.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-[#B0A497]">
-              Tem certeza que deseja excluir esta ficha? Esta ação não pode ser
-              desfeita.
-            </p>
-            <div className="flex items-center justify-center gap-4 pt-3">
+
+            {/* Content */}
+            <div className="p-4">
+              <p className="mb-4 text-sm text-[#B0A497]">
+                Você está prestes a excluir a seguinte ficha:
+              </p>
+
+              <div className="rounded-xl border border-[#383430] bg-[#242220] p-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-[#7A7065]">
+                      {deleteTarget.type === "feral" ? "Feral" : "Criatura"}
+                    </span>
+
+                    <p className="truncate font-serif text-base font-bold text-[#F5EFEB]">
+                      {deleteTarget.name}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 rounded-lg bg-[#2E2B27] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#B0A497]">
+                    {deleteTarget.type === "feral" ? "Feral" : "Criatura"}
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-4 text-xs leading-relaxed text-[#7A7065]">
+                Todos os dados associados a esta ficha serão removidos
+                permanentemente.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 border-t border-[#383430] bg-[#161514] px-6 py-4">
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg bg-[#242220] hover:bg-[#2E2B27] text-xs font-bold text-[#FF9B42] border border-[#383430] transition-colors cursor-pointer"
                 onClick={() => setDeleteTarget(null)}
+                className="rounded-lg border border-[#383430] px-4 py-2.5 text-xs font-bold text-[#B0A497] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB] cursor-pointer"
               >
                 Cancelar
               </button>
+
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg bg-[#FC8181] hover:bg-[#9B2C2C] text-xs font-bold text-white border border-[#9B2C2C] transition-colors cursor-pointer"
                 onClick={handleDeleteTarget}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#9B2C2C] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#B83232] cursor-pointer"
               >
+                <Trash2 className="h-3.5 w-3.5" />
                 Excluir
               </button>
             </div>
