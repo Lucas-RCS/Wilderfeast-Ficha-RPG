@@ -10,7 +10,6 @@ import {
   createEmptyCreatureDraft,
   createEmptyCreaturePart,
   finalizeCreatureCreation,
-  getAllConditionOptions,
   getAllLineageOptions,
   getAllStageOptions,
   getAllTraitOptions,
@@ -24,13 +23,13 @@ import {
   SectionTitle,
   inputClass,
 } from "./FormControls";
-import { ConditionPicker, TraitPicker } from "./TraitConditionPicker";
+import { TraitPicker } from "./TraitConditionPicker";
 import { PartEditor } from "./PartEditor";
 
 const STEPS: WizardStepDef[] = [
   { id: "basics", label: "Dados Básicos" },
   { id: "combat", label: "Estilos & Perícias" },
-  { id: "traits", label: "Traços & Condições" },
+  { id: "traits", label: "Traços" },
   { id: "parts", label: "Partes do Corpo" },
   { id: "behavior", label: "Comportamento" },
 ];
@@ -135,7 +134,7 @@ export function CreatureCreateModal({
 
   return (
     <WizardShell
-      icon={<Plus className="w-5 h-5 text-[#FF9B42]" />}
+      icon={<PawPrint className="w-5 h-5 text-[#FF9B42]" />}
       eyebrow="Criação de Criatura"
       title="Novo Registro do Bestiário"
       subtitle="Monte a ficha de combate e ecologia da Criatura em etapas."
@@ -199,16 +198,11 @@ function BasicsStep({ draft, setDraft }: StepProps) {
               className="sr-only"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-
                 if (!file) return;
-
                 const reader = new FileReader();
-
                 reader.onload = (event) => {
                   const result = event.target?.result;
-
                   if (typeof result !== "string") return;
-
                   setDraft((current) => ({
                     ...current,
                     avatarUrl: result,
@@ -313,6 +307,8 @@ function BasicsStep({ draft, setDraft }: StepProps) {
             </label>
           </div>
         </Field>
+      </div>
+      <div className="grid sm:grid-cols-3 gap-4">
         <Field label="Linhagem">
           <select
             value={draft.lineage}
@@ -362,20 +358,6 @@ function BasicsStep({ draft, setDraft }: StepProps) {
             placeholder="Ex.: 1,5 metro de envergadura"
           />
         </Field>
-        <Field label="Vigor máximo">
-          <input
-            type="number"
-            min={1}
-            value={draft.vigorMax}
-            onChange={(e) =>
-              setDraft((current) => ({
-                ...current,
-                vigorMax: Math.max(1, Number(e.target.value)),
-              }))
-            }
-            className={inputClass}
-          />
-        </Field>
       </div>
       <Field label="Descrição" required>
         <textarea
@@ -384,6 +366,7 @@ function BasicsStep({ draft, setDraft }: StepProps) {
             setDraft((current) => ({ ...current, description: e.target.value }))
           }
           className={`${inputClass} min-h-28 resize-y`}
+          placeholder="Ex.: Uma criatura alada de plumagem negra, com bico afiado e garras poderosas. Costuma habitar regiões montanhosas e é conhecida por sua astúcia e agressividade."
         />
       </Field>
     </div>
@@ -457,19 +440,18 @@ function CombatStep({ draft, setDraft }: StepProps) {
 }
 
 // ============================================================================
-// ETAPA 3 — TRAÇOS & CONDIÇÕES
+// ETAPA 3 — TRAÇOS
 // ============================================================================
 
 function TraitsStep({ draft, setDraft }: StepProps) {
   const allTraits = getAllTraitOptions();
-  const allConditions = getAllConditionOptions();
 
   return (
     <div className="space-y-5">
       <SectionTitle
         eyebrow="03"
-        title="Traços & Condições"
-        subtitle="Separe Traços principais dos adicionais e registre Condições já ativas, se houver."
+        title="Traços"
+        subtitle="Traços especiais da Criatura, que podem ser passivos ou ativados em combate."
       />
       <TraitPicker
         title="Traços principais"
@@ -488,54 +470,6 @@ function TraitsStep({ draft, setDraft }: StepProps) {
             ...current,
             traits: current.traits.map((t) =>
               t.traitId === traitId ? { ...t, level } : t,
-            ),
-          }))
-        }
-      />
-      <TraitPicker
-        title="Traços adicionais"
-        hint="Traços extras adquiridos ao longo da progressão da Criatura."
-        allTraits={allTraits}
-        selected={draft.additionalTraits}
-        onToggle={(traitId) =>
-          setDraft((current) => ({
-            ...current,
-            additionalTraits: current.additionalTraits.some(
-              (t) => t.traitId === traitId,
-            )
-              ? current.additionalTraits.filter((t) => t.traitId !== traitId)
-              : [...current.additionalTraits, { traitId, level: 1 }],
-          }))
-        }
-        onLevelChange={(traitId, level) =>
-          setDraft((current) => ({
-            ...current,
-            additionalTraits: current.additionalTraits.map((t) =>
-              t.traitId === traitId ? { ...t, level } : t,
-            ),
-          }))
-        }
-      />
-      <ConditionPicker
-        title="Condições"
-        hint="Opcional. Condições que a Criatura já inicia sofrendo."
-        allConditions={allConditions}
-        selected={draft.conditions}
-        onToggle={(conditionId) =>
-          setDraft((current) => ({
-            ...current,
-            conditions: current.conditions.some(
-              (c) => c.conditionId === conditionId,
-            )
-              ? current.conditions.filter((c) => c.conditionId !== conditionId)
-              : [...current.conditions, { conditionId, level: 1 }],
-          }))
-        }
-        onLevelChange={(conditionId, level) =>
-          setDraft((current) => ({
-            ...current,
-            conditions: current.conditions.map((c) =>
-              c.conditionId === conditionId ? { ...c, level } : c,
             ),
           }))
         }
