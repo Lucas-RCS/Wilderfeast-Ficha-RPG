@@ -38,10 +38,13 @@ import type {
   IMatilha,
   IOriginConnection,
   IOriginDish,
+  ITechniqueDefinition,
   ITechniqueTraining,
+  ITraitDefinition,
   IUtensilDefinition,
   OriginDishType,
   PermanentReward,
+  CostType,
   SkillKey,
   SpecialtyKey,
   StyleKey,
@@ -92,22 +95,42 @@ import { InfoTooltip } from "../ui/Tooltip";
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
 
+const COST_TYPE_LABELS: Record<CostType, string> = {
+  acoes: "Ações",
+  vigor: "Vigor",
+  sucessos: "Sucessos",
+};
+
 interface ICustomEntry {
-  id: string;
+  id: ID;
   name: string;
   badge?: string;
   description: string;
+  level?: number;
+  maxLevel?: number | null;
 }
 
-function readCustom<T>(entity: unknown, key: string): T[] {
-  const value = (entity as Record<string, unknown>)[key];
-  return Array.isArray(value) ? (value as T[]) : [];
+type FeralSheetEntity = IFeral & {
+  customTraits?: ICustomEntry[];
+  customTechniques?: ICustomEntry[];
+};
+
+type CustomEntryKey = keyof Pick<
+  FeralSheetEntity,
+  "customTraits" | "customTechniques"
+>;
+
+function readCustom(
+  entity: FeralSheetEntity,
+  key: CustomEntryKey,
+): ICustomEntry[] {
+  return entity[key] ?? [];
 }
 
 const LINEAGE_META: Record<
   SpecialtyKey,
   {
-    icon: React.ReactNode;
+    icon: ReactNode;
     text: string;
     bg: string;
     border: string;
@@ -214,7 +237,7 @@ function Modal({
 // ============================================================================
 
 interface TabDef {
-  key: string;
+  key: FeralTabKey;
   label: string;
   icon: typeof Award;
   count: number;
@@ -227,8 +250,8 @@ function TabBar({
   onChange,
 }: {
   tabs: TabDef[];
-  active: string;
-  onChange: (key: string) => void;
+  active: FeralTabKey;
+  onChange: (key: FeralTabKey) => void;
 }) {
   return (
     <div className="flex flex-wrap gap-2 rounded-2xl border border-[#302D29] bg-[#171615] p-2">
@@ -259,16 +282,17 @@ function TabBar({
             <Icon className="h-3.5 w-3.5" style={{ color: tab.color }} />
 
             {tab.label}
-
-            <span
-              className="rounded-full px-1.5 py-0.5 text-[9px] font-black"
-              style={{
-                backgroundColor: isActive ? `${tab.color}33` : "#242220",
-                color: isActive ? tab.color : "#8F877D",
-              }}
-            >
-              {tab.count}
-            </span>
+            {tab.key !== "habilidades" && (
+              <span
+                className="rounded-full px-1.5 py-0.5 text-[9px] font-black"
+                style={{
+                  backgroundColor: isActive ? `${tab.color}33` : "#242220",
+                  color: isActive ? tab.color : "#8F877D",
+                }}
+              >
+                {tab.count}
+              </span>
+            )}
           </button>
         );
       })}
@@ -310,7 +334,11 @@ interface FeralSheetProps {
   onDeleted: () => void;
 }
 
-function FeralSheet({ feralId, onBack, onDeleted }: FeralSheetProps) {
+function FeralSheet({
+  feralId,
+  onBack,
+  onDeleted: _onDeleted,
+}: FeralSheetProps) {
   const initial = getFeralById(feralId);
 
   if (!initial) {
@@ -330,7 +358,7 @@ function FeralSheetView({
   onBack: () => void;
 }) {
   const { entity, update, undo, canUndo, lastSavedAt, isPending } =
-    useAutosaveEntity<IFeral>({
+    useAutosaveEntity<FeralSheetEntity>({
       initial,
       save: saveFeral,
     });
@@ -345,12 +373,11 @@ function FeralSheetView({
     | IUtensilDefinition
     | undefined;
 
-  const updateRaw = (patch: Record<string, unknown>) =>
-    update(patch as Partial<IFeral>);
+  const updateSheet = (patch: Partial<FeralSheetEntity>) => update(patch);
 
-  const customTraits = readCustom<ICustomEntry>(entity, "customTraits");
+  const customTraits = readCustom(entity, "customTraits");
 
-  const customTechniques = readCustom<ICustomEntry>(entity, "customTechniques");
+  const customTechniques = readCustom(entity, "customTechniques");
 
   const tabs: TabDef[] = [
     {
@@ -454,7 +481,7 @@ function FeralSheetView({
                     },
                   })
                 }
-                tooltip="Representa a resistência física e mental do Feral. Ao chegar a 0, o Feral é derrubado durante a Caçada."
+                tooltip="Sua reserva de energia física. Se chegar a 0, você recebe 1 nível de Ferido e seu Vigor é restaurado ao máximo! Com Ferido 3, você corre risco mortal."
                 category="Combate"
               />
 
@@ -487,7 +514,7 @@ function FeralSheetView({
                     },
                   })
                 }
-                tooltip="Durabilidade do Utensílio de Arkaicaço. Quando chega a 0, o Utensílio quebra e passa a sofrer penalidades até ser reparado."
+                tooltip="Usar técnicas ou bloquear ataques pesados consome Durabilidade. Quando chega a 0, o Utensílio quebra e passa a sofrer penalidades até ser reparado."
                 category="Equipamento"
               />
 
@@ -600,11 +627,7 @@ function FeralSheetView({
 
           {/* ================= COLUNA DIREITA ================= */}
           <div className="min-w-0 space-y-4">
-            <TabBar
-              tabs={tabs}
-              active={activeTab}
-              onChange={(k) => setActiveTab(k as FeralTabKey)}
-            />
+            <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
             {activeTab === "habilidades" && (
               <HabilidadesPanel
@@ -635,7 +658,7 @@ function FeralSheetView({
                   })
                 }
                 onAddCustom={(entryData) =>
-                  updateRaw({
+                  updateSheet({
                     customTechniques: [
                       {
                         id: generateId(),
@@ -646,14 +669,14 @@ function FeralSheetView({
                   })
                 }
                 onEditCustom={(id, patch) =>
-                  updateRaw({
+                  updateSheet({
                     customTechniques: customTechniques.map((c) =>
                       c.id === id ? { ...c, ...patch } : c,
                     ),
                   })
                 }
                 onRemoveCustom={(id) =>
-                  updateRaw({
+                  updateSheet({
                     customTechniques: customTechniques.filter(
                       (c) => c.id !== id,
                     ),
@@ -687,7 +710,7 @@ function FeralSheetView({
                   })
                 }
                 onAddCustom={(entryData) =>
-                  updateRaw({
+                  updateSheet({
                     customTraits: [
                       {
                         id: generateId(),
@@ -698,14 +721,14 @@ function FeralSheetView({
                   })
                 }
                 onEditCustom={(id, patch) =>
-                  updateRaw({
+                  updateSheet({
                     customTraits: customTraits.map((c) =>
                       c.id === id ? { ...c, ...patch } : c,
                     ),
                   })
                 }
                 onRemoveCustom={(id) =>
-                  updateRaw({
+                  updateSheet({
                     customTraits: customTraits.filter((c) => c.id !== id),
                   })
                 }
@@ -860,8 +883,8 @@ function VigorEditor({
           style={{
             background: `linear-gradient(
               to right,
-              #9B2C2C 0%,
-              #FF9B42 ${percentage}%,
+              #c22424 0%,
+              #ff7e42 ${percentage}%,
               #2B2825 ${percentage}%,
               #2B2825 100%
             )`,
@@ -1045,8 +1068,8 @@ function UtensilEditor({
           style={{
             background: `linear-gradient(
               to right,
-              #3E5A7A 0%,
-              #7EA8E0 ${percentage}%,
+              #3d71a1 0%,
+              #71a3e6 ${percentage}%,
               #2B2825 ${percentage}%,
               #2B2825 100%
             )`,
@@ -1256,20 +1279,26 @@ function ConditionsGrid({
   onToggle: (conditionId: ID) => void;
   onLevelChange: (conditionId: ID, level: number) => void;
 }) {
+  const selectedById = useMemo(
+    () =>
+      new Map(selected.map((condition) => [condition.conditionId, condition])),
+    [selected],
+  );
+
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {conditionDefinitions.map((condition) => {
-        const anyCondition = condition as unknown as {
+        const conditionOption = condition as {
           id: ID;
           name: string;
           description?: string;
         };
 
-        const active = selected.find((c) => c.conditionId === anyCondition.id);
+        const active = selectedById.get(conditionOption.id);
 
         return (
           <div
-            key={String(anyCondition.id)}
+            key={String(conditionOption.id)}
             className={`
               group flex h-12 min-w-0 items-center gap-2
               rounded-xl border px-2.5
@@ -1292,8 +1321,8 @@ function ConditionsGrid({
             {/* Área clicável da condição */}
             <button
               type="button"
-              onClick={() => onToggle(anyCondition.id)}
-              title={anyCondition.description ?? anyCondition.name}
+              onClick={() => onToggle(conditionOption.id)}
+              title={conditionOption.description ?? conditionOption.name}
               className="flex min-w-0 flex-1 items-center gap-2 text-left focus:outline-none"
             >
               <span
@@ -1319,14 +1348,14 @@ function ConditionsGrid({
                   }
                 `}
               >
-                {anyCondition.name}
+                {conditionOption.name}
               </span>
             </button>
 
             {/* Tooltip fica fora do botão da condição */}
             <InfoTooltip
-              title={anyCondition.name}
-              description={anyCondition.description ?? ""}
+              title={conditionOption.name}
+              description={conditionOption.description ?? ""}
               category="Condição"
             />
 
@@ -1344,21 +1373,21 @@ function ConditionsGrid({
                   type="button"
                   onClick={() =>
                     onLevelChange(
-                      anyCondition.id,
+                      conditionOption.id,
                       Math.max(1, active.level - 1),
                     )
                   }
                   disabled={active.level <= 1}
                   className="
                     flex h-5 w-5 items-center justify-center
-                    rounded-md text-[#81776E]
+                    rounded-md text-[#a09891]
                     transition-colors
                     hover:bg-[#38251F]
                     hover:text-[#F0C4A8]
                     disabled:pointer-events-none
                     disabled:opacity-25
                   "
-                  aria-label={`Diminuir nível de ${anyCondition.name}`}
+                  aria-label={`Diminuir nível de ${conditionOption.name}`}
                 >
                   <Minus className="h-3 w-3" />
                 </button>
@@ -1376,16 +1405,16 @@ function ConditionsGrid({
                 <button
                   type="button"
                   onClick={() =>
-                    onLevelChange(anyCondition.id, active.level + 1)
+                    onLevelChange(conditionOption.id, active.level + 1)
                   }
                   className="
                     flex h-5 w-5 items-center justify-center
-                    rounded-md text-[#81776E]
+                    rounded-md text-[#a09891]
                     transition-colors
                     hover:bg-[#38251F]
                     hover:text-[#F0C4A8]
                   "
-                  aria-label={`Aumentar nível de ${anyCondition.name}`}
+                  aria-label={`Aumentar nível de ${conditionOption.name}`}
                 >
                   <Plus className="h-3 w-3" />
                 </button>
@@ -1524,6 +1553,40 @@ function HabilidadesPanel({
 // TAB 2 — TÉCNICAS
 // ============================================================================
 
+function formatTechniqueCost(
+  cost: ITechniqueDefinition["cost"],
+): string | null {
+  if (!cost) return null;
+
+  return `${cost.amount} ${COST_TYPE_LABELS[cost.type] ?? cost.type}`;
+}
+
+function techniqueLevelClass(level: ITechniqueDefinition["level"]): string {
+  switch (level) {
+    case "Iniciante":
+      return "border-[#2E6F63]/40 bg-[#153029]/70 text-[#6FCF97]";
+
+    case "Intermediária":
+      return "border-[#89B5F7]/40 bg-[#13335C]/60 text-[#89B5F7]";
+
+    case "Avançada":
+      return "border-[#A98AFF]/40 bg-[#2B2145]/60 text-[#C2B3FF]";
+  }
+}
+
+function techniqueLevelIndicator(level: ITechniqueDefinition["level"]): string {
+  switch (level) {
+    case "Iniciante":
+      return "bg-[#6FCF97]";
+
+    case "Intermediária":
+      return "bg-[#89B5F7]";
+
+    case "Avançada":
+      return "bg-[#A98AFF]";
+  }
+}
+
 function TecnicasPanel({
   known,
   custom,
@@ -1540,85 +1603,131 @@ function TecnicasPanel({
   onToggle: (techniqueId: ID) => void;
   onTrainingChange: (training: ITechniqueTraining | undefined) => void;
   onAddCustom: (entry: Omit<ICustomEntry, "id">) => void;
-  onEditCustom: (id: string, patch: Partial<ICustomEntry>) => void;
-  onRemoveCustom: (id: string) => void;
+  onEditCustom: (id: ID, patch: Partial<ICustomEntry>) => void;
+  onRemoveCustom: (id: ID) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
-
   const [editing, setEditing] = useState<ICustomEntry | null>(null);
 
-  const knownDefs = known
-    .map((t) => techniquesById[t.techniqueId])
-    .filter((t): t is (typeof techniqueDefinitions)[number] => Boolean(t));
+  const knownEntries = useMemo(
+    () =>
+      known
+        .map((selection) => {
+          const definition = techniquesById[selection.techniqueId] as
+            | ITechniqueDefinition
+            | undefined;
 
-  const total = knownDefs.length + custom.length;
+          return definition
+            ? {
+                selection,
+                definition,
+              }
+            : null;
+        })
+        .filter(
+          (
+            entry,
+          ): entry is {
+            selection: IFeral["techniques"][number];
+            definition: ITechniqueDefinition;
+          } => Boolean(entry),
+        ),
+    [known],
+  );
+
+  const total = knownEntries.length + custom.length;
+
+  const openCreateModal = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (entry: ICustomEntry) => {
+    setEditing(entry);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditing(null);
+  };
 
   return (
     <section className={cardClass}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
-            Técnicas de Utensílio ({total})
-          </h3>
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#13335C]/60 text-[#89B5F7]">
+            <Swords className="h-4 w-4" />
+          </div>
+
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+              Técnicas de Utensílio ({total})
+            </h3>
+          </div>
 
           <InfoTooltip
             title="Técnicas de Utensílio"
             category="Combate"
-            description="Manobras táticas e golpes especiais executados com o Utensílio de Arkaicaço. Escolha da biblioteca de Técnicas ou crie uma manobra totalmente sua."
+            description="Manobras táticas e golpes especiais executados com o Utensílio de Arkaicaço. Escolha uma Técnica da biblioteca ou crie uma manobra personalizada."
           />
         </div>
 
         <button
           type="button"
-          onClick={() => {
-            setEditing(null);
-            setModalOpen(true);
-          }}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#2B6CB0]/40 bg-[#13335C]/30 px-3.5 py-2 text-xs font-black text-[#89B5F7] transition-colors hover:border-[#89B5F7]"
+          onClick={openCreateModal}
+          className="
+            inline-flex items-center gap-2
+            rounded-xl border border-[#2B6CB0]/40
+            bg-[#13335C]/40 px-3.5 py-2
+            text-xs font-black text-[#89B5F7]
+            transition-all duration-150
+            hover:border-[#89B5F7]/70
+            hover:bg-[#183D69]
+            active:scale-[0.98]
+          "
         >
           <Plus className="h-4 w-4" />
           Nova Técnica
         </button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {knownDefs.map((technique) => {
-          const anyTech = technique as unknown as {
-            id: ID;
-            name: string;
-            description?: string;
-          };
-
-          return (
-            <EntryCard
-              key={`lib-${anyTech.id}`}
-              name={anyTech.name}
-              description={anyTech.description ?? ""}
-              onRemove={() => onToggle(anyTech.id)}
+      {knownEntries.length > 0 && (
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {knownEntries.map(({ selection, definition }) => (
+            <TechniqueCard
+              key={`lib-${definition.id}`}
+              technique={definition}
+              onRemove={() => onToggle(selection.techniqueId)}
             />
-          );
-        })}
+          ))}
+        </div>
+      )}
 
-        {custom.map((entry) => (
-          <EntryCard
-            key={entry.id}
-            name={entry.name}
-            badge={entry.badge}
-            description={entry.description}
-            onEdit={() => {
-              setEditing(entry);
-              setModalOpen(true);
-            }}
-            onRemove={() => onRemoveCustom(entry.id)}
-          />
-        ))}
-      </div>
+      {custom.length > 0 && (
+        <div
+          className={
+            knownEntries.length > 0
+              ? "mt-2.5 grid gap-2.5 sm:grid-cols-2"
+              : "grid gap-2.5 sm:grid-cols-2"
+          }
+        >
+          {custom.map((entry) => (
+            <TechniqueCard
+              key={entry.id}
+              custom={entry}
+              onEdit={() => openEditModal(entry)}
+              onRemove={() => onRemoveCustom(entry.id)}
+            />
+          ))}
+        </div>
+      )}
 
       {total === 0 && (
         <Placeholder
           icon={Swords}
           message="Nenhuma Técnica registrada ainda."
-          hint="Clique em “Nova Técnica” para escolher uma da biblioteca ou criar uma manobra personalizada."
+          hint="Adicione uma Técnica da biblioteca ou crie uma manobra personalizada."
         />
       )}
 
@@ -1633,163 +1742,161 @@ function TecnicasPanel({
             } else {
               onAddCustom(data);
             }
+
+            closeModal();
           }}
-          onClose={() => setModalOpen(false)}
+          onClose={closeModal}
         />
       )}
     </section>
   );
 }
 
-function AddTechniqueModal({
-  known,
-  editing,
-  onToggleLibrary,
-  onSaveCustom,
-  onClose,
+function TechniqueCard({
+  technique,
+  custom,
+  onEdit,
+  onRemove,
 }: {
-  known: IFeral["techniques"];
-  editing: ICustomEntry | null;
-  onToggleLibrary: (techniqueId: ID) => void;
-  onSaveCustom: (data: Omit<ICustomEntry, "id">) => void;
-  onClose: () => void;
+  technique?: ITechniqueDefinition;
+  custom?: ICustomEntry;
+  onEdit?: () => void;
+  onRemove: () => void;
 }) {
-  const [mode, setMode] = useState<"biblioteca" | "personalizada">(
-    editing ? "personalizada" : "biblioteca",
-  );
-
-  const [name, setName] = useState(editing?.name ?? "");
-
-  const [badge, setBadge] = useState(editing?.badge ?? "");
-
-  const [description, setDescription] = useState(editing?.description ?? "");
-
-  function handleSaveCustom() {
-    if (!name.trim()) return;
-
-    onSaveCustom({
-      name: name.trim(),
-      badge: badge.trim() || undefined,
-      description,
-    });
-
-    onClose();
-  }
+  const isCustom = Boolean(custom);
+  const name = technique?.name ?? custom?.name ?? "Técnica";
+  const description = technique?.description ?? custom?.description ?? "";
+  const costLabel = technique ? formatTechniqueCost(technique.cost) : null;
 
   return (
-    <Modal
-      title={editing ? "Editar Técnica" : "Nova Técnica"}
-      onClose={onClose}
-      wide
+    <div
+      className={`
+        group relative overflow-hidden
+        rounded-xl border bg-[#1E1D1B]
+        transition-all duration-150
+        border-[#383430]
+        hover:border-[#89B5F7]/50
+        hover:bg-[#201F1D]
+        }
+      `}
     >
-      {!editing && (
-        <div className="mb-4 flex gap-2">
-          <ModeTab
-            label="Biblioteca de Técnicas"
-            active={mode === "biblioteca"}
-            onClick={() => setMode("biblioteca")}
-          />
+      <div
+        className={`
+          absolute inset-y-0 left-0 w-0.5 bg-[#4D7EBA]}
+        `}
+      />
 
-          <ModeTab
-            label="Criar personalizada"
-            active={mode === "personalizada"}
-            onClick={() => setMode("personalizada")}
-          />
+      <div className="flex min-w-0 items-start gap-3 p-3.5">
+        <div
+          className={`
+            mt-0.5 flex h-8 w-8 shrink-0
+            items-center justify-center
+            rounded-lg border
+            border-[#89B5F7]/25 bg-[#13335C]/50 text-[#89B5F7]"
+          `}
+        >
+          <Swords className="h-4 w-4 text-[#89B5F7]" />
         </div>
-      )}
 
-      {mode === "biblioteca" && !editing ? (
-        <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
-          {techniqueDefinitions.map((technique) => {
-            const anyTech = technique as unknown as {
-              id: ID;
-              name: string;
-              description?: string;
-            };
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p className="truncate text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
+                  {name}
+                </p>
 
-            const isKnown = known.some((t) => t.techniqueId === anyTech.id);
+                {technique?.level && (
+                  <span
+                    className={`
+                      inline-flex shrink-0
+                      items-center gap-1.5
+                      rounded-md border
+                      px-1.5 py-0.5
+                      text-[8px] font-black
+                      uppercase tracking-wide
+                      ${techniqueLevelClass(technique.level)}
+                    `}
+                  >
+                    <span
+                      className={`
+                        h-1.5 w-1.5 rounded-full
+                        ${techniqueLevelIndicator(technique.level)}
+                      `}
+                    />
 
-            return (
-              <button
-                key={String(anyTech.id)}
-                type="button"
-                onClick={() => onToggleLibrary(anyTech.id)}
-                className={`flex w-full items-start justify-between gap-3 rounded-xl border p-3 text-left transition-colors ${
-                  isKnown
-                    ? "border-[#2E6F63]/60 bg-[#15302B]"
-                    : "border-[#383430] bg-[#1E1D1B] hover:border-[#89B5F7]/50"
-                }`}
-              >
-                <div className="min-w-0">
-                  <p className="text-[11px] font-black text-[#F5EFEB]">
-                    {anyTech.name}
-                  </p>
-
-                  <p className="mt-1 text-[10px] leading-relaxed text-[#8F877D]">
-                    {anyTech.description}
-                  </p>
-                </div>
-
-                {isKnown && (
-                  <Check className="h-4 w-4 shrink-0 text-[#6FCF97]" />
+                    {technique.level}
+                  </span>
                 )}
+
+                {isCustom && custom?.badge && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#6FCF97]">
+                    {custom.badge}
+                  </span>
+                )}
+
+                {isCustom && !custom?.badge && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-[#6FCF97]">
+                    Personalizada
+                  </span>
+                )}
+
+                {costLabel && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                    {costLabel}
+                  </span>
+                )}
+
+                {technique?.utensils && technique.utensils.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {technique.utensils.map((utensil) => (
+                      <span
+                        key={String(utensil)}
+                        className="rounded-md border border-[#383430] bg-[#171615] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-[#7A7065]"
+                      >
+                        {utensil}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1">
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  aria-label={`Editar ${name}`}
+                  className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB]"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              )}
+
+              <InfoTooltip
+                title={name}
+                category="Técnica"
+                description={description}
+              />
+
+              <button
+                type="button"
+                onClick={onRemove}
+                aria-label={`Remover ${name}`}
+                className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#2B1F1C] hover:text-[#D97867]"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <Field label="Nome" required>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Corte Ascendente"
-              className={inputClass}
-            />
-          </Field>
-
-          <Field
-            label="Selo / Custo"
-            hint="Opcional. Ex: Intermediária · 1 Sucesso"
-          >
-            <input
-              value={badge}
-              onChange={(e) => setBadge(e.target.value)}
-              placeholder="Ex: Intermediária · 1 Sucesso"
-              className={inputClass}
-            />
-          </Field>
-
-          <Field label="Descrição">
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={`${inputClass} min-h-24 resize-y`}
-              placeholder="Descreva o efeito da Técnica..."
-            />
-          </Field>
-
-          <div className="flex justify-end items-center gap-2 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-2 text-xs font-bold text-[#B0A497] hover:text-[#F5EFEB]"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveCustom}
-              disabled={!name.trim()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#2B6CB0]/40 bg-[#13335C] px-3.5 py-2 text-xs font-black text-white transition-colors hover:bg-[#184073] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Check className="h-3.5 w-3.5" />
-              {editing ? "Salvar alterações" : "Adicionar Técnica"}
-            </button>
+            </div>
           </div>
+
+          <p className="text-[10px] leading-relaxed text-[#a7a19a]">
+            {description}
+          </p>
         </div>
-      )}
-    </Modal>
+      </div>
+    </div>
   );
 }
 
@@ -1814,6 +1921,291 @@ function ModeTab({
     >
       {label}
     </button>
+  );
+}
+
+function AddTechniqueModal({
+  known,
+  editing,
+  onToggleLibrary,
+  onSaveCustom,
+  onClose,
+}: {
+  known: IFeral["techniques"];
+  editing: ICustomEntry | null;
+  onToggleLibrary: (techniqueId: ID) => void;
+  onSaveCustom: (data: Omit<ICustomEntry, "id">) => void;
+  onClose: () => void;
+}) {
+  const [mode, setMode] = useState<"biblioteca" | "personalizada">(
+    editing ? "personalizada" : "biblioteca",
+  );
+
+  const [search, setSearch] = useState("");
+
+  const [name, setName] = useState(editing?.name ?? "");
+
+  const [badge, setBadge] = useState(editing?.badge ?? "");
+
+  const [description, setDescription] = useState(editing?.description ?? "");
+
+  const knownTechniqueIds = useMemo(
+    () => new Set(known.map(({ techniqueId }) => techniqueId)),
+    [known],
+  );
+
+  const filteredTechniques = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return techniqueDefinitions;
+    }
+
+    return techniqueDefinitions.filter((technique) => {
+      const searchableText = [
+        technique.name,
+        technique.description,
+        technique.level,
+        formatTechniqueCost(technique.cost) ?? "",
+        ...(technique.utensils ?? []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedSearch);
+    });
+  }, [search]);
+
+  function handleSaveCustom() {
+    const normalizedName = name.trim();
+
+    if (!normalizedName) return;
+
+    onSaveCustom({
+      name: normalizedName,
+      badge: badge.trim() || undefined,
+      description: description.trim(),
+    });
+  }
+
+  return (
+    <Modal
+      title={editing ? "Editar Técnica" : "Nova Técnica"}
+      onClose={onClose}
+      wide
+    >
+      {!editing && (
+        <div className="mb-4 flex rounded-xl border border-[#383430] bg-[#171615] p-1">
+          <ModeTab
+            label="Biblioteca"
+            active={mode === "biblioteca"}
+            onClick={() => setMode("biblioteca")}
+          />
+
+          <ModeTab
+            label="Personalizada"
+            active={mode === "personalizada"}
+            onClick={() => setMode("personalizada")}
+          />
+        </div>
+      )}
+
+      {mode === "biblioteca" && !editing ? (
+        <div className="space-y-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar técnica..."
+            className="
+              w-full rounded-xl
+              border border-[#383430]
+              bg-[#171615]
+              px-3 py-2.5
+              text-xs text-[#F5EFEB]
+              outline-none
+              placeholder:text-[#625A53]
+              transition-colors
+              focus:border-[#89B5F7]/60
+            "
+          />
+
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#625A53]">
+              {filteredTechniques.length} resultado
+              {filteredTechniques.length === 1 ? "" : "s"}
+            </span>
+
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#89B5F7]">
+              {known.length} selecionada
+              {known.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+            {filteredTechniques.map((technique) => {
+              const isKnown = knownTechniqueIds.has(technique.id);
+
+              return (
+                <button
+                  key={String(technique.id)}
+                  type="button"
+                  onClick={() => onToggleLibrary(technique.id)}
+                  className={`
+                      flex w-full items-start
+                      gap-3 rounded-xl border p-3
+                      text-left
+                      transition-all duration-150
+                      ${
+                        isKnown
+                          ? "border-[#89B5F7]/60 bg-[#13335C]/40"
+                          : "border-[#383430] bg-[#1E1D1B] hover:border-[#89B5F7]/40"
+                      }
+                    `}
+                >
+                  <span
+                    className={`
+                        mt-0.5 flex h-7 w-7
+                        shrink-0 items-center
+                        justify-center rounded-lg
+                        border
+                        ${
+                          isKnown
+                            ? "border-[#89B5F7]/50 bg-[#89B5F7]/10 text-[#89B5F7]"
+                            : "border-[#383430] bg-[#171615] text-[#5E564D]"
+                        }
+                      `}
+                  >
+                    {isKnown ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Swords className="h-3.5 w-3.5" />
+                    )}
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-black text-[#F5EFEB]">
+                        {technique.name}
+                      </span>
+
+                      <span
+                        className={`
+                            rounded-md border
+                            px-1.5 py-0.5
+                            text-[8px] font-black
+                            uppercase tracking-wide
+                            ${techniqueLevelClass(technique.level)}
+                          `}
+                      >
+                        {technique.level}
+                      </span>
+
+                      {technique.cost && (
+                        <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                          {formatTechniqueCost(technique.cost)}
+                        </span>
+                      )}
+                    </span>
+
+                    <span className="mt-1 block text-[10px] leading-relaxed text-[#8F877D]">
+                      {technique.description}
+                    </span>
+
+                    {technique.utensils && technique.utensils.length > 0 && (
+                      <span className="mt-2 flex flex-wrap gap-1">
+                        {technique.utensils.map((utensil) => (
+                          <span
+                            key={String(utensil)}
+                            className="rounded-md border border-[#383430] bg-[#171615] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-[#7A7065]"
+                          >
+                            {utensil}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+
+            {filteredTechniques.length === 0 && (
+              <Placeholder
+                icon={Swords}
+                message="Nenhuma técnica encontrada."
+                hint="Tente buscar pelo nome, nível, custo ou utensílio."
+              />
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <Field label="Nome" required>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Corte Ascendente"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Selo / Custo" hint="Opcional. Ex: Passiva · 1 Sucesso">
+            <input
+              value={badge}
+              onChange={(e) => setBadge(e.target.value)}
+              placeholder="Ex: Passiva · 1 Sucesso"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Descrição">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={`${inputClass} min-h-24 resize-y`}
+              placeholder="Descreva o efeito da Técnica..."
+            />
+          </Field>
+
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="
+                rounded-xl px-3.5 py-2
+                text-xs font-bold
+                text-[#8F877D]
+                transition-colors
+                hover:bg-[#242220]
+                hover:text-[#F5EFEB]
+              "
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSaveCustom}
+              disabled={!name.trim()}
+              className="
+                inline-flex items-center gap-1.5
+                rounded-xl border
+                border-[#2B6CB0]/40
+                bg-[#13335C] px-3.5 py-2
+                text-xs font-black text-white
+                transition-all
+                hover:bg-[#184073]
+                disabled:cursor-not-allowed
+                disabled:opacity-40
+              "
+            >
+              <Check className="h-3.5 w-3.5" />
+
+              {editing ? "Salvar alterações" : "Adicionar Técnica"}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }
 
@@ -1883,6 +2275,16 @@ function EntryCard({
 // TAB 3 — TRAÇOS & MUTAÇÕES
 // ============================================================================
 
+// ============================================================================
+// TAB 3 — TRAÇOS & MUTAÇÕES
+// ============================================================================
+
+function formatTraitCost(cost: ITraitDefinition["cost"]): string | null {
+  if (!cost) return null;
+
+  return `${cost.amount} ${COST_TYPE_LABELS[cost.type] ?? cost.type}`;
+}
+
 function TracosPanel({
   selected,
   custom,
@@ -1900,97 +2302,129 @@ function TracosPanel({
   onToggleLibrary: (traitId: ID) => void;
   onLevelChange: (traitId: ID, level: number) => void;
   onAddCustom: (entry: Omit<ICustomEntry, "id">) => void;
-  onEditCustom: (id: string, patch: Partial<ICustomEntry>) => void;
-  onRemoveCustom: (id: string) => void;
+  onEditCustom: (id: ID, patch: Partial<ICustomEntry>) => void;
+  onRemoveCustom: (id: ID) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
-
   const [editing, setEditing] = useState<ICustomEntry | null>(null);
 
-  const libraryEntries = selected
-    .map((s) => ({
-      selection: s,
-      def: traitsById[s.traitId],
-    }))
-    .filter(
-      (
-        entry,
-      ): entry is {
-        selection: typeof entry.selection;
-        def: NonNullable<typeof entry.def>;
-      } => Boolean(entry.def),
-    );
+  const libraryEntries = useMemo(
+    () =>
+      selected
+        .map((selection) => {
+          const definition = traitsById[selection.traitId] as
+            | ITraitDefinition
+            | undefined;
+
+          return definition
+            ? {
+                selection,
+                definition,
+              }
+            : null;
+        })
+        .filter(
+          (
+            entry,
+          ): entry is {
+            selection: {
+              traitId: ID;
+              level: number;
+            };
+            definition: ITraitDefinition;
+          } => Boolean(entry),
+        ),
+    [selected],
+  );
 
   const total = libraryEntries.length + custom.length;
+
+  const openCreateModal = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (entry: ICustomEntry) => {
+    setEditing(entry);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditing(null);
+  };
 
   return (
     <section className={cardClass}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
-            Traços & Mutações Biológicas ({total})
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#2E6F63]/15 text-[#6FCF97]">
+            <Sparkles className="h-4 w-4" />
+          </div>
+
+          <h3 className="truncate text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+            Traços & Mutações ({total})
           </h3>
 
           <InfoTooltip
             title="Traços & Mutações Biológicas"
             category="Mutações"
-            description="Poderes sobrenaturais e mutações corporais herdadas do consumo de monstros. Escolha da biblioteca de Traços ou registre uma mutação totalmente sua."
+            description="Poderes e mutações corporais herdadas do consumo de monstros."
           />
         </div>
 
         <button
           type="button"
-          onClick={() => {
-            setEditing(null);
-            setModalOpen(true);
-          }}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#2E6F63]/40 bg-[#153029]/50 px-3.5 py-2 text-xs font-black text-[#6FCF97] transition-colors hover:border-[#6FCF97]"
+          onClick={openCreateModal}
+          className="
+            inline-flex items-center gap-2
+            rounded-xl border border-[#2E6F63]/40
+            bg-[#153029]/60 px-3.5 py-2
+            text-xs font-black text-[#6FCF97]
+            transition-all
+            hover:border-[#6FCF97]/70
+            hover:bg-[#1A3A31]
+          "
         >
           <Plus className="h-4 w-4" />
           Novo Traço
         </button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {libraryEntries.map(({ selection, def }) => {
-          const anyDef = def as unknown as {
-            id: ID;
-            name: string;
-            description?: string;
-            cost?: string;
-          };
-
-          return (
-            <EntryCard
-              key={`lib-${anyDef.id}`}
-              name={anyDef.name}
-              badge={anyDef.cost ?? `Nível ${selection.level}`}
-              description={anyDef.description ?? ""}
+      {(libraryEntries.length > 0 || custom.length > 0) && (
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {libraryEntries.map(({ selection, definition }) => (
+            <TraitCard
+              key={`library-${definition.id}`}
+              trait={definition}
+              level={selection.level}
+              onLevelChange={(level) => onLevelChange(selection.traitId, level)}
               onRemove={() => onToggleLibrary(selection.traitId)}
             />
-          );
-        })}
+          ))}
 
-        {custom.map((entry) => (
-          <EntryCard
-            key={entry.id}
-            name={entry.name}
-            badge={entry.badge}
-            description={entry.description}
-            onEdit={() => {
-              setEditing(entry);
-              setModalOpen(true);
-            }}
-            onRemove={() => onRemoveCustom(entry.id)}
-          />
-        ))}
-      </div>
+          {custom.map((entry) => (
+            <TraitCard
+              key={`custom-${entry.id}`}
+              custom={entry}
+              level={Math.max(1, entry.level ?? 1)}
+              onLevelChange={(level) =>
+                onEditCustom(entry.id, {
+                  level,
+                })
+              }
+              onEdit={() => openEditModal(entry)}
+              onRemove={() => onRemoveCustom(entry.id)}
+            />
+          ))}
+        </div>
+      )}
 
       {total === 0 && (
         <Placeholder
           icon={Sparkles}
           message="Nenhum Traço ou Mutação registrado ainda."
-          hint="Clique em “Novo Traço” para escolher da biblioteca ou criar uma mutação personalizada."
+          hint="Adicione um Traço da biblioteca ou crie uma mutação personalizada."
         />
       )}
 
@@ -1999,17 +2433,194 @@ function TracosPanel({
           selected={selected}
           editing={editing}
           onToggleLibrary={onToggleLibrary}
+          onLevelChange={onLevelChange}
           onSaveCustom={(data) => {
             if (editing) {
               onEditCustom(editing.id, data);
             } else {
               onAddCustom(data);
             }
+
+            closeModal();
           }}
-          onClose={() => setModalOpen(false)}
+          onClose={closeModal}
         />
       )}
     </section>
+  );
+}
+
+function TraitCard({
+  trait,
+  custom,
+  level,
+  onLevelChange,
+  onEdit,
+  onRemove,
+}: {
+  trait?: ITraitDefinition;
+  custom?: ICustomEntry;
+  level: number;
+  onLevelChange: (level: number) => void;
+  onEdit?: () => void;
+  onRemove: () => void;
+}) {
+  const isCustom = Boolean(custom);
+  const name = trait?.name ?? custom?.name ?? "Traço";
+  const description = trait?.description ?? custom?.description ?? "";
+  const costLabel = trait ? formatTraitCost(trait.cost) : custom?.badge;
+  const maxLevel = trait?.maxLevel ?? custom?.maxLevel ?? null;
+  const canDecrease = level > 1;
+  const canIncrease = maxLevel == null || level < maxLevel;
+
+  const decreaseLevel = () => {
+    if (!canDecrease) return;
+
+    onLevelChange(Math.max(1, level - 1));
+  };
+
+  const increaseLevel = () => {
+    if (!canIncrease) return;
+
+    onLevelChange(maxLevel == null ? level + 1 : Math.min(maxLevel, level + 1));
+  };
+
+  return (
+    <div
+      className={`
+        group relative overflow-hidden
+        rounded-xl border bg-[#1E1D1B]
+        transition-all duration-150 border-[#2E6F63]/40 hover:border-[#2E6F63]/70 hover:bg-[#201F1D]"}
+      `}
+    >
+      <div
+        className={`
+          absolute inset-y-0 left-0 w-0.5 bg-[#6FCF97]"}
+        `}
+      />
+
+      <div className="flex min-w-0 items-start gap-3 p-3.5">
+        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#2E6F63]/30 bg-[#153029]/60 text-[#6FCF97]">
+          <Sparkles className="h-4 w-4" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
+                  {name}
+                </p>
+
+                {costLabel && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                    {costLabel}
+                  </span>
+                )}
+
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider">
+                      Nível
+                    </span>
+
+                    <div className="flex items-center rounded-lg border border-[#383430] bg-[#171615] p-0.5">
+                      <button
+                        type="button"
+                        onClick={decreaseLevel}
+                        disabled={!canDecrease}
+                        className="
+                    flex h-5 w-5
+                    items-center justify-center
+                    rounded-md text-[#a09891]
+                    transition-colors
+                    hover:bg-[#242220]
+                    hover:text-[#F0C4A8]
+                    disabled:pointer-events-none
+                    disabled:opacity-25
+                  "
+                        aria-label={`Diminuir nível de ${name}`}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+
+                      <span className="min-w-[22px] px-0.5 text-center text-[10px] font-black tabular-nums text-[#6FCF97]">
+                        {level}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={increaseLevel}
+                        disabled={!canIncrease}
+                        className="
+                    flex h-5 w-5
+                    items-center justify-center
+                    rounded-md text-[#a09891]
+                    transition-colors
+                    hover:bg-[#242220]
+                    hover:text-[#6FCF97]
+                    disabled:pointer-events-none
+                    disabled:opacity-25
+                  "
+                        aria-label={`Aumentar nível de ${name}`}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {maxLevel != null && (
+                    <span className="text-[9px] font-bold text-[#625A53]">
+                      Máx. {maxLevel}
+                    </span>
+                  )}
+                </div>
+
+                {isCustom && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-[#6FCF97]">
+                    Personalizado
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1">
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  aria-label={`Editar ${name}`}
+                  className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB]"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              )}
+
+              <InfoTooltip
+                title={name}
+                category="Traço"
+                description={description}
+              />
+
+              <button
+                type="button"
+                onClick={onRemove}
+                aria-label={`Remover ${name}`}
+                className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#2B1F1C] hover:text-[#D97867]"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {description && (
+            <p className="mt-2 text-[10px] leading-relaxed text-[#a7a19a]">
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -2017,6 +2628,7 @@ function AddTraitModal({
   selected,
   editing,
   onToggleLibrary,
+  onLevelChange,
   onSaveCustom,
   onClose,
 }: {
@@ -2026,6 +2638,7 @@ function AddTraitModal({
   }>;
   editing: ICustomEntry | null;
   onToggleLibrary: (traitId: ID) => void;
+  onLevelChange: (traitId: ID, level: number) => void;
   onSaveCustom: (data: Omit<ICustomEntry, "id">) => void;
   onClose: () => void;
 }) {
@@ -2033,22 +2646,65 @@ function AddTraitModal({
     editing ? "personalizada" : "biblioteca",
   );
 
+  const [search, setSearch] = useState("");
+
   const [name, setName] = useState(editing?.name ?? "");
 
   const [badge, setBadge] = useState(editing?.badge ?? "");
 
   const [description, setDescription] = useState(editing?.description ?? "");
 
+  const [level, setLevel] = useState(editing?.level ?? 1);
+
+  const [maxLevel, setMaxLevel] = useState<number | "">(
+    editing?.maxLevel ?? "",
+  );
+
+  const selectedTraitsById = useMemo(
+    () => new Map(selected.map((trait) => [trait.traitId, trait])),
+    [selected],
+  );
+
+  const filteredTraits = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return traitDefinitions;
+    }
+
+    return traitDefinitions.filter((trait) => {
+      const searchableText = [
+        trait.name,
+        trait.description,
+        formatTraitCost(trait.cost) ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedSearch);
+    });
+  }, [search]);
+
   function handleSaveCustom() {
-    if (!name.trim()) return;
+    const normalizedName = name.trim();
+
+    if (!normalizedName) return;
+
+    const normalizedMax =
+      maxLevel === "" ? undefined : Math.max(1, Number(maxLevel));
+
+    const normalizedLevel =
+      normalizedMax != null
+        ? clamp(Math.max(1, level), 1, normalizedMax)
+        : Math.max(1, level);
 
     onSaveCustom({
-      name: name.trim(),
+      name: normalizedName,
       badge: badge.trim() || undefined,
-      description,
+      description: description.trim(),
+      level: normalizedLevel,
+      maxLevel: normalizedMax,
     });
-
-    onClose();
   }
 
   return (
@@ -2058,15 +2714,15 @@ function AddTraitModal({
       wide
     >
       {!editing && (
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex rounded-xl border border-[#383430] bg-[#171615] p-1">
           <ModeTab
-            label="Biblioteca de Traços"
+            label="Biblioteca"
             active={mode === "biblioteca"}
             onClick={() => setMode("biblioteca")}
           />
 
           <ModeTab
-            label="Criar personalizado"
+            label="Personalizado"
             active={mode === "personalizada"}
             onClick={() => setMode("personalizada")}
           />
@@ -2074,52 +2730,165 @@ function AddTraitModal({
       )}
 
       {mode === "biblioteca" && !editing ? (
-        <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
-          {traitDefinitions.map((trait) => {
-            const anyTrait = trait as unknown as {
-              id: ID;
-              name: string;
-              description?: string;
-              cost?: string;
-            };
+        <div className="space-y-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar traço..."
+            className="
+              w-full rounded-xl
+              border border-[#383430]
+              bg-[#171615]
+              px-3 py-2.5
+              text-xs text-[#F5EFEB]
+              outline-none
+              placeholder:text-[#625A53]
+              transition-colors
+              focus:border-[#2E6F63]/70
+            "
+          />
 
-            const isKnown = selected.some((t) => t.traitId === anyTrait.id);
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#625A53]">
+              {filteredTraits.length} resultado
+              {filteredTraits.length === 1 ? "" : "s"}
+            </span>
 
-            return (
-              <button
-                key={String(anyTrait.id)}
-                type="button"
-                onClick={() => onToggleLibrary(anyTrait.id)}
-                className={`flex w-full items-start justify-between gap-3 rounded-xl border p-3 text-left transition-colors ${
-                  isKnown
-                    ? "border-[#2E6F63]/60 bg-[#15302B]"
-                    : "border-[#383430] bg-[#1E1D1B] hover:border-[#6FCF97]/50"
-                }`}
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[11px] font-black text-[#F5EFEB]">
-                      {anyTrait.name}
-                    </p>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#6FCF97]">
+              {selected.length} selecionado
+              {selected.length === 1 ? "" : "s"}
+            </span>
+          </div>
 
-                    {anyTrait.cost && (
-                      <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
-                        {anyTrait.cost}
-                      </span>
-                    )}
+          <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+            {filteredTraits.map((trait) => {
+              const selectedTrait = selectedTraitsById.get(trait.id);
+
+              const isSelected = Boolean(selectedTrait);
+
+              return (
+                <div
+                  key={String(trait.id)}
+                  className={`
+                      rounded-xl border p-3
+                      transition-all
+                      ${
+                        isSelected
+                          ? "border-[#2E6F63]/70 bg-[#15302B]"
+                          : "border-[#383430] bg-[#1E1D1B] hover:border-[#4A433C]"
+                      }
+                    `}
+                >
+                  <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => onToggleLibrary(trait.id)}
+                      className={`
+                          mt-0.5 flex h-7 w-7
+                          shrink-0 items-center
+                          justify-center rounded-lg
+                          border
+                          ${
+                            isSelected
+                              ? "border-[#2E6F63]/60 bg-[#2E6F63]/20 text-[#6FCF97]"
+                              : "border-[#383430] bg-[#171615] text-transparent hover:border-[#6FCF97]/40"
+                          }
+                        `}
+                      aria-label={
+                        isSelected
+                          ? `Remover ${trait.name}`
+                          : `Adicionar ${trait.name}`
+                      }
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="text-[11px] font-black text-[#F5EFEB]">
+                          {trait.name}
+                        </p>
+
+                        {trait.cost && (
+                          <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                            {formatTraitCost(trait.cost)}
+                          </span>
+                        )}
+
+                        {trait.maxLevel != null && (
+                          <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#6FCF97]">
+                            Máx. {trait.maxLevel}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="mt-1 text-[10px] leading-relaxed text-[#8F877D]">
+                        {trait.description}
+                      </p>
+
+                      {isSelected && selectedTrait && (
+                        <div className="mt-2 flex items-center justify-between border-t border-[#2E6F63]/20 pt-2">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#625A53]">
+                            Nível {selectedTrait.level}
+                          </span>
+
+                          <div className="flex items-center gap-0.5 rounded-lg border border-[#2E6F63]/30 bg-[#171615] p-0.5">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onLevelChange(
+                                  trait.id,
+                                  Math.max(1, selectedTrait.level - 1),
+                                )
+                              }
+                              disabled={selectedTrait.level <= 1}
+                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#a09891] hover:bg-[#242220] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+
+                            <span className="min-w-[22px] text-center text-[9px] font-black text-[#6FCF97]">
+                              {selectedTrait.level}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onLevelChange(
+                                  trait.id,
+                                  trait.maxLevel != null
+                                    ? Math.min(
+                                        trait.maxLevel,
+                                        selectedTrait.level + 1,
+                                      )
+                                    : selectedTrait.level + 1,
+                                )
+                              }
+                              disabled={
+                                trait.maxLevel != null &&
+                                selectedTrait.level >= trait.maxLevel
+                              }
+                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#a09891] hover:bg-[#242220] hover:text-[#6FCF97] disabled:pointer-events-none disabled:opacity-25"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-
-                  <p className="mt-1 text-[10px] leading-relaxed text-[#8F877D]">
-                    {anyTrait.description}
-                  </p>
                 </div>
+              );
+            })}
 
-                {isKnown && (
-                  <Check className="h-4 w-4 shrink-0 text-[#6FCF97]" />
-                )}
-              </button>
-            );
-          })}
+            {filteredTraits.length === 0 && (
+              <Placeholder
+                icon={Sparkles}
+                message="Nenhum traço encontrado."
+                hint="Tente buscar por nome, efeito ou custo."
+              />
+            )}
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
@@ -2132,10 +2901,7 @@ function AddTraitModal({
             />
           </Field>
 
-          <Field
-            label="Selo / Custo"
-            hint="Opcional. Ex: Passiva ou Custo: 1 Sucesso"
-          >
+          <Field label="Selo / Custo" hint="Opcional.">
             <input
               value={badge}
               onChange={(e) => setBadge(e.target.value)}
@@ -2143,6 +2909,42 @@ function AddTraitModal({
               className={inputClass}
             />
           </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Nível inicial">
+              <input
+                type="number"
+                min={1}
+                value={level}
+                onChange={(e) => setLevel(Math.max(1, Number(e.target.value)))}
+                className={inputClass}
+              />
+            </Field>
+
+            <Field label="Nível máximo" hint="Opcional.">
+              <input
+                type="number"
+                min={1}
+                value={maxLevel}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (value === "") {
+                    setMaxLevel("");
+                    return;
+                  }
+
+                  const parsed = Number(value);
+
+                  setMaxLevel(
+                    Number.isFinite(parsed) ? Math.max(1, parsed) : "",
+                  );
+                }}
+                className={inputClass}
+                placeholder="Sem limite"
+              />
+            </Field>
+          </div>
 
           <Field label="Descrição">
             <textarea
@@ -2153,23 +2955,35 @@ function AddTraitModal({
             />
           </Field>
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
-              onClick={handleSaveCustom}
-              disabled={!name.trim()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#2E6F63]/40 bg-[#2E6F63] px-3.5 py-2 text-xs font-black text-white transition-colors hover:bg-[#357C6F] disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={onClose}
+              className="rounded-xl px-3.5 py-2 text-xs font-bold text-[#8F877D] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB]"
             >
-              <Check className="h-3.5 w-3.5" />
-              {editing ? "Salvar alterações" : "Adicionar Traço"}
+              Cancelar
             </button>
 
             <button
               type="button"
-              onClick={onClose}
-              className="px-2 text-xs font-bold text-[#B0A497] hover:text-[#F5EFEB]"
+              onClick={handleSaveCustom}
+              disabled={!name.trim()}
+              className="
+                inline-flex items-center
+                gap-1.5 rounded-xl
+                border border-[#2E6F63]/40
+                bg-[#2E6F63]
+                px-3.5 py-2
+                text-xs font-black text-white
+                transition-all
+                hover:bg-[#357C6F]
+                disabled:cursor-not-allowed
+                disabled:opacity-40
+              "
             >
-              Cancelar
+              <Check className="h-3.5 w-3.5" />
+
+              {editing ? "Salvar alterações" : "Adicionar Traço"}
             </button>
           </div>
         </div>
@@ -2177,7 +2991,6 @@ function AddTraitModal({
     </Modal>
   );
 }
-
 // ============================================================================
 // TAB 4 — FERAS & BANQUETES
 // ============================================================================
@@ -2303,9 +3116,9 @@ function FeastRecordForm({
   const [rewardType, setRewardType] =
     useState<PermanentReward["type"]>("trait");
 
-  const [styleKey, setStyleKey] = useState<StyleKey>("ligeiro" as StyleKey);
+  const [styleKey, setStyleKey] = useState<StyleKey>("ligeiro");
 
-  const [skillKey, setSkillKey] = useState<SkillKey>("agarrar" as SkillKey);
+  const [skillKey, setSkillKey] = useState<SkillKey>("agarrar");
 
   const [traitId, setTraitId] = useState("");
 
