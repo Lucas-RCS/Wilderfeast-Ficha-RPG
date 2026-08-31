@@ -1,13 +1,29 @@
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import {
+  Award,
   Check,
-  Hammer,
+  FileText,
+  Heart,
   Link2,
+  Minus,
+  Pencil,
   Plus,
+  Sparkles,
+  Swords,
   Target,
   Trash2,
   Users,
+  Utensils,
   X,
+  Beef,
+  Layers,
+  Flame,
+  Sprout,
+  Droplets,
+  Wheat,
+  Fish,
+  Dna,
 } from "lucide-react";
 
 import type {
@@ -27,14 +43,18 @@ import type {
   OriginDishType,
   PermanentReward,
   SkillKey,
+  SpecialtyKey,
   StyleKey,
 } from "../../types/types";
+
 import {
   SKILLS,
   STYLES,
+  STYLE_INFO,
   conditionDefinitions,
   creatureDefinitions,
   creaturesById,
+  skillsList,
   specialtiesById,
   techniqueDefinitions,
   techniquesById,
@@ -42,42 +62,247 @@ import {
   traitsById,
   utensilsById,
 } from "../../data/wilderfeastData";
+
 import {
-  addFeralToMatilha,
-  deleteFeral,
   generateId,
   getAllFeralCards,
-  getAllMatilhas,
   getFeralById,
-  removeFeralFromMatilha,
   saveFeral,
 } from "../../lib/storage";
+
 import {
   ALL_ORIGIN_DISH_TYPES,
   ORIGIN_DISH_LABELS,
 } from "../../types/wilderfeastTypes";
+
 import { useAutosaveEntity } from "../../hooks/useAutosaveEntity";
 import { formatRelativeTime } from "../../hooks/useUtils";
+
 import {
-  EmptyState,
   Field,
-  NumberStepper,
-  SectionTitle,
   cardClass,
   inputClass,
 } from "../../components/creation/FormControls";
-import {
-  ConditionPicker,
-  TraitPicker,
-} from "../../components/creation/TraitConditionPicker";
-import { TechniquePicker } from "../../components/layout/TechniquePicker";
+
 import { SheetHeader } from "../../components/layout/SheetHeader";
 import { SheetNotFound } from "../../components/layout/SheetNotFound";
 import { FloatingUndoButton } from "../../components/ui/FloatingUndoButton";
-import { ConfirmButton } from "../../components/ui/ConfirmButton";
+import { InfoTooltip } from "../ui/Tooltip";
 
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
+
+interface ICustomEntry {
+  id: string;
+  name: string;
+  badge?: string;
+  description: string;
+}
+
+function readCustom<T>(entity: unknown, key: string): T[] {
+  const value = (entity as Record<string, unknown>)[key];
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+const LINEAGE_META: Record<
+  SpecialtyKey,
+  {
+    icon: React.ReactNode;
+    text: string;
+    bg: string;
+    border: string;
+  }
+> = {
+  Açougueiro: {
+    icon: <Beef className="h-4 w-4" />,
+    text: "text-red-300",
+    bg: "bg-red-500/20",
+    border: "border-red-500/60",
+  },
+  Amontoeiro: {
+    icon: <Layers className="h-4 w-4" />,
+    text: "text-stone-300",
+    bg: "bg-stone-500/20",
+    border: "border-stone-500/60",
+  },
+  Churrasqueiro: {
+    icon: <Flame className="h-4 w-4" />,
+    text: "text-orange-300",
+    bg: "bg-orange-500/20",
+    border: "border-orange-500/60",
+  },
+  Jardineiro: {
+    icon: <Sprout className="h-4 w-4" />,
+    text: "text-emerald-300",
+    bg: "bg-emerald-500/20",
+    border: "border-emerald-500/60",
+  },
+  Molheiro: {
+    icon: <Droplets className="h-4 w-4" />,
+    text: "text-sky-300",
+    bg: "bg-sky-500/20",
+    border: "border-sky-500/60",
+  },
+  Padeiro: {
+    icon: <Wheat className="h-4 w-4" />,
+    text: "text-amber-300",
+    bg: "bg-amber-500/20",
+    border: "border-amber-500/60",
+  },
+  Peixeiro: {
+    icon: <Fish className="h-4 w-4" />,
+    text: "text-cyan-300",
+    bg: "bg-cyan-500/20",
+    border: "border-cyan-500/60",
+  },
+  Pivoteiro: {
+    icon: <Dna className="h-4 w-4" />,
+    text: "text-violet-300",
+    bg: "bg-violet-500/20",
+    border: "border-violet-500/60",
+  },
+};
+
+// ============================================================================
+// MODAL
+// ============================================================================
+
+function Modal({
+  title,
+  onClose,
+  children,
+  wide,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  wide?: boolean;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className={`max-h-[85vh] w-full ${
+          wide ? "max-w-2xl" : "max-w-md"
+        } overflow-y-auto rounded-2xl border border-[#383430] bg-[#1A1918] p-5 shadow-2xl`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+            {title}
+          </h3>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-lg p-1.5 text-[#8F877D] transition-colors hover:bg-[#242220] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// TABS
+// ============================================================================
+
+interface TabDef {
+  key: string;
+  label: string;
+  icon: typeof Award;
+  count: number;
+  color: string;
+}
+
+function TabBar({
+  tabs,
+  active,
+  onChange,
+}: {
+  tabs: TabDef[];
+  active: string;
+  onChange: (key: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2 rounded-2xl border border-[#302D29] bg-[#171615] p-2">
+      {tabs.map((tab) => {
+        const isActive = tab.key === active;
+        const Icon = tab.icon;
+
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => onChange(tab.key)}
+            style={
+              isActive
+                ? {
+                    borderColor: `${tab.color}66`,
+                    backgroundColor: `${tab.color}1F`,
+                    color: tab.color,
+                  }
+                : undefined
+            }
+            className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-[11px] font-black uppercase tracking-wide transition-colors ${
+              isActive
+                ? ""
+                : "border-transparent text-[#8F877D] hover:bg-[#1E1D1B] hover:text-[#F5EFEB]"
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" style={{ color: tab.color }} />
+
+            {tab.label}
+
+            <span
+              className="rounded-full px-1.5 py-0.5 text-[9px] font-black"
+              style={{
+                backgroundColor: isActive ? `${tab.color}33` : "#242220",
+                color: isActive ? tab.color : "#8F877D",
+              }}
+            >
+              {tab.count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================================
+// PLACEHOLDER
+// ============================================================================
+
+function Placeholder({
+  icon: Icon,
+  message,
+  hint,
+}: {
+  icon: typeof Award;
+  message: string;
+  hint?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#383430] bg-[#171615]/60 px-6 py-10 text-center">
+      <Icon className="h-7 w-7 text-[#4A433C]" />
+
+      <p className="text-xs font-bold text-[#8F877D]">{message}</p>
+
+      {hint && <p className="max-w-xs text-[10px] text-[#5E564D]">{hint}</p>}
+    </div>
+  );
+}
+
+// ============================================================================
+// ENTRY POINT
+// ============================================================================
 
 interface FeralSheetProps {
   feralId: ID;
@@ -85,7 +310,6 @@ interface FeralSheetProps {
   onDeleted: () => void;
 }
 
-/** Ponto de entrada: carrega o Feral do storage e trata o caso de "não encontrado". */
 function FeralSheet({ feralId, onBack, onDeleted }: FeralSheetProps) {
   const initial = getFeralById(feralId);
 
@@ -93,64 +317,89 @@ function FeralSheet({ feralId, onBack, onDeleted }: FeralSheetProps) {
     return <SheetNotFound label="Feral" onBack={onBack} />;
   }
 
-  // `key` força remontagem (e novo estado de autosave) ao trocar de Feral.
-  return (
-    <FeralSheetView
-      key={feralId}
-      initial={initial}
-      onBack={onBack}
-      onDeleted={onDeleted}
-    />
-  );
+  return <FeralSheetView key={feralId} initial={initial} onBack={onBack} />;
 }
+
+type FeralTabKey = "habilidades" | "tecnicas" | "tracos" | "feras" | "diario";
 
 function FeralSheetView({
   initial,
   onBack,
-  onDeleted,
 }: {
   initial: IFeral;
   onBack: () => void;
-  onDeleted: () => void;
 }) {
   const { entity, update, undo, canUndo, lastSavedAt, isPending } =
-    useAutosaveEntity<IFeral>({ initial, save: saveFeral });
+    useAutosaveEntity<IFeral>({
+      initial,
+      save: saveFeral,
+    });
 
-  const [matilhas, setMatilhas] = useState<IMatilha[]>(() => getAllMatilhas());
   const feralOptions = useMemo(() => getAllFeralCards(), []);
+  const [activeTab, setActiveTab] = useState<FeralTabKey>("habilidades");
 
   const specialtyName =
     specialtiesById[entity.specialtyId]?.name ?? entity.specialtyId;
+
   const utensilDef = utensilsById[entity.utensil.utensilId] as
     | IUtensilDefinition
     | undefined;
-  const currentMatilha = matilhas.find((m) => m.memberIds.includes(entity.id));
 
-  function handleDelete() {
-    deleteFeral(entity.id);
-    onDeleted();
-  }
+  const updateRaw = (patch: Record<string, unknown>) =>
+    update(patch as Partial<IFeral>);
 
-  function handleJoinMatilha(matilhaId: ID) {
-    if (currentMatilha) removeFeralFromMatilha(currentMatilha.id, entity.id);
-    addFeralToMatilha(matilhaId, entity.id);
-    setMatilhas(getAllMatilhas());
-  }
+  const customTraits = readCustom<ICustomEntry>(entity, "customTraits");
 
-  function handleLeaveMatilha() {
-    if (!currentMatilha) return;
-    removeFeralFromMatilha(currentMatilha.id, entity.id);
-    setMatilhas(getAllMatilhas());
-  }
+  const customTechniques = readCustom<ICustomEntry>(entity, "customTechniques");
 
+  const tabs: TabDef[] = [
+    {
+      key: "habilidades",
+      label: "1. Habilidades",
+      icon: Award,
+      count: skillsList.length,
+      color: "#FF9B42",
+    },
+    {
+      key: "tecnicas",
+      label: "2. Técnicas",
+      icon: Swords,
+      count: entity.techniques.length + customTechniques.length,
+      color: "#89B5F7",
+    },
+    {
+      key: "tracos",
+      label: "3. Traços & Mutações",
+      icon: Sparkles,
+      count: entity.traits.length + customTraits.length,
+      color: "#6FCF97",
+    },
+    {
+      key: "feras",
+      label: "4. Feras & Banquetes",
+      icon: Users,
+      count: entity.feastHistory.length,
+      color: "#E08A3C",
+    },
+    {
+      key: "diario",
+      label: "5. Diário & Notas",
+      icon: FileText,
+      count: entity.notes.length,
+      color: "#B0A497",
+    },
+  ];
+  const lineageMeta = LINEAGE_META[entity.specialtyId as SpecialtyKey];
   return (
-    <div className="min-h-screen bg-[#121110] text-[#F5EFEB] pb-24">
+    <div className="min-h-screen w-full bg-[#121110] pb-24 text-[#F5EFEB]">
       <SheetHeader
         eyebrow="Ficha de Feral"
         accent="blue"
         avatarUrl={entity.avatarUrl ?? ""}
         onAvatarChange={(avatarUrl) =>
-          update({ avatarUrl: avatarUrl || undefined })
+          update({
+            avatarUrl: avatarUrl || undefined,
+          })
         }
         avatarFallback={
           entity.name.trim() ? entity.name.trim()[0].toUpperCase() : "?"
@@ -161,9 +410,6 @@ function FeralSheetView({
         onBack={onBack}
         lastSavedAt={lastSavedAt}
         isPending={isPending}
-        actions={
-          <ConfirmButton label="Excluir Feral" onConfirm={handleDelete} />
-        }
         subtitle={
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -172,282 +418,327 @@ function FeralSheetView({
               placeholder="pronomes"
               className="w-28 border-b border-transparent bg-transparent text-xs font-medium text-[#B0A497] outline-none transition-colors hover:border-[#383430] focus:border-[#FF9B42]"
             />
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#2B6CB0]/40 bg-[#13335C]/20 px-2.5 py-1 text-[10px] font-bold text-[#89B5F7]">
-              <Target className="w-3 h-3" /> {specialtyName}
+
+            <span
+              className={` inline-flex items-center gap-1 rounded-full border ${lineageMeta?.border ?? "border-[#2B6CB0]/40"} ${lineageMeta?.bg ?? "bg-[#13335C]/20"} px-2.5 py-1 text-[10px] font-bold ${lineageMeta?.text ?? "text-[#89B5F7]"} `}
+            >
+              {lineageMeta?.icon ?? <Target className="h-3 w-3" />}
+              {specialtyName}
             </span>
+
             <span className="inline-flex items-center gap-1 rounded-full border border-[#383430] bg-[#1A1918] px-2.5 py-1 text-[10px] font-bold text-[#FF9B42]">
-              <Hammer className="w-3 h-3" />{" "}
+              <Utensils className="h-3 w-3" />
               {utensilDef?.name ?? entity.utensil.utensilId}
             </span>
           </div>
         }
       />
 
-      <main className="mx-auto max-w-5xl space-y-5 px-4 sm:px-6 py-6">
-        <section className={cardClass}>
-          <SectionTitle eyebrow="Identidade" title="Aparência" />
-          <textarea
-            value={entity.appearance}
-            onChange={(e) => update({ appearance: e.target.value })}
-            className={`${inputClass} mt-3 min-h-24 resize-y`}
-          />
-        </section>
-
-        <div className="grid gap-5 md:grid-cols-2">
-          <section className={cardClass}>
-            <SectionTitle
-              eyebrow="Recursos"
-              title="Vigor"
-              subtitle="Resistência física e mental do Feral."
-            />
-            <VigorEditor
-              vigor={entity.vigor}
-              onChange={(vigor) => update({ vigor })}
-            />
-          </section>
-          <section className={cardClass}>
-            <SectionTitle
-              eyebrow="Equipamento"
-              title={utensilDef?.name ?? "Utensílio"}
-              subtitle="Durabilidade e alcance do Utensílio de Arkaicaço."
-            />
-            <UtensilEditor
-              utensil={entity.utensil}
-              definition={utensilDef}
-              onChange={(utensil) => update({ utensil })}
-            />
-          </section>
-        </div>
-
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Combate"
-            title="Estilos de Ação"
-            subtitle="De 1 a 5. Definem os dados rolados em cada abordagem."
-          />
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {Object.entries(STYLES).map(([key, meta]) => (
-              <NumberStepper
-                key={key}
-                label={meta.name}
-                min={1}
-                max={5}
-                value={entity.styles[key as StyleKey]}
-                onChange={(value) =>
-                  update({ styles: { ...entity.styles, [key]: value } })
-                }
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Combate"
-            title="Perícias"
-            subtitle="De 0 a 3. Somam-se ao Estilo em cada teste."
-          />
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {Object.entries(SKILLS).map(([key, meta]) => (
-              <NumberStepper
-                key={key}
-                label={meta.name}
-                min={0}
-                max={3}
-                value={entity.skills[key as SkillKey]}
-                onChange={(value) =>
-                  update({ skills: { ...entity.skills, [key]: value } })
-                }
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Combate"
-            title="Técnicas"
-            subtitle="Técnicas conhecidas e a que está em treinamento."
-          />
-          <TechniquesEditor
-            known={entity.techniques}
-            training={entity.techniqueTraining}
-            onToggle={(techniqueId) =>
-              update({
-                techniques: entity.techniques.some(
-                  (t) => t.techniqueId === techniqueId,
-                )
-                  ? entity.techniques.filter(
-                      (t) => t.techniqueId !== techniqueId,
-                    )
-                  : [...entity.techniques, { techniqueId }],
-              })
-            }
-            onTrainingChange={(techniqueTraining) =>
-              update({ techniqueTraining })
-            }
-          />
-        </section>
-
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Progressão"
-            title="Traços"
-            subtitle="Habilidades especiais adquiridas pelo Feral."
-          />
-          <div className="mt-3">
-            <TraitPicker
-              title="Traços do Feral"
-              allTraits={traitDefinitions}
-              selected={entity.traits}
-              onToggle={(traitId) =>
-                update({
-                  traits: entity.traits.some((t) => t.traitId === traitId)
-                    ? entity.traits.filter((t) => t.traitId !== traitId)
-                    : [...entity.traits, { traitId, level: 1 }],
-                })
-              }
-              onLevelChange={(traitId, level) =>
-                update({
-                  traits: entity.traits.map((t) =>
-                    t.traitId === traitId ? { ...t, level } : t,
-                  ),
-                })
-              }
-            />
-          </div>
-        </section>
-
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Status"
-            title="Condições"
-            subtitle="Efeitos ativos no Feral neste momento."
-          />
-          <div className="mt-3">
-            <ConditionPicker
-              title="Condições ativas"
-              allConditions={conditionDefinitions}
-              selected={entity.conditions}
-              onToggle={(conditionId) =>
-                update({
-                  conditions: entity.conditions.some(
-                    (c) => c.conditionId === conditionId,
-                  )
-                    ? entity.conditions.filter(
-                        (c) => c.conditionId !== conditionId,
-                      )
-                    : [...entity.conditions, { conditionId, level: 1 }],
-                })
-              }
-              onLevelChange={(conditionId, level) =>
-                update({
-                  conditions: entity.conditions.map((c) =>
-                    c.conditionId === conditionId ? { ...c, level } : c,
-                  ),
-                })
-              }
-            />
-          </div>
-        </section>
-
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="História"
-            title="Origem"
-            subtitle="Os marcos que moldaram o Feral."
-          />
-          <OriginEditor
-            origin={entity.origin}
-            onChange={(origin) => update({ origin })}
-            feralOptions={feralOptions}
-            selfId={entity.id}
-          />
-        </section>
-
-        <section className={cardClass}>
-          <SectionTitle eyebrow="História" title="Personalidade" />
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <Field label="É...">
-              <input
-                value={entity.personality.is}
-                onChange={(e) =>
+      <main className="w-full px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid gap-5 lg:grid-cols-[380px_1fr] xl:grid-cols-[620px_1fr]">
+          {/* ================= COLUNA ESQUERDA ================= */}
+          <div className="space-y-4">
+            <section className={cardClass}>
+              <StatHeader
+                icon={<Heart />}
+                color="#E5484D"
+                title="Vigor (Saúde)"
+                value={entity.vigor.current}
+                max={entity.vigor.max}
+                onMaxChange={(max) =>
                   update({
-                    personality: { ...entity.personality, is: e.target.value },
-                  })
-                }
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Busca ser...">
-              <input
-                value={entity.personality.strivesToBe}
-                onChange={(e) =>
-                  update({
-                    personality: {
-                      ...entity.personality,
-                      strivesToBe: e.target.value,
+                    vigor: {
+                      ...entity.vigor,
+                      max,
+                      current: clamp(entity.vigor.current, 0, max),
                     },
                   })
                 }
-                className={inputClass}
+                tooltip="Representa a resistência física e mental do Feral. Ao chegar a 0, o Feral é derrubado durante a Caçada."
+                category="Combate"
               />
-            </Field>
+
+              <VigorEditor
+                vigor={entity.vigor}
+                onChange={(vigor) => update({ vigor })}
+              />
+            </section>
+
+            <section className={cardClass}>
+              <StatHeader
+                icon={<Utensils />}
+                color="#7EA8E0"
+                title={"Durabilidade do " + (utensilDef?.name ?? "Utensílio")}
+                value={entity.utensil.durability.current}
+                max={entity.utensil.durability.max}
+                onMaxChange={(max) =>
+                  update({
+                    utensil: {
+                      ...entity.utensil,
+                      durability: {
+                        ...entity.utensil.durability,
+                        max,
+                        current: clamp(
+                          entity.utensil.durability.current,
+                          0,
+                          max,
+                        ),
+                      },
+                    },
+                  })
+                }
+                tooltip="Durabilidade do Utensílio de Arkaicaço. Quando chega a 0, o Utensílio quebra e passa a sofrer penalidades até ser reparado."
+                category="Equipamento"
+              />
+
+              <UtensilEditor
+                utensil={entity.utensil}
+                definition={utensilDef}
+                onChange={(utensil) => update({ utensil })}
+              />
+            </section>
+
+            <section className={cardClass}>
+              <div className="mb-1 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-black uppercase tracking-wide text-[#F5EFEB]">
+                    Estilos de Ação
+                  </h3>
+
+                  <InfoTooltip
+                    title="Estilos de Ação"
+                    category="Regras Básicas"
+                    description="Vão de 1 a 5. Cada ponto em um Estilo adiciona um d6 à pilha de dados rolada quando você age daquela forma. Combine Estilo + Perícia em cada teste."
+                  />
+                </div>
+
+                <span className="text-[9px] font-bold uppercase tracking-wide text-[#5E564D]">
+                  Pilha de dados d6
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {Object.entries(STYLES).map(([key, style]) => {
+                  const info = STYLE_INFO[key] ?? {
+                    description: "",
+                    tooltip: "Estilo de ação do Feral.",
+                  };
+
+                  return (
+                    <StyleCard
+                      key={key}
+                      name={style.name}
+                      color={style.color}
+                      description={info.description}
+                      tooltip={info.tooltip}
+                      value={entity.styles[key as StyleKey]}
+                      min={1}
+                      max={5}
+                      onChange={(value) =>
+                        update({
+                          styles: {
+                            ...entity.styles,
+                            [key]: value,
+                          },
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className={cardClass}>
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-black uppercase tracking-wide text-[#F5EFEB]">
+                    Condições de Status
+                  </h3>
+
+                  <InfoTooltip
+                    title="Condições de Status"
+                    category="Regras Básicas"
+                    description="Efeitos temporários que afetam o Feral durante a Caçada (fadiga, veneno, medo, etc). Clique para ativar e ajuste o nível quando aplicável."
+                  />
+                </div>
+
+                <span className="text-[9px] font-bold uppercase tracking-wide text-[#5E564D]">
+                  {entity.conditions.length} ativa
+                  {entity.conditions.length === 1 ? "" : "s"}
+                </span>
+              </div>
+
+              <ConditionsGrid
+                selected={entity.conditions}
+                onToggle={(conditionId) =>
+                  update({
+                    conditions: entity.conditions.some(
+                      (c) => c.conditionId === conditionId,
+                    )
+                      ? entity.conditions.filter(
+                          (c) => c.conditionId !== conditionId,
+                        )
+                      : [
+                          ...entity.conditions,
+                          {
+                            conditionId,
+                            level: 1,
+                          },
+                        ],
+                  })
+                }
+                onLevelChange={(conditionId, level) =>
+                  update({
+                    conditions: entity.conditions.map((c) =>
+                      c.conditionId === conditionId ? { ...c, level } : c,
+                    ),
+                  })
+                }
+              />
+            </section>
           </div>
-        </section>
 
-        <section className={cardClass}>
-          <SectionTitle eyebrow="História" title="Monstro Importante" />
-          <ImportantMonsterEditor
-            value={entity.importantMonster}
-            onChange={(importantMonster) => update({ importantMonster })}
-          />
-        </section>
+          {/* ================= COLUNA DIREITA ================= */}
+          <div className="min-w-0 space-y-4">
+            <TabBar
+              tabs={tabs}
+              active={activeTab}
+              onChange={(k) => setActiveTab(k as FeralTabKey)}
+            />
 
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Vínculos"
-            title="Matilha"
-            subtitle="A qual Matilha este Feral pertence."
-          />
-          <MatilhaMembershipEditor
-            matilhas={matilhas}
-            currentMatilha={currentMatilha}
-            onJoin={handleJoinMatilha}
-            onLeave={handleLeaveMatilha}
-          />
-        </section>
+            {activeTab === "habilidades" && (
+              <HabilidadesPanel
+                skills={entity.skills}
+                onChange={(skills) => update({ skills })}
+              />
+            )}
 
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Progressão"
-            title="Banquete Feral"
-            subtitle="Criaturas banqueteadas e as recompensas permanentes obtidas."
-          />
-          <FeastHistoryEditor
-            records={entity.feastHistory}
-            onAdd={(record) =>
-              update({ feastHistory: [record, ...entity.feastHistory] })
-            }
-            onRemove={(id) =>
-              update({
-                feastHistory: entity.feastHistory.filter((r) => r.id !== id),
-              })
-            }
-          />
-        </section>
+            {activeTab === "tecnicas" && (
+              <TecnicasPanel
+                known={entity.techniques}
+                custom={customTechniques}
+                training={entity.techniqueTraining}
+                onToggle={(techniqueId) =>
+                  update({
+                    techniques: entity.techniques.some(
+                      (t) => t.techniqueId === techniqueId,
+                    )
+                      ? entity.techniques.filter(
+                          (t) => t.techniqueId !== techniqueId,
+                        )
+                      : [...entity.techniques, { techniqueId }],
+                  })
+                }
+                onTrainingChange={(techniqueTraining) =>
+                  update({
+                    techniqueTraining,
+                  })
+                }
+                onAddCustom={(entryData) =>
+                  updateRaw({
+                    customTechniques: [
+                      {
+                        id: generateId(),
+                        ...entryData,
+                      },
+                      ...customTechniques,
+                    ],
+                  })
+                }
+                onEditCustom={(id, patch) =>
+                  updateRaw({
+                    customTechniques: customTechniques.map((c) =>
+                      c.id === id ? { ...c, ...patch } : c,
+                    ),
+                  })
+                }
+                onRemoveCustom={(id) =>
+                  updateRaw({
+                    customTechniques: customTechniques.filter(
+                      (c) => c.id !== id,
+                    ),
+                  })
+                }
+              />
+            )}
 
-        <section className={cardClass}>
-          <SectionTitle
-            eyebrow="Registro"
-            title="Diário de Caçada"
-            subtitle="Anotações livres sobre a jornada do Feral."
-          />
-          <JournalNotesEditor
-            notes={entity.notes}
-            onChange={(notes) => update({ notes })}
-          />
-        </section>
+            {activeTab === "tracos" && (
+              <TracosPanel
+                selected={entity.traits}
+                custom={customTraits}
+                onToggleLibrary={(traitId) =>
+                  update({
+                    traits: entity.traits.some((t) => t.traitId === traitId)
+                      ? entity.traits.filter((t) => t.traitId !== traitId)
+                      : [
+                          ...entity.traits,
+                          {
+                            traitId,
+                            level: 1,
+                          },
+                        ],
+                  })
+                }
+                onLevelChange={(traitId, level) =>
+                  update({
+                    traits: entity.traits.map((t) =>
+                      t.traitId === traitId ? { ...t, level } : t,
+                    ),
+                  })
+                }
+                onAddCustom={(entryData) =>
+                  updateRaw({
+                    customTraits: [
+                      {
+                        id: generateId(),
+                        ...entryData,
+                      },
+                      ...customTraits,
+                    ],
+                  })
+                }
+                onEditCustom={(id, patch) =>
+                  updateRaw({
+                    customTraits: customTraits.map((c) =>
+                      c.id === id ? { ...c, ...patch } : c,
+                    ),
+                  })
+                }
+                onRemoveCustom={(id) =>
+                  updateRaw({
+                    customTraits: customTraits.filter((c) => c.id !== id),
+                  })
+                }
+              />
+            )}
+
+            {activeTab === "feras" && (
+              <FerasPanel
+                records={entity.feastHistory}
+                onAdd={(record) =>
+                  update({
+                    feastHistory: [record, ...entity.feastHistory],
+                  })
+                }
+                onRemove={(id) =>
+                  update({
+                    feastHistory: entity.feastHistory.filter(
+                      (r) => r.id !== id,
+                    ),
+                  })
+                }
+              />
+            )}
+
+            {activeTab === "diario" && (
+              <DiarioPanel
+                entity={entity}
+                update={update}
+                feralOptions={feralOptions}
+              />
+            )}
+          </div>
+        </div>
       </main>
 
       <FloatingUndoButton visible={canUndo} onUndo={undo} />
@@ -455,8 +746,78 @@ function FeralSheetView({
   );
 }
 
+function StatHeader({
+  icon,
+  color,
+  title,
+  value,
+  max,
+  tooltip,
+  category,
+  onMaxChange,
+}: {
+  icon: ReactNode;
+  color: string;
+  title: string;
+  value: number;
+  max: number;
+  category: string;
+  tooltip: string;
+  onMaxChange: (max: number) => void;
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-black"
+          style={{
+            color,
+          }}
+        >
+          {icon}
+        </span>
+
+        <h3 className="truncate text-xs font-black uppercase tracking-wide text-[#F5EFEB]">
+          {title}
+        </h3>
+
+        <InfoTooltip title={title} description={tooltip} category={category} />
+      </div>
+
+      <div className="flex shrink-0 items-baseline gap-1">
+        <span className="text-lg font-black leading-none text-[#F5EFEB]">
+          {value}
+        </span>
+
+        <span className="text-xs font-bold text-[#7A7065]">/</span>
+
+        <input
+          type="number"
+          min={1}
+          value={max}
+          onChange={(e) => onMaxChange(Math.max(1, Number(e.target.value)))}
+          aria-label={`${title} máximo`}
+          className="
+            w-10
+            border-none
+            bg-transparent
+            p-0
+            text-xs
+            font-bold
+            text-[#7A7065]
+            outline-none
+            appearance-none
+            focus:text-[#B0A497]
+          "
+        />
+        <span className="text-xs font-bold text-[#7A7065]">MAX</span>
+      </div>
+    </div>
+  );
+}
+
 // ============================================================================
-// VIGOR & UTENSÍLIO
+// VIGOR
 // ============================================================================
 
 function VigorEditor({
@@ -469,46 +830,167 @@ function VigorEditor({
   const percentage =
     vigor.max > 0 ? clamp((vigor.current / vigor.max) * 100, 0, 100) : 0;
 
+  const updateCurrent = (value: number) => {
+    onChange({
+      ...vigor,
+      current: clamp(value, 0, vigor.max),
+    });
+  };
+
   return (
-    <div className="mt-3 space-y-3">
-      <div className="h-2.5 overflow-hidden rounded-full border border-[#302D29] bg-[#1E1D1B]">
-        <div
-          className="h-full bg-gradient-to-r from-[#9B2C2C] to-[#FF9B42] transition-all"
-          style={{ width: `${percentage}%` }}
+    <div className="w-full space-y-3">
+      <div className="relative w-full">
+        <input
+          type="range"
+          min={0}
+          max={vigor.max}
+          value={vigor.current}
+          onChange={(e) => updateCurrent(Number(e.target.value))}
+          className="
+            vigor-slider
+            block
+            h-3
+            w-full
+            cursor-pointer
+            appearance-none
+            rounded-full
+            bg-[#2B2825]
+            outline-none
+          "
+          style={{
+            background: `linear-gradient(
+              to right,
+              #9B2C2C 0%,
+              #FF9B42 ${percentage}%,
+              #2B2825 ${percentage}%,
+              #2B2825 100%
+            )`,
+          }}
         />
+
+        <style>
+          {`
+            .vigor-slider::-webkit-slider-runnable-track {
+              height: 12px;
+              border-radius: 9999px;
+              background: transparent;
+            }
+
+            .vigor-slider::-moz-range-track {
+              height: 12px;
+              border-radius: 9999px;
+              background: transparent;
+            }
+
+            .vigor-slider::-webkit-slider-thumb {
+              appearance: none;
+              width: 20px;
+              height: 20px;
+              margin-top: -4px;
+              border-radius: 9999px;
+              border: 3px solid #171514;
+              background: #F2E9DE;
+              box-shadow:
+                0 0 0 1px rgba(255,255,255,0.08),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+
+            .vigor-slider::-moz-range-thumb {
+              width: 20px;
+              height: 20px;
+              border-radius: 9999px;
+              border: 3px solid #171514;
+              background: #F2E9DE;
+              box-shadow:
+                0 0 0 1px rgba(255,255,255,0.08),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+
+            .vigor-slider:focus-visible::-webkit-slider-thumb {
+              box-shadow:
+                0 0 0 3px rgba(255,155,66,0.2),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+
+            .vigor-slider:focus-visible::-moz-range-thumb {
+              box-shadow:
+                0 0 0 3px rgba(255,155,66,0.2),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+          `}
+        </style>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Atual">
+
+      <div className="grid grid-cols-5 gap-1.5">
+        <QuickStepButton
+          label="-5"
+          onClick={() => updateCurrent(vigor.current - 5)}
+        />
+
+        <QuickStepButton
+          label="−"
+          onClick={() => updateCurrent(vigor.current - 1)}
+        />
+
+        <div className="flex min-w-0 items-center justify-center rounded-lg bg-[#211F1D] px-2 py-2">
           <input
             type="number"
             min={0}
             max={vigor.max}
             value={vigor.current}
-            onChange={(e) =>
-              onChange({
-                ...vigor,
-                current: clamp(Number(e.target.value), 0, vigor.max),
-              })
-            }
-            className={inputClass}
+            onChange={(e) => updateCurrent(Number(e.target.value))}
+            className="
+              w-full
+              min-w-0
+              bg-transparent
+              text-center
+              text-sm
+              font-black
+              text-[#E8E0D6]
+              outline-none
+            "
           />
-        </Field>
-        <Field label="Máximo">
-          <input
-            type="number"
-            min={1}
-            value={vigor.max}
-            onChange={(e) => {
-              const max = Math.max(1, Number(e.target.value));
-              onChange({ current: Math.min(vigor.current, max), max });
-            }}
-            className={inputClass}
-          />
-        </Field>
+        </div>
+
+        <QuickStepButton
+          label="+"
+          onClick={() => updateCurrent(vigor.current + 1)}
+        />
+
+        <QuickStepButton
+          label="+5"
+          onClick={() => updateCurrent(vigor.current + 5)}
+        />
       </div>
     </div>
   );
 }
+
+// ============================================================================
+// QUICK STEP
+// ============================================================================
+
+function QuickStepButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="cursor-pointer shrink-0 rounded-lg border border-[#383430] bg-[#242220] px-2.5 py-1.5 text-[10px] font-black text-[#D8CFC4] transition-colors hover:border-[#FF9B42] hover:text-[#FF9B42]"
+    >
+      {label}
+    </button>
+  );
+}
+
+// ============================================================================
+// UTENSÍLIO
+// ============================================================================
 
 function UtensilEditor({
   utensil,
@@ -527,198 +1009,231 @@ function UtensilEditor({
           100,
         )
       : 0;
+
   const isBroken = utensil.durability.current <= 0;
 
+  const updateCurrent = (value: number) => {
+    onChange({
+      ...utensil,
+      durability: {
+        ...utensil.durability,
+        current: clamp(value, 0, utensil.durability.max),
+      },
+    });
+  };
+
   return (
-    <div className="mt-3 space-y-3">
-      <div className="h-2.5 overflow-hidden rounded-full border border-[#302D29] bg-[#1E1D1B]">
-        <div
-          className="h-full bg-gradient-to-r from-[#5A4632] to-[#FF9B42] transition-all"
-          style={{ width: `${percentage}%` }}
+    <div className="w-full space-y-3">
+      <div className="relative w-full">
+        <input
+          type="range"
+          min={0}
+          max={utensil.durability.max}
+          value={utensil.durability.current}
+          onChange={(e) => updateCurrent(Number(e.target.value))}
+          className="
+            utensil-slider
+            block
+            h-3
+            w-full
+            cursor-pointer
+            appearance-none
+            rounded-full
+            bg-[#2B2825]
+            outline-none
+          "
+          style={{
+            background: `linear-gradient(
+              to right,
+              #3E5A7A 0%,
+              #7EA8E0 ${percentage}%,
+              #2B2825 ${percentage}%,
+              #2B2825 100%
+            )`,
+          }}
         />
+
+        <style>
+          {`
+            .utensil-slider::-webkit-slider-runnable-track {
+              height: 12px;
+              border-radius: 9999px;
+              background: transparent;
+            }
+
+            .utensil-slider::-moz-range-track {
+              height: 12px;
+              border-radius: 9999px;
+              background: transparent;
+            }
+
+            .utensil-slider::-webkit-slider-thumb {
+              appearance: none;
+              width: 20px;
+              height: 20px;
+              margin-top: -4px;
+              border-radius: 9999px;
+              border: 3px solid #171514;
+              background: #F2E9DE;
+              box-shadow:
+                0 0 0 1px rgba(255,255,255,0.08),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+
+            .utensil-slider::-moz-range-thumb {
+              width: 20px;
+              height: 20px;
+              border-radius: 9999px;
+              border: 3px solid #171514;
+              background: #F2E9DE;
+              box-shadow:
+                0 0 0 1px rgba(255,255,255,0.08),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+
+            .utensil-slider:focus-visible::-webkit-slider-thumb {
+              box-shadow:
+                0 0 0 3px rgba(126,168,224,0.2),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+
+            .utensil-slider:focus-visible::-moz-range-thumb {
+              box-shadow:
+                0 0 0 3px rgba(126,168,224,0.2),
+                0 3px 8px rgba(0,0,0,0.35);
+            }
+          `}
+        </style>
       </div>
-      {isBroken && definition && (
-        <div className="rounded-lg border border-[#9B2C2C]/40 bg-[#2B1A16] px-3 py-2 text-[11px] text-[#F0C4A8]">
-          <span className="font-bold">Quebrado: </span>
-          {definition.brokenDescription}
-        </div>
-      )}
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="Durab. atual">
+
+      <div className="grid grid-cols-5 gap-1.5">
+        <QuickStepButton
+          label="-5"
+          onClick={() => updateCurrent(utensil.durability.current - 5)}
+        />
+
+        <QuickStepButton
+          label="−"
+          onClick={() => updateCurrent(utensil.durability.current - 1)}
+        />
+
+        <div className="flex min-w-0 items-center justify-center rounded-lg bg-[#211F1D] text-center px-2 py-2">
           <input
             type="number"
             min={0}
             max={utensil.durability.max}
             value={utensil.durability.current}
-            onChange={(e) =>
-              onChange({
-                ...utensil,
-                durability: {
-                  ...utensil.durability,
-                  current: clamp(
-                    Number(e.target.value),
-                    0,
-                    utensil.durability.max,
-                  ),
-                },
-              })
-            }
-            className={inputClass}
+            onChange={(e) => updateCurrent(Number(e.target.value))}
+            className="
+              w-full
+              min-w-0
+              bg-transparent
+              text-center
+              text-sm
+              font-black
+              text-[#E8E0D6]
+              outline-none
+            "
           />
-        </Field>
-        <Field label="Durab. máxima">
-          <input
-            type="number"
-            min={1}
-            value={utensil.durability.max}
-            onChange={(e) => {
-              const max = Math.max(1, Number(e.target.value));
-              onChange({
-                ...utensil,
-                durability: {
-                  current: Math.min(utensil.durability.current, max),
-                  max,
-                },
-              });
-            }}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Alcance">
-          <input
-            type="number"
-            min={0}
-            value={utensil.range}
-            onChange={(e) =>
-              onChange({
-                ...utensil,
-                range: Math.max(0, Number(e.target.value)),
-              })
-            }
-            className={inputClass}
-          />
-        </Field>
+        </div>
+
+        <QuickStepButton
+          label="+"
+          onClick={() => updateCurrent(utensil.durability.current + 1)}
+        />
+
+        <QuickStepButton
+          label="+5"
+          onClick={() => updateCurrent(utensil.durability.current + 5)}
+        />
       </div>
+
+      {isBroken && definition && (
+        <div className="rounded-lg bg-[#2B1A16] px-3 py-2 text-[11px] text-[#F0C4A8]">
+          <span className="font-bold">Quebrado: </span>
+          {definition.brokenDescription}
+        </div>
+      )}
     </div>
   );
 }
 
 // ============================================================================
-// TÉCNICAS
+// ESTILOS — cartão individual
 // ============================================================================
 
-function TechniquesEditor({
-  known,
-  training,
-  onToggle,
-  onTrainingChange,
+function StyleCard({
+  name,
+  description,
+  color,
+  tooltip,
+  value,
+  min,
+  max,
+  onChange,
 }: {
-  known: IFeral["techniques"];
-  training?: ITechniqueTraining;
-  onToggle: (techniqueId: ID) => void;
-  onTrainingChange: (training: ITechniqueTraining | undefined) => void;
+  name: string;
+  color: string;
+  description: string;
+  tooltip: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
 }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const knownDefs = known
-    .map((t) => techniquesById[t.techniqueId])
-    .filter((t): t is (typeof techniqueDefinitions)[number] => Boolean(t));
-
   return (
-    <div className="mt-3 space-y-4">
-      <div className="grid gap-2 sm:grid-cols-2">
-        {knownDefs.map((technique) => (
-          <div
-            key={technique.id}
-            className="rounded-xl border border-[#383430] bg-[#1E1D1B] p-3"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-[#F5EFEB]">
-                  {technique.name}
-                </p>
-                <p className="mt-1 text-[10px] leading-relaxed text-[#8F877D]">
-                  {technique.description}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onToggle(technique.id)}
-                className="shrink-0 rounded-lg p-1 text-[#B0645A] hover:bg-[#5C2626]/40 hover:text-white"
-                title="Esquecer Técnica"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        ))}
-        {knownDefs.length === 0 && (
-          <div className="sm:col-span-2">
-            <EmptyState message="Nenhuma Técnica conhecida ainda." />
-          </div>
-        )}
+    <div
+      className={`rounded-xl border bg-[#1E1D1B] p-3`}
+      style={{ borderColor: color }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-black text-[#F5EFEB]">{name}</p>
+
+          <InfoTooltip title={name} category="Estilo" description={tooltip} />
+        </div>
+
+        <span
+          className={`shrink-0 rounded-md  px-1.5 py-0.5 text-[9px] font-black text-[#fff]`}
+          style={{ backgroundColor: color }}
+        >
+          {value}d6
+        </span>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setPickerOpen((current) => !current)}
-        className="inline-flex items-center gap-2 rounded-xl border border-[#383430] bg-[#242220] px-3.5 py-2 text-xs font-black text-[#F5EFEB] transition-colors hover:border-[#FF9B42]"
-      >
-        <Plus className="w-4 h-4 text-[#FF9B42]" />
-        {pickerOpen ? "Fechar lista de Técnicas" : "Aprender Técnica"}
-      </button>
-      {pickerOpen && (
-        <TechniquePicker
-          allTechniques={techniqueDefinitions}
-          known={known}
-          onToggle={onToggle}
-        />
-      )}
+      <p className="mt-1 text-[10px] leading-relaxed text-[#8F877D]">
+        {description}
+      </p>
 
-      <div className="rounded-xl border border-[#302D29] bg-[#171615] p-3">
-        <p className="mb-2 text-[10px] font-black uppercase tracking-wide text-[#B0A497]">
-          Técnica em treinamento
-        </p>
-        <div className="grid items-end gap-3 sm:grid-cols-[2fr_1fr]">
-          <Field label="Técnica">
-            <select
-              value={training?.techniqueId ?? ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                onTrainingChange(
-                  value
-                    ? {
-                        techniqueId: Number(value),
-                        sessions: training?.sessions ?? 0,
-                      }
-                    : undefined,
-                );
+      <div className="mt-3 flex items-center justify-between">
+        <div className="flex gap-1">
+          {Array.from({ length: max }).map((_, i) => (
+            <span
+              key={i}
+              className="h-2 w-2 rounded-full"
+              style={{
+                backgroundColor: i < value ? "#FF9B42" : "#3A3530",
               }}
-              className={inputClass}
-            >
-              <option value="">Nenhuma</option>
-              {techniqueDefinitions.map((technique) => (
-                <option key={technique.id} value={technique.id}>
-                  {technique.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {training && (
-            <Field label="Sessões">
-              <input
-                type="number"
-                min={0}
-                value={training.sessions}
-                onChange={(e) =>
-                  onTrainingChange({
-                    ...training,
-                    sessions: Math.max(0, Number(e.target.value)),
-                  })
-                }
-                className={inputClass}
-              />
-            </Field>
-          )}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onChange(clamp(value - 1, min, max))}
+            className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
+          >
+            <Minus className="h-3 w-3" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onChange(clamp(value + 1, min, max))}
+            className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
         </div>
       </div>
     </div>
@@ -726,322 +1241,956 @@ function TechniquesEditor({
 }
 
 // ============================================================================
-// ORIGEM
+// CONDIÇÕES
 // ============================================================================
 
-const ORIGIN_DISH_META: {
-  key: "creation" | "initiation" | "ambition";
-  type: OriginDishType;
-}[] = [
-  { key: "creation", type: "criacao" },
-  { key: "initiation", type: "iniciacao" },
-  { key: "ambition", type: "ambicao" },
-];
-
-function OriginEditor({
-  origin,
-  onChange,
-  feralOptions,
-  selfId,
+function ConditionsGrid({
+  selected,
+  onToggle,
+  onLevelChange,
 }: {
-  origin: IFeralOrigin;
-  onChange: (origin: IFeralOrigin) => void;
-  feralOptions: ReturnType<typeof getAllFeralCards>;
-  selfId: ID;
+  selected: Array<{
+    conditionId: ID;
+    level: number;
+  }>;
+  onToggle: (conditionId: ID) => void;
+  onLevelChange: (conditionId: ID, level: number) => void;
 }) {
-  function updateDish(
-    key: "creation" | "initiation" | "ambition",
-    patch: Partial<IOriginDish>,
-  ) {
-    onChange({ ...origin, [key]: { ...origin[key], ...patch } });
-  }
-
-  function updateConnection(patch: Partial<IOriginConnection>) {
-    onChange({ ...origin, connection: { ...origin.connection, ...patch } });
-  }
-
   return (
-    <div className="mt-3 space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
-        {ORIGIN_DISH_META.map(({ key, type }) => {
-          const dish = origin[key];
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {conditionDefinitions.map((condition) => {
+        const anyCondition = condition as unknown as {
+          id: ID;
+          name: string;
+          description?: string;
+        };
+
+        const active = selected.find((c) => c.conditionId === anyCondition.id);
+
+        return (
+          <div
+            key={String(anyCondition.id)}
+            className={`
+              group flex h-12 min-w-0 items-center gap-2
+              rounded-xl border px-2.5
+              transition-all duration-150
+              ${
+                active
+                  ? `
+                    border-[#8F3B2F]/70
+                    bg-[#2A1C18]
+                  `
+                  : `
+                    border-[#383430]
+                    bg-[#1E1D1B]
+                    hover:border-[#4A433C]
+                    hover:bg-[#211F1D]
+                  `
+              }
+            `}
+          >
+            {/* Área clicável da condição */}
+            <button
+              type="button"
+              onClick={() => onToggle(anyCondition.id)}
+              title={anyCondition.description ?? anyCondition.name}
+              className="flex min-w-0 flex-1 items-center gap-2 text-left focus:outline-none"
+            >
+              <span
+                className={`
+                  h-1.5 w-1.5 shrink-0 rounded-full
+                  transition-all duration-150
+                  ${
+                    active
+                      ? "bg-[#D96B4C] shadow-[0_0_7px_rgba(217,107,76,0.55)]"
+                      : "bg-[#4C4640] group-hover:bg-[#655D55]"
+                  }
+                `}
+              />
+
+              <span
+                className={`
+                  min-w-0 truncate text-[10px] font-black uppercase
+                  tracking-wide transition-colors
+                  ${
+                    active
+                      ? "text-[#F0C4A8]"
+                      : "text-[#B0A497] group-hover:text-[#D8CFC4]"
+                  }
+                `}
+              >
+                {anyCondition.name}
+              </span>
+            </button>
+
+            {/* Tooltip fica fora do botão da condição */}
+            <InfoTooltip
+              title={anyCondition.name}
+              description={anyCondition.description ?? ""}
+              category="Condição"
+            />
+
+            {/* Controles de nível */}
+            {active && (
+              <div
+                className="
+                  flex shrink-0 items-center gap-0.5
+                  rounded-lg border border-[#49312A]
+                  bg-[#211A17]
+                  p-0.5
+                "
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    onLevelChange(
+                      anyCondition.id,
+                      Math.max(1, active.level - 1),
+                    )
+                  }
+                  disabled={active.level <= 1}
+                  className="
+                    flex h-5 w-5 items-center justify-center
+                    rounded-md text-[#81776E]
+                    transition-colors
+                    hover:bg-[#38251F]
+                    hover:text-[#F0C4A8]
+                    disabled:pointer-events-none
+                    disabled:opacity-25
+                  "
+                  aria-label={`Diminuir nível de ${anyCondition.name}`}
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+
+                <span
+                  className="
+                    min-w-[24px] px-0.5 text-center
+                    text-[9px] font-black tabular-nums
+                    text-[#F0C4A8]
+                  "
+                >
+                  {active.level}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    onLevelChange(anyCondition.id, active.level + 1)
+                  }
+                  className="
+                    flex h-5 w-5 items-center justify-center
+                    rounded-md text-[#81776E]
+                    transition-colors
+                    hover:bg-[#38251F]
+                    hover:text-[#F0C4A8]
+                  "
+                  aria-label={`Aumentar nível de ${anyCondition.name}`}
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================================
+// TAB 1 — HABILIDADES
+// ============================================================================
+
+function HabilidadesPanel({
+  skills,
+  onChange,
+}: {
+  skills: IFeral["skills"];
+  onChange: (skills: IFeral["skills"]) => void;
+}) {
+  return (
+    <section className={cardClass}>
+      <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+            Habilidades do Feral
+          </h3>
+
+          <InfoTooltip
+            title="Habilidades do Feral"
+            category="Regras Básicas"
+            description="Cada Habilidade vai de +0 a +3. O bônus é somado diretamente ao resultado do Dado de Ação [A] em testes daquele tipo."
+          />
+        </div>
+
+        <span className="rounded-lg border border-[#FF9B42]/40 bg-[#2B1A16] px-3 py-1.5 text-[10px] font-black text-[#FF9B42]">
+          Teste = Estilo (dados) + Habilidade (+bônus)
+        </span>
+      </div>
+
+      <p className="mb-4 text-[11px] text-[#8F877D]">
+        O bônus da habilidade é somado diretamente ao resultado do Dado de Ação
+        [A] nos testes.
+      </p>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {skillsList.map((skill) => {
+          const value = skills[skill.key];
+
           return (
             <div
-              key={key}
-              className="space-y-3 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5"
+              key={skill.key}
+              className="rounded-xl border border-[#383430] bg-[#1E1D1B] p-3"
             >
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#FF9B42]">
-                {ORIGIN_DISH_LABELS[type]}
-              </p>
-              <Field label="Descrição">
-                <textarea
-                  value={dish.description}
-                  onChange={(e) =>
-                    updateDish(key, { description: e.target.value })
-                  }
-                  className={`${inputClass} min-h-20 resize-y text-xs`}
-                />
-              </Field>
-              <Field label="Bônus de Perícia">
-                <select
-                  value={dish.skillBonus}
-                  onChange={(e) =>
-                    updateDish(key, { skillBonus: e.target.value as SkillKey })
-                  }
-                  className={inputClass}
-                >
-                  {Object.entries(SKILLS).map(([skill, meta]) => (
-                    <option key={skill} value={skill}>
-                      {meta.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              {key === "initiation" && (
-                <Field label="Criatura do 1º Banquete">
-                  <select
-                    value={dish.monsterId ?? ""}
-                    onChange={(e) =>
-                      updateDish(key, {
-                        monsterId: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[11px] font-black text-[#F5EFEB]">
+                    {skill.name}
+                  </p>
+
+                  <InfoTooltip
+                    title={skill.name}
+                    category="Habilidade"
+                    description={skill.tooltipHelp}
+                  />
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onChange({
+                        ...skills,
+                        [skill.key]: clamp(value - 1, 0, 3),
                       })
                     }
-                    className={inputClass}
+                    className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
                   >
-                    <option value="">Selecionar...</option>
-                    {creatureDefinitions.map((creature) => (
-                      <option key={creature.id} value={creature.id}>
-                        {creature.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              )}
-              <Field label="Notas" hint="Opcional">
-                <input
-                  value={dish.notes ?? ""}
-                  onChange={(e) =>
-                    updateDish(key, { notes: e.target.value || undefined })
-                  }
-                  className={inputClass}
-                />
-              </Field>
+                    <Minus className="h-3 w-3" />
+                  </button>
+
+                  <span
+                    className={`min-w-[30px] rounded-md px-1.5 py-0.5 text-center text-[10px] font-black ${
+                      value > 0
+                        ? "bg-[#2E6F63]/30 text-[#6FCF97]"
+                        : "bg-[#242220] text-[#7A7065]"
+                    }`}
+                  >
+                    +{value}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onChange({
+                        ...skills,
+                        [skill.key]: clamp(value + 1, 0, 3),
+                      })
+                    }
+                    className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+
+              <p className="mt-1.5 text-[10px] leading-relaxed text-[#8F877D]">
+                {skill.description}
+              </p>
             </div>
           );
         })}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Terra natal" hint="Opcional">
-          <input
-            value={origin.homeland ?? ""}
-            onChange={(e) =>
-              onChange({ ...origin, homeland: e.target.value || undefined })
-            }
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Ingrediente típico">
-          <input
-            value={origin.typicalIngredient}
-            onChange={(e) =>
-              onChange({ ...origin, typicalIngredient: e.target.value })
-            }
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Tempero típico">
-          <input
-            value={origin.typicalSeasoning}
-            onChange={(e) =>
-              onChange({ ...origin, typicalSeasoning: e.target.value })
-            }
-            className={inputClass}
-          />
-        </Field>
-      </div>
+      <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#FF9B42]/25 bg-[#241B12] px-3.5 py-3">
+        <span className="mt-0.5 text-[#FF9B42]">ⓘ</span>
 
-      <div className="rounded-xl border border-[#302D29] bg-[#171615] p-3.5">
-        <div className="mb-3 flex items-center gap-2">
-          <Link2 className="w-4 h-4 text-[#38C2B3]" />
-          <p className="text-[11px] font-black uppercase tracking-wide text-[#89B5F7]">
-            Conexão com outro Feral
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Feral parceiro">
-            <select
-              value={origin.connection.partnerFeralId || ""}
-              onChange={(e) =>
-                updateConnection({
-                  partnerFeralId: e.target.value ? Number(e.target.value) : 0,
-                })
-              }
-              className={inputClass}
-            >
-              <option value="">Nenhum</option>
-              {feralOptions
-                .filter((f) => f.id !== selfId)
-                .map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-            </select>
-          </Field>
-          <Field label="Prato associado">
-            <select
-              value={origin.connection.dish}
-              onChange={(e) =>
-                updateConnection({ dish: e.target.value as OriginDishType })
-              }
-              className={inputClass}
-            >
-              {ALL_ORIGIN_DISH_TYPES.map((dish) => (
-                <option key={dish} value={dish}>
-                  {ORIGIN_DISH_LABELS[dish]}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-        <div className="mt-3">
-          <Field label="Descrição da conexão">
-            <textarea
-              value={origin.connection.description}
-              onChange={(e) =>
-                updateConnection({ description: e.target.value })
-              }
-              className={`${inputClass} min-h-16 resize-y text-xs`}
-            />
-          </Field>
-        </div>
+        <p className="text-[10px] leading-relaxed text-[#D8CFC4]">
+          <span className="font-black text-[#FF9B42]">
+            Dica de Caçador Feral:
+          </span>{" "}
+          Na criação de personagem, distribua seus pontos entre as perícias que
+          melhor representam seu passado humano e sua afinidade de monstro. Cada
+          feral preparado começa com +1 em três Habilidades diferentes e +0 nas
+          Habilidades restantes
+        </p>
       </div>
-    </div>
+    </section>
   );
 }
 
 // ============================================================================
-// MONSTRO IMPORTANTE
+// TAB 2 — TÉCNICAS
 // ============================================================================
 
-function ImportantMonsterEditor({
-  value,
-  onChange,
+function TecnicasPanel({
+  known,
+  custom,
+  training,
+  onToggle,
+  onTrainingChange,
+  onAddCustom,
+  onEditCustom,
+  onRemoveCustom,
 }: {
-  value: IImportantMonsterRelation;
-  onChange: (value: IImportantMonsterRelation) => void;
+  known: IFeral["techniques"];
+  custom: ICustomEntry[];
+  training?: ITechniqueTraining;
+  onToggle: (techniqueId: ID) => void;
+  onTrainingChange: (training: ITechniqueTraining | undefined) => void;
+  onAddCustom: (entry: Omit<ICustomEntry, "id">) => void;
+  onEditCustom: (id: string, patch: Partial<ICustomEntry>) => void;
+  onRemoveCustom: (id: string) => void;
 }) {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const [editing, setEditing] = useState<ICustomEntry | null>(null);
+
+  const knownDefs = known
+    .map((t) => techniquesById[t.techniqueId])
+    .filter((t): t is (typeof techniqueDefinitions)[number] => Boolean(t));
+
+  const total = knownDefs.length + custom.length;
+
   return (
-    <div className="mt-3 grid gap-4 sm:grid-cols-2">
-      <Field label="Criatura">
-        <select
-          value={value.monsterId}
-          onChange={(e) =>
-            onChange({ ...value, monsterId: Number(e.target.value) })
-          }
-          className={inputClass}
+    <section className={cardClass}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+            Técnicas de Utensílio ({total})
+          </h3>
+
+          <InfoTooltip
+            title="Técnicas de Utensílio"
+            category="Combate"
+            description="Manobras táticas e golpes especiais executados com o Utensílio de Arkaicaço. Escolha da biblioteca de Técnicas ou crie uma manobra totalmente sua."
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setEditing(null);
+            setModalOpen(true);
+          }}
+          className="inline-flex items-center gap-2 rounded-xl border border-[#2B6CB0]/40 bg-[#13335C]/30 px-3.5 py-2 text-xs font-black text-[#89B5F7] transition-colors hover:border-[#89B5F7]"
         >
-          {creatureDefinitions.map((creature) => (
-            <option key={creature.id} value={creature.id}>
-              {creature.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Relação">
-        <input
-          value={value.description}
-          onChange={(e) => onChange({ ...value, description: e.target.value })}
-          className={inputClass}
+          <Plus className="h-4 w-4" />
+          Nova Técnica
+        </button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {knownDefs.map((technique) => {
+          const anyTech = technique as unknown as {
+            id: ID;
+            name: string;
+            description?: string;
+          };
+
+          return (
+            <EntryCard
+              key={`lib-${anyTech.id}`}
+              name={anyTech.name}
+              description={anyTech.description ?? ""}
+              onRemove={() => onToggle(anyTech.id)}
+            />
+          );
+        })}
+
+        {custom.map((entry) => (
+          <EntryCard
+            key={entry.id}
+            name={entry.name}
+            badge={entry.badge}
+            description={entry.description}
+            onEdit={() => {
+              setEditing(entry);
+              setModalOpen(true);
+            }}
+            onRemove={() => onRemoveCustom(entry.id)}
+          />
+        ))}
+      </div>
+
+      {total === 0 && (
+        <Placeholder
+          icon={Swords}
+          message="Nenhuma Técnica registrada ainda."
+          hint="Clique em “Nova Técnica” para escolher uma da biblioteca ou criar uma manobra personalizada."
         />
-      </Field>
-    </div>
+      )}
+
+      {modalOpen && (
+        <AddTechniqueModal
+          known={known}
+          editing={editing}
+          onToggleLibrary={onToggle}
+          onSaveCustom={(data) => {
+            if (editing) {
+              onEditCustom(editing.id, data);
+            } else {
+              onAddCustom(data);
+            }
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </section>
   );
 }
 
-// ============================================================================
-// MATILHA
-// ============================================================================
-
-function MatilhaMembershipEditor({
-  matilhas,
-  currentMatilha,
-  onJoin,
-  onLeave,
+function AddTechniqueModal({
+  known,
+  editing,
+  onToggleLibrary,
+  onSaveCustom,
+  onClose,
 }: {
-  matilhas: IMatilha[];
-  currentMatilha: IMatilha | undefined;
-  onJoin: (matilhaId: ID) => void;
-  onLeave: () => void;
+  known: IFeral["techniques"];
+  editing: ICustomEntry | null;
+  onToggleLibrary: (techniqueId: ID) => void;
+  onSaveCustom: (data: Omit<ICustomEntry, "id">) => void;
+  onClose: () => void;
 }) {
+  const [mode, setMode] = useState<"biblioteca" | "personalizada">(
+    editing ? "personalizada" : "biblioteca",
+  );
+
+  const [name, setName] = useState(editing?.name ?? "");
+
+  const [badge, setBadge] = useState(editing?.badge ?? "");
+
+  const [description, setDescription] = useState(editing?.description ?? "");
+
+  function handleSaveCustom() {
+    if (!name.trim()) return;
+
+    onSaveCustom({
+      name: name.trim(),
+      badge: badge.trim() || undefined,
+      description,
+    });
+
+    onClose();
+  }
+
   return (
-    <div className="mt-3 space-y-3">
-      {currentMatilha ? (
-        <div className="flex items-center justify-between rounded-xl border border-[#2B6CB0]/40 bg-[#13335C]/20 px-3.5 py-3">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-[#89B5F7]" />
-            <div>
-              <p className="text-[11px] font-bold text-[#F5EFEB]">
-                {currentMatilha.name}
-              </p>
-              <p className="text-[10px] text-[#8F877D]">
-                {currentMatilha.memberIds.length} membro
-                {currentMatilha.memberIds.length === 1 ? "" : "s"}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onLeave}
-            className="rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-[#B0645A] transition-colors hover:bg-[#5C2626]/40 hover:text-white"
-          >
-            Sair da Matilha
-          </button>
+    <Modal
+      title={editing ? "Editar Técnica" : "Nova Técnica"}
+      onClose={onClose}
+      wide
+    >
+      {!editing && (
+        <div className="mb-4 flex gap-2">
+          <ModeTab
+            label="Biblioteca de Técnicas"
+            active={mode === "biblioteca"}
+            onClick={() => setMode("biblioteca")}
+          />
+
+          <ModeTab
+            label="Criar personalizada"
+            active={mode === "personalizada"}
+            onClick={() => setMode("personalizada")}
+          />
+        </div>
+      )}
+
+      {mode === "biblioteca" && !editing ? (
+        <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
+          {techniqueDefinitions.map((technique) => {
+            const anyTech = technique as unknown as {
+              id: ID;
+              name: string;
+              description?: string;
+            };
+
+            const isKnown = known.some((t) => t.techniqueId === anyTech.id);
+
+            return (
+              <button
+                key={String(anyTech.id)}
+                type="button"
+                onClick={() => onToggleLibrary(anyTech.id)}
+                className={`flex w-full items-start justify-between gap-3 rounded-xl border p-3 text-left transition-colors ${
+                  isKnown
+                    ? "border-[#2E6F63]/60 bg-[#15302B]"
+                    : "border-[#383430] bg-[#1E1D1B] hover:border-[#89B5F7]/50"
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black text-[#F5EFEB]">
+                    {anyTech.name}
+                  </p>
+
+                  <p className="mt-1 text-[10px] leading-relaxed text-[#8F877D]">
+                    {anyTech.description}
+                  </p>
+                </div>
+
+                {isKnown && (
+                  <Check className="h-4 w-4 shrink-0 text-[#6FCF97]" />
+                )}
+              </button>
+            );
+          })}
         </div>
       ) : (
-        <p className="text-[11px] text-[#8F877D]">
-          Este Feral não pertence a nenhuma Matilha no momento.
-        </p>
-      )}
+        <div className="space-y-3">
+          <Field label="Nome" required>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Corte Ascendente"
+              className={inputClass}
+            />
+          </Field>
 
-      {matilhas.length > 0 && (
-        <Field
-          label={currentMatilha ? "Trocar de Matilha" : "Entrar em uma Matilha"}
-        >
-          <select
-            value=""
-            onChange={(e) => e.target.value && onJoin(Number(e.target.value))}
-            className={inputClass}
+          <Field
+            label="Selo / Custo"
+            hint="Opcional. Ex: Intermediária · 1 Sucesso"
           >
-            <option value="">Selecionar...</option>
-            {matilhas
-              .filter((m) => m.id !== currentMatilha?.id)
-              .map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-          </select>
-        </Field>
+            <input
+              value={badge}
+              onChange={(e) => setBadge(e.target.value)}
+              placeholder="Ex: Intermediária · 1 Sucesso"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Descrição">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={`${inputClass} min-h-24 resize-y`}
+              placeholder="Descreva o efeito da Técnica..."
+            />
+          </Field>
+
+          <div className="flex justify-end items-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-2 text-xs font-bold text-[#B0A497] hover:text-[#F5EFEB]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveCustom}
+              disabled={!name.trim()}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#2B6CB0]/40 bg-[#13335C] px-3.5 py-2 text-xs font-black text-white transition-colors hover:bg-[#184073] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Check className="h-3.5 w-3.5" />
+              {editing ? "Salvar alterações" : "Adicionar Técnica"}
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function ModeTab({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-wide transition-colors ${
+        active
+          ? "border-[#89B5F7]/50 bg-[#13335C]/40 text-[#89B5F7]"
+          : "border-[#383430] bg-[#1E1D1B] text-[#8F877D] hover:text-[#F5EFEB]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ============================================================================
+// CARTÃO GENÉRICO
+// ============================================================================
+
+function EntryCard({
+  name,
+  badge,
+  description,
+  onEdit,
+  onRemove,
+}: {
+  name: string;
+  badge?: string;
+  description: string;
+  onEdit?: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
+            {name}
+          </p>
+
+          {badge && (
+            <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+              {badge}
+            </span>
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded-lg p-1.5 text-[#8F877D] hover:bg-[#242220] hover:text-[#F5EFEB]"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onRemove}
+            className="rounded-lg p-1.5 text-[#B0645A] hover:bg-[#5C2626]/40 hover:text-white"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {description && (
+        <p className="mt-1.5 border-t border-[#302D29] pt-1.5 text-[10px] leading-relaxed text-[#8F877D]">
+          {description}
+        </p>
       )}
     </div>
   );
 }
 
 // ============================================================================
-// BANQUETE FERAL
+// TAB 3 — TRAÇOS & MUTAÇÕES
+// ============================================================================
+
+function TracosPanel({
+  selected,
+  custom,
+  onToggleLibrary,
+  onLevelChange,
+  onAddCustom,
+  onEditCustom,
+  onRemoveCustom,
+}: {
+  selected: Array<{
+    traitId: ID;
+    level: number;
+  }>;
+  custom: ICustomEntry[];
+  onToggleLibrary: (traitId: ID) => void;
+  onLevelChange: (traitId: ID, level: number) => void;
+  onAddCustom: (entry: Omit<ICustomEntry, "id">) => void;
+  onEditCustom: (id: string, patch: Partial<ICustomEntry>) => void;
+  onRemoveCustom: (id: string) => void;
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const [editing, setEditing] = useState<ICustomEntry | null>(null);
+
+  const libraryEntries = selected
+    .map((s) => ({
+      selection: s,
+      def: traitsById[s.traitId],
+    }))
+    .filter(
+      (
+        entry,
+      ): entry is {
+        selection: typeof entry.selection;
+        def: NonNullable<typeof entry.def>;
+      } => Boolean(entry.def),
+    );
+
+  const total = libraryEntries.length + custom.length;
+
+  return (
+    <section className={cardClass}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+            Traços & Mutações Biológicas ({total})
+          </h3>
+
+          <InfoTooltip
+            title="Traços & Mutações Biológicas"
+            category="Mutações"
+            description="Poderes sobrenaturais e mutações corporais herdadas do consumo de monstros. Escolha da biblioteca de Traços ou registre uma mutação totalmente sua."
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setEditing(null);
+            setModalOpen(true);
+          }}
+          className="inline-flex items-center gap-2 rounded-xl border border-[#2E6F63]/40 bg-[#153029]/50 px-3.5 py-2 text-xs font-black text-[#6FCF97] transition-colors hover:border-[#6FCF97]"
+        >
+          <Plus className="h-4 w-4" />
+          Novo Traço
+        </button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {libraryEntries.map(({ selection, def }) => {
+          const anyDef = def as unknown as {
+            id: ID;
+            name: string;
+            description?: string;
+            cost?: string;
+          };
+
+          return (
+            <EntryCard
+              key={`lib-${anyDef.id}`}
+              name={anyDef.name}
+              badge={anyDef.cost ?? `Nível ${selection.level}`}
+              description={anyDef.description ?? ""}
+              onRemove={() => onToggleLibrary(selection.traitId)}
+            />
+          );
+        })}
+
+        {custom.map((entry) => (
+          <EntryCard
+            key={entry.id}
+            name={entry.name}
+            badge={entry.badge}
+            description={entry.description}
+            onEdit={() => {
+              setEditing(entry);
+              setModalOpen(true);
+            }}
+            onRemove={() => onRemoveCustom(entry.id)}
+          />
+        ))}
+      </div>
+
+      {total === 0 && (
+        <Placeholder
+          icon={Sparkles}
+          message="Nenhum Traço ou Mutação registrado ainda."
+          hint="Clique em “Novo Traço” para escolher da biblioteca ou criar uma mutação personalizada."
+        />
+      )}
+
+      {modalOpen && (
+        <AddTraitModal
+          selected={selected}
+          editing={editing}
+          onToggleLibrary={onToggleLibrary}
+          onSaveCustom={(data) => {
+            if (editing) {
+              onEditCustom(editing.id, data);
+            } else {
+              onAddCustom(data);
+            }
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </section>
+  );
+}
+
+function AddTraitModal({
+  selected,
+  editing,
+  onToggleLibrary,
+  onSaveCustom,
+  onClose,
+}: {
+  selected: Array<{
+    traitId: ID;
+    level: number;
+  }>;
+  editing: ICustomEntry | null;
+  onToggleLibrary: (traitId: ID) => void;
+  onSaveCustom: (data: Omit<ICustomEntry, "id">) => void;
+  onClose: () => void;
+}) {
+  const [mode, setMode] = useState<"biblioteca" | "personalizada">(
+    editing ? "personalizada" : "biblioteca",
+  );
+
+  const [name, setName] = useState(editing?.name ?? "");
+
+  const [badge, setBadge] = useState(editing?.badge ?? "");
+
+  const [description, setDescription] = useState(editing?.description ?? "");
+
+  function handleSaveCustom() {
+    if (!name.trim()) return;
+
+    onSaveCustom({
+      name: name.trim(),
+      badge: badge.trim() || undefined,
+      description,
+    });
+
+    onClose();
+  }
+
+  return (
+    <Modal
+      title={editing ? "Editar Traço" : "Novo Traço"}
+      onClose={onClose}
+      wide
+    >
+      {!editing && (
+        <div className="mb-4 flex gap-2">
+          <ModeTab
+            label="Biblioteca de Traços"
+            active={mode === "biblioteca"}
+            onClick={() => setMode("biblioteca")}
+          />
+
+          <ModeTab
+            label="Criar personalizado"
+            active={mode === "personalizada"}
+            onClick={() => setMode("personalizada")}
+          />
+        </div>
+      )}
+
+      {mode === "biblioteca" && !editing ? (
+        <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
+          {traitDefinitions.map((trait) => {
+            const anyTrait = trait as unknown as {
+              id: ID;
+              name: string;
+              description?: string;
+              cost?: string;
+            };
+
+            const isKnown = selected.some((t) => t.traitId === anyTrait.id);
+
+            return (
+              <button
+                key={String(anyTrait.id)}
+                type="button"
+                onClick={() => onToggleLibrary(anyTrait.id)}
+                className={`flex w-full items-start justify-between gap-3 rounded-xl border p-3 text-left transition-colors ${
+                  isKnown
+                    ? "border-[#2E6F63]/60 bg-[#15302B]"
+                    : "border-[#383430] bg-[#1E1D1B] hover:border-[#6FCF97]/50"
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[11px] font-black text-[#F5EFEB]">
+                      {anyTrait.name}
+                    </p>
+
+                    {anyTrait.cost && (
+                      <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                        {anyTrait.cost}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-1 text-[10px] leading-relaxed text-[#8F877D]">
+                    {anyTrait.description}
+                  </p>
+                </div>
+
+                {isKnown && (
+                  <Check className="h-4 w-4 shrink-0 text-[#6FCF97]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <Field label="Nome" required>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Garras Retráteis"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field
+            label="Selo / Custo"
+            hint="Opcional. Ex: Passiva ou Custo: 1 Sucesso"
+          >
+            <input
+              value={badge}
+              onChange={(e) => setBadge(e.target.value)}
+              placeholder="Ex: Passiva"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="Descrição">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={`${inputClass} min-h-24 resize-y`}
+              placeholder="Descreva o efeito do Traço..."
+            />
+          </Field>
+
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleSaveCustom}
+              disabled={!name.trim()}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#2E6F63]/40 bg-[#2E6F63] px-3.5 py-2 text-xs font-black text-white transition-colors hover:bg-[#357C6F] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Check className="h-3.5 w-3.5" />
+              {editing ? "Salvar alterações" : "Adicionar Traço"}
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-2 text-xs font-bold text-[#B0A497] hover:text-[#F5EFEB]"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+// ============================================================================
+// TAB 4 — FERAS & BANQUETES
 // ============================================================================
 
 function describeReward(reward: PermanentReward): string {
   if (reward.type === "style") return `+1 Estilo: ${STYLES[reward.key].name}`;
+
   if (reward.type === "skill") return `+1 Perícia: ${SKILLS[reward.key].name}`;
+
   return `Traço: ${traitsById[reward.traitId]?.name ?? "—"}`;
 }
 
-function FeastHistoryEditor({
+function FerasPanel({
   records,
   onAdd,
   onRemove,
@@ -1050,66 +2199,91 @@ function FeastHistoryEditor({
   onAdd: (record: IFeastRecord) => void;
   onRemove: (id: ID) => void;
 }) {
-  const [formOpen, setFormOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <div className="mt-3 space-y-3">
-      <div className="space-y-2">
+    <section className={cardClass}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+            Banquete Feral ({records.length})
+          </h3>
+
+          <InfoTooltip
+            title="Banquete Feral"
+            category="Companheiros"
+            description="Registro das Criaturas banqueteadas e as recompensas permanentes obtidas em cada Banquete."
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="inline-flex items-center gap-2 rounded-xl border border-[#E08A3C]/40 bg-[#2B1A16] px-3.5 py-2 text-xs font-black text-[#E08A3C] transition-colors hover:border-[#E08A3C]"
+        >
+          <Plus className="h-4 w-4" />
+          Registrar Banquete
+        </button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
         {records.map((record) => {
           const monster = creaturesById[record.monsterId] as
             | ICreature
             | undefined;
+
           return (
             <div
               key={record.id}
-              className="flex items-start justify-between gap-3 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3"
+              className="flex items-start justify-between gap-3 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5"
             >
               <div className="min-w-0">
                 <p className="truncate text-[11px] font-bold text-[#F5EFEB]">
                   {record.dishName || "Banquete sem nome"}
                 </p>
+
                 <p className="mt-0.5 text-[10px] text-[#8F877D]">
                   {monster?.name ?? "Criatura desconhecida"}
                   {record.date ? ` · ${record.date}` : ""}
                 </p>
+
                 <p className="mt-1 text-[10px] font-bold text-[#FF9B42]">
                   {describeReward(record.permanentReward)}
                 </p>
               </div>
+
               <button
                 type="button"
                 onClick={() => onRemove(record.id)}
                 className="shrink-0 rounded-lg p-1.5 text-[#B0645A] hover:bg-[#5C2626]/40 hover:text-white"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           );
         })}
-        {records.length === 0 && (
-          <EmptyState message="Nenhum Banquete registrado ainda." />
-        )}
       </div>
 
-      {formOpen ? (
-        <FeastRecordForm
-          onAdd={(record) => {
-            onAdd(record);
-            setFormOpen(false);
-          }}
-          onCancel={() => setFormOpen(false)}
+      {records.length === 0 && (
+        <Placeholder
+          icon={Users}
+          message="Nenhum Banquete registrado ainda."
+          hint="Registre a Criatura banqueteada e a recompensa permanente obtida."
         />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setFormOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#383430] bg-[#242220] px-3.5 py-2 text-xs font-black text-[#F5EFEB] transition-colors hover:border-[#FF9B42]"
-        >
-          <Plus className="w-4 h-4 text-[#FF9B42]" />
-          Registrar Banquete
-        </button>
       )}
-    </div>
+
+      {modalOpen && (
+        <Modal title="Registrar Banquete" onClose={() => setModalOpen(false)}>
+          <FeastRecordForm
+            onAdd={(record) => {
+              onAdd(record);
+              setModalOpen(false);
+            }}
+            onCancel={() => setModalOpen(false)}
+          />
+        </Modal>
+      )}
+    </section>
   );
 }
 
@@ -1121,12 +2295,18 @@ function FeastRecordForm({
   onCancel: () => void;
 }) {
   const [monsterId, setMonsterId] = useState("");
+
   const [dishName, setDishName] = useState("");
+
   const [date, setDate] = useState("");
+
   const [rewardType, setRewardType] =
     useState<PermanentReward["type"]>("trait");
-  const [styleKey, setStyleKey] = useState<StyleKey>("ligeiro");
-  const [skillKey, setSkillKey] = useState<SkillKey>("agarrar");
+
+  const [styleKey, setStyleKey] = useState<StyleKey>("ligeiro" as StyleKey);
+
+  const [skillKey, setSkillKey] = useState<SkillKey>("agarrar" as SkillKey);
+
   const [traitId, setTraitId] = useState("");
 
   const canSubmit =
@@ -1137,10 +2317,19 @@ function FeastRecordForm({
 
     const permanentReward: PermanentReward =
       rewardType === "style"
-        ? { type: "style", key: styleKey }
+        ? {
+            type: "style",
+            key: styleKey,
+          }
         : rewardType === "skill"
-          ? { type: "skill", key: skillKey }
-          : { type: "trait", traitId: Number(traitId) };
+          ? {
+              type: "skill",
+              key: skillKey,
+            }
+          : {
+              type: "trait",
+              traitId: Number(traitId),
+            };
 
     onAdd({
       id: generateId(),
@@ -1152,7 +2341,7 @@ function FeastRecordForm({
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-[#302D29] bg-[#171615] p-3.5">
+    <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Criatura" required>
           <select
@@ -1161,6 +2350,7 @@ function FeastRecordForm({
             className={inputClass}
           >
             <option value="">Selecionar...</option>
+
             {creatureDefinitions.map((creature) => (
               <option key={creature.id} value={creature.id}>
                 {creature.name}
@@ -1168,6 +2358,7 @@ function FeastRecordForm({
             ))}
           </select>
         </Field>
+
         <Field label="Nome do prato" hint="Opcional">
           <input
             value={dishName}
@@ -1175,6 +2366,7 @@ function FeastRecordForm({
             className={inputClass}
           />
         </Field>
+
         <Field label="Data" hint="Opcional">
           <input
             type="date"
@@ -1183,6 +2375,7 @@ function FeastRecordForm({
             className={inputClass}
           />
         </Field>
+
         <Field label="Tipo de recompensa">
           <select
             value={rewardType}
@@ -1192,7 +2385,9 @@ function FeastRecordForm({
             className={inputClass}
           >
             <option value="trait">Traço</option>
+
             <option value="style">Estilo</option>
+
             <option value="skill">Perícia</option>
           </select>
         </Field>
@@ -1213,6 +2408,7 @@ function FeastRecordForm({
           </select>
         </Field>
       )}
+
       {rewardType === "skill" && (
         <Field label="Perícia">
           <select
@@ -1228,6 +2424,7 @@ function FeastRecordForm({
           </select>
         </Field>
       )}
+
       {rewardType === "trait" && (
         <Field label="Traço" required>
           <select
@@ -1236,6 +2433,7 @@ function FeastRecordForm({
             className={inputClass}
           >
             <option value="">Selecionar...</option>
+
             {traitDefinitions.map((trait) => (
               <option key={trait.id} value={trait.id}>
                 {trait.name}
@@ -1252,9 +2450,10 @@ function FeastRecordForm({
           onClick={handleSubmit}
           className="inline-flex items-center gap-1.5 rounded-xl border border-[#55A99A]/40 bg-[#2E6F63] px-3.5 py-2 text-xs font-black text-white transition-colors hover:bg-[#357C6F] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Check className="w-3.5 h-3.5" />
+          <Check className="h-3.5 w-3.5" />
           Adicionar
         </button>
+
         <button
           type="button"
           onClick={onCancel}
@@ -1268,8 +2467,490 @@ function FeastRecordForm({
 }
 
 // ============================================================================
-// DIÁRIO DE CAÇADA
+// TAB 5 — DIÁRIO & NOTAS
 // ============================================================================
+
+function DiarioPanel({
+  entity,
+  update,
+  feralOptions,
+}: {
+  entity: IFeral;
+  update: (patch: Partial<IFeral>) => void;
+  feralOptions: ReturnType<typeof getAllFeralCards>;
+}) {
+  const [section, setSection] = useState<"historia" | "notas">("notas");
+
+  return (
+    <section className={cardClass}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+            Diário & Notas
+          </h3>
+
+          <InfoTooltip
+            title="Diário & Notas"
+            category="Campanha"
+            description="Anotações livres sobre a jornada do Feral, além da História pessoal: Origem, Personalidade, Monstro Importante e Matilha."
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <ModeTab
+            label="Anotações"
+            active={section === "notas"}
+            onClick={() => setSection("notas")}
+          />
+
+          <ModeTab
+            label="História"
+            active={section === "historia"}
+            onClick={() => setSection("historia")}
+          />
+        </div>
+      </div>
+
+      {section === "notas" ? (
+        <JournalNotesEditor
+          notes={entity.notes}
+          onChange={(notes) => update({ notes })}
+        />
+      ) : (
+        <div className="space-y-5">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <h4 className="text-[11px] font-black uppercase tracking-wide text-[#B0A497]">
+                Origem
+              </h4>
+
+              <InfoTooltip
+                title="Origem"
+                description="Os marcos que moldaram o Feral: os pratos de Criação, Iniciação e Ambição, além da terra natal e uma conexão com outro Feral."
+              />
+            </div>
+
+            <OriginEditor
+              origin={entity.origin}
+              onChange={(origin) => update({ origin })}
+              feralOptions={feralOptions}
+              selfId={entity.id}
+            />
+          </div>
+
+          <div>
+            <h4 className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#B0A497]">
+              Personalidade
+            </h4>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="É...">
+                <input
+                  value={entity.personality.is}
+                  onChange={(e) =>
+                    update({
+                      personality: {
+                        ...entity.personality,
+                        is: e.target.value,
+                      },
+                    })
+                  }
+                  className={inputClass}
+                />
+              </Field>
+
+              <Field label="Busca ser...">
+                <input
+                  value={entity.personality.strivesToBe}
+                  onChange={(e) =>
+                    update({
+                      personality: {
+                        ...entity.personality,
+                        strivesToBe: e.target.value,
+                      },
+                    })
+                  }
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#B0A497]">
+              Monstro Importante
+            </h4>
+
+            <ImportantMonsterEditor
+              value={entity.importantMonster}
+              onChange={(importantMonster) =>
+                update({
+                  importantMonster,
+                })
+              }
+            />
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+const ORIGIN_DISH_META: {
+  key: "creation" | "initiation" | "ambition";
+  type: OriginDishType;
+}[] = [
+  {
+    key: "creation",
+    type: "criacao",
+  },
+  {
+    key: "initiation",
+    type: "iniciacao",
+  },
+  {
+    key: "ambition",
+    type: "ambicao",
+  },
+];
+
+function OriginEditor({
+  origin,
+  onChange,
+  feralOptions,
+  selfId,
+}: {
+  origin: IFeralOrigin;
+  onChange: (origin: IFeralOrigin) => void;
+  feralOptions: ReturnType<typeof getAllFeralCards>;
+  selfId: ID;
+}) {
+  function updateDish(
+    key: "creation" | "initiation" | "ambition",
+    patch: Partial<IOriginDish>,
+  ) {
+    onChange({
+      ...origin,
+      [key]: {
+        ...origin[key],
+        ...patch,
+      },
+    });
+  }
+
+  function updateConnection(patch: Partial<IOriginConnection>) {
+    onChange({
+      ...origin,
+      connection: {
+        ...origin.connection,
+        ...patch,
+      },
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {ORIGIN_DISH_META.map(({ key, type }) => {
+          const dish = origin[key];
+
+          return (
+            <div
+              key={key}
+              className="space-y-3 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5"
+            >
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#FF9B42]">
+                {ORIGIN_DISH_LABELS[type]}
+              </p>
+
+              <Field label="Descrição">
+                <textarea
+                  value={dish.description}
+                  onChange={(e) =>
+                    updateDish(key, {
+                      description: e.target.value,
+                    })
+                  }
+                  className={`${inputClass} min-h-20 resize-y text-xs`}
+                />
+              </Field>
+
+              <Field label="Bônus de Perícia">
+                <select
+                  value={dish.skillBonus}
+                  onChange={(e) =>
+                    updateDish(key, {
+                      skillBonus: e.target.value as SkillKey,
+                    })
+                  }
+                  className={inputClass}
+                >
+                  {Object.entries(SKILLS).map(([skill, meta]) => (
+                    <option key={skill} value={skill}>
+                      {meta.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              {key === "initiation" && (
+                <Field label="Criatura do 1º Banquete">
+                  <select
+                    value={dish.monsterId ?? ""}
+                    onChange={(e) =>
+                      updateDish(key, {
+                        monsterId: e.target.value
+                          ? Number(e.target.value)
+                          : undefined,
+                      })
+                    }
+                    className={inputClass}
+                  >
+                    <option value="">Selecionar...</option>
+
+                    {creatureDefinitions.map((creature) => (
+                      <option key={creature.id} value={creature.id}>
+                        {creature.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+
+              <Field label="Notas" hint="Opcional">
+                <input
+                  value={dish.notes ?? ""}
+                  onChange={(e) =>
+                    updateDish(key, {
+                      notes: e.target.value || undefined,
+                    })
+                  }
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Terra natal" hint="Opcional">
+          <input
+            value={origin.homeland ?? ""}
+            onChange={(e) =>
+              onChange({
+                ...origin,
+                homeland: e.target.value || undefined,
+              })
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Ingrediente típico">
+          <input
+            value={origin.typicalIngredient}
+            onChange={(e) =>
+              onChange({
+                ...origin,
+                typicalIngredient: e.target.value,
+              })
+            }
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Tempero típico">
+          <input
+            value={origin.typicalSeasoning}
+            onChange={(e) =>
+              onChange({
+                ...origin,
+                typicalSeasoning: e.target.value,
+              })
+            }
+            className={inputClass}
+          />
+        </Field>
+      </div>
+
+      <div className="rounded-xl border border-[#302D29] bg-[#171615] p-3.5">
+        <div className="mb-3 flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-[#38C2B3]" />
+
+          <p className="text-[11px] font-black uppercase tracking-wide text-[#89B5F7]">
+            Conexão com outro Feral
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Feral parceiro">
+            <select
+              value={origin.connection.partnerFeralId || ""}
+              onChange={(e) =>
+                updateConnection({
+                  partnerFeralId: e.target.value ? Number(e.target.value) : 0,
+                })
+              }
+              className={inputClass}
+            >
+              <option value="">Nenhum</option>
+
+              {feralOptions
+                .filter((f) => f.id !== selfId)
+                .map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+            </select>
+          </Field>
+
+          <Field label="Prato associado">
+            <select
+              value={origin.connection.dish}
+              onChange={(e) =>
+                updateConnection({
+                  dish: e.target.value as OriginDishType,
+                })
+              }
+              className={inputClass}
+            >
+              {ALL_ORIGIN_DISH_TYPES.map((dish) => (
+                <option key={dish} value={dish}>
+                  {ORIGIN_DISH_LABELS[dish]}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <div className="mt-3">
+          <Field label="Descrição da conexão">
+            <textarea
+              value={origin.connection.description}
+              onChange={(e) =>
+                updateConnection({
+                  description: e.target.value,
+                })
+              }
+              className={`${inputClass} min-h-16 resize-y text-xs`}
+            />
+          </Field>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ImportantMonsterEditor({
+  value,
+  onChange,
+}: {
+  value: IImportantMonsterRelation;
+  onChange: (value: IImportantMonsterRelation) => void;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Criatura">
+        <select
+          value={value.monsterId}
+          onChange={(e) =>
+            onChange({
+              ...value,
+              monsterId: Number(e.target.value),
+            })
+          }
+          className={inputClass}
+        >
+          {creatureDefinitions.map((creature) => (
+            <option key={creature.id} value={creature.id}>
+              {creature.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <Field label="Relação">
+        <input
+          value={value.description}
+          onChange={(e) =>
+            onChange({
+              ...value,
+              description: e.target.value,
+            })
+          }
+          className={inputClass}
+        />
+      </Field>
+    </div>
+  );
+}
+
+function MatilhaMembershipEditor({
+  matilhas,
+  currentMatilha,
+  onJoin,
+  onLeave,
+}: {
+  matilhas: IMatilha[];
+  currentMatilha: IMatilha | undefined;
+  onJoin: (matilhaId: ID) => void;
+  onLeave: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {currentMatilha ? (
+        <div className="flex items-center justify-between rounded-xl border border-[#2B6CB0]/40 bg-[#13335C]/20 px-3.5 py-3">
+          <div>
+            <p className="text-[11px] font-bold text-[#F5EFEB]">
+              {currentMatilha.name}
+            </p>
+
+            <p className="text-[10px] text-[#8F877D]">
+              {currentMatilha.memberIds.length} membro
+              {currentMatilha.memberIds.length === 1 ? "" : "s"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onLeave}
+            className="rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-[#B0645A] transition-colors hover:bg-[#5C2626]/40 hover:text-white"
+          >
+            Sair
+          </button>
+        </div>
+      ) : (
+        <p className="text-[11px] text-[#8F877D]">
+          Este Feral não pertence a nenhuma Matilha no momento.
+        </p>
+      )}
+
+      {matilhas.length > 0 && (
+        <Field
+          label={currentMatilha ? "Trocar de Matilha" : "Entrar em uma Matilha"}
+        >
+          <select
+            value=""
+            onChange={(e) => e.target.value && onJoin(Number(e.target.value))}
+            className={inputClass}
+          >
+            <option value="">Selecionar...</option>
+
+            {matilhas
+              .filter((m) => m.id !== currentMatilha?.id)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+          </select>
+        </Field>
+      )}
+    </div>
+  );
+}
 
 function JournalNotesEditor({
   notes,
@@ -1278,21 +2959,11 @@ function JournalNotesEditor({
   notes: IJournalNote[];
   onChange: (notes: IJournalNote[]) => void;
 }) {
-  function addNote() {
-    const note: IJournalNote = {
-      id: generateId(),
-      title: "",
-      category: "Geral",
-      content: "",
-      createdAt: new Date().toISOString(),
-    };
-    onChange([note, ...notes]);
-  }
+  const [modalOpen, setModalOpen] = useState(false);
 
-  function updateNote(id: ID, patch: Partial<IJournalNote>) {
-    onChange(
-      notes.map((note) => (note.id === id ? { ...note, ...patch } : note)),
-    );
+  function addNote(note: IJournalNote) {
+    onChange([note, ...notes]);
+    setModalOpen(false);
   }
 
   function removeNote(id: ID) {
@@ -1300,63 +2971,139 @@ function JournalNotesEditor({
   }
 
   return (
-    <div className="mt-3 space-y-3">
+    <div className="space-y-3">
       <button
         type="button"
-        onClick={addNote}
+        onClick={() => setModalOpen(true)}
         className="inline-flex items-center gap-2 rounded-xl border border-[#383430] bg-[#242220] px-3.5 py-2 text-xs font-black text-[#F5EFEB] transition-colors hover:border-[#FF9B42]"
       >
-        <Plus className="w-4 h-4 text-[#FF9B42]" />
+        <Plus className="h-4 w-4 text-[#FF9B42]" />
         Nova Anotação
       </button>
 
-      <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {notes.map((note) => (
           <div
             key={note.id}
-            className="space-y-2.5 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5"
+            className="space-y-1.5 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5"
           >
-            <div className="flex items-start gap-2">
-              <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-[2fr_1fr]">
-                <input
-                  value={note.title}
-                  onChange={(e) =>
-                    updateNote(note.id, { title: e.target.value })
-                  }
-                  placeholder="Título"
-                  className={`${inputClass} text-xs`}
-                />
-                <input
-                  value={note.category}
-                  onChange={(e) =>
-                    updateNote(note.id, { category: e.target.value })
-                  }
-                  placeholder="Categoria"
-                  className={`${inputClass} text-xs`}
-                />
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="truncate text-[11px] font-black text-[#F5EFEB]">
+                  {note.title || "Sem título"}
+                </p>
+
+                <span className="text-[9px] font-bold uppercase tracking-wide text-[#7A7065]">
+                  {note.category}
+                </span>
               </div>
+
               <button
                 type="button"
                 onClick={() => removeNote(note.id)}
-                className="mt-0.5 shrink-0 rounded-lg p-1.5 text-[#B0645A] hover:bg-[#5C2626]/40 hover:text-white"
+                className="shrink-0 rounded-lg p-1.5 text-[#B0645A] hover:bg-[#5C2626]/40 hover:text-white"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
-            <textarea
-              value={note.content}
-              onChange={(e) => updateNote(note.id, { content: e.target.value })}
-              placeholder="O que aconteceu..."
-              className={`${inputClass} min-h-20 resize-y text-xs`}
-            />
-            <p className="text-[9px] text-[#7A7065]">
+
+            <p className="text-[10px] leading-relaxed text-[#B0A497]">
+              {note.content}
+            </p>
+
+            <p className="text-[9px] text-[#5E564D]">
               {formatRelativeTime(note.createdAt)}
             </p>
           </div>
         ))}
-        {notes.length === 0 && (
-          <EmptyState message="Nenhuma anotação registrada ainda." />
-        )}
+      </div>
+
+      {notes.length === 0 && (
+        <Placeholder
+          icon={FileText}
+          message="Nenhuma anotação registrada ainda."
+          hint="Registre descobertas, eventos e memórias da jornada do Feral."
+        />
+      )}
+
+      {modalOpen && (
+        <Modal title="Nova Anotação" onClose={() => setModalOpen(false)}>
+          <NewNoteForm onAdd={addNote} onCancel={() => setModalOpen(false)} />
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function NewNoteForm({
+  onAdd,
+  onCancel,
+}: {
+  onAdd: (note: IJournalNote) => void;
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState("");
+
+  const [category, setCategory] = useState("Geral");
+
+  const [content, setContent] = useState("");
+
+  function handleSubmit() {
+    onAdd({
+      id: generateId(),
+      title,
+      category,
+      content,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+        <Field label="Título">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Categoria">
+          <input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+      </div>
+
+      <Field label="Conteúdo">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="O que aconteceu..."
+          className={`${inputClass} min-h-28 resize-y`}
+        />
+      </Field>
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[#383430] bg-[#242220] px-3.5 py-2 text-xs font-black text-[#F5EFEB] transition-colors hover:border-[#FF9B42]"
+        >
+          <Check className="h-3.5 w-3.5" />
+          Adicionar
+        </button>
+
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-2 text-xs font-bold text-[#B0A497] hover:text-[#F5EFEB]"
+        >
+          Cancelar
+        </button>
       </div>
     </div>
   );

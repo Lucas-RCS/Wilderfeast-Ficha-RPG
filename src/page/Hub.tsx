@@ -100,10 +100,10 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
             <span>Sistema de Fichas • Wilderfeast RPG</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black font-serif tracking-tight text-[#89B5F7] uppercase mb-2">
+          <h1 className="text-4xl sm:text-6xl font-black  tracking-tight text-[#89B5F7] uppercase mb-2">
             Wilderfeast
           </h1>
-          <p className="text-sm sm:text-base text-[#B0A497] font-serif italic">
+          <p className="text-sm sm:text-base text-[#B0A497]  italic">
             "Você é o que você come. Ame o que você mata e ame o que pode matar
             você."
           </p>
@@ -117,7 +117,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                   <Info className="w-4 h-4 text-[#FF9B42]" />
                 </div>
                 <div>
-                  <h2 className="font-serif font-black text-sm text-[#89B5F7] uppercase tracking-wide">
+                  <h2 className=" font-black text-sm text-[#89B5F7] uppercase tracking-wide">
                     Novo em Wilderfeast? Primeiros Passos
                   </h2>
                   <p className="text-xs text-[#B0A497]">
@@ -138,7 +138,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[#2B2825] text-xs">
               <div className="p-3 rounded-xl bg-[#242220] border border-[#383430] space-y-1">
-                <div className="font-serif font-bold text-xs text-[#89B5F7] uppercase flex items-center gap-1.5">
+                <div className=" font-bold text-xs text-[#89B5F7] uppercase flex items-center gap-1.5">
                   <Utensils className="w-3.5 h-3.5 text-[#FF9B42]" />
                   <span>1. Crie seu Feral</span>
                 </div>
@@ -149,7 +149,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
               </div>
 
               <div className="p-3 rounded-xl bg-[#242220] border border-[#383430] space-y-1">
-                <div className="font-serif font-bold text-xs text-[#89B5F7] uppercase flex items-center gap-1.5">
+                <div className=" font-bold text-xs text-[#89B5F7] uppercase flex items-center gap-1.5">
                   <Swords className="w-3.5 h-3.5 text-[#FF9B42]" />
                   <span>2. A Trilha & A Caçada</span>
                 </div>
@@ -160,7 +160,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
               </div>
 
               <div className="p-3 rounded-xl bg-[#242220] border border-[#383430] space-y-1">
-                <div className="font-serif font-bold text-xs text-[#89B5F7] uppercase flex items-center gap-1.5">
+                <div className=" font-bold text-xs text-[#89B5F7] uppercase flex items-center gap-1.5">
                   <CookingPot className="w-3.5 h-3.5 text-[#38C2B3]" />
                   <span>3. O Banquete</span>
                 </div>
@@ -180,7 +180,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
               id="hub-tab-ferais"
               type="button"
               onClick={() => setActiveTab("ferais")}
-              className={`flex-1 py-3 px-4 rounded-lg font-serif font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`flex-1 py-3 px-4 rounded-lg  font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 activeTab === "ferais"
                   ? "bg-[#13335C] text-white shadow-sm border border-[#2B6CB0]/40"
                   : "bg-transparent text-[#B0A497] hover:bg-[#282623] hover:text-[#F5EFEB]"
@@ -194,7 +194,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
               id="hub-tab-criaturas"
               type="button"
               onClick={() => setActiveTab("criaturas")}
-              className={`flex-1 py-3 px-4 rounded-lg font-serif font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`flex-1 py-3 px-4 rounded-lg  font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 activeTab === "criaturas"
                   ? "bg-[#13335C] text-white shadow-sm border border-[#2B6CB0]/40"
                   : "bg-transparent text-[#B0A497] hover:bg-[#282623] hover:text-[#F5EFEB]"
@@ -250,7 +250,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
           <div className="w-full space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#383430]">
               <div>
-                <h2 className="text-xl font-bold font-serif text-[#89B5F7]">
+                <h2 className="text-xl font-bold  text-[#89B5F7]">
                   Fichas dos Ferais
                 </h2>
                 <p className="text-xs text-[#B0A497]">
@@ -298,7 +298,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                   <Utensils className="w-8 h-8" />
                 </div>
                 <div className="max-w-md mx-auto space-y-1">
-                  <h3 className="font-serif font-black text-lg text-[#89B5F7]">
+                  <h3 className=" font-black text-lg text-[#89B5F7]">
                     Nenhum Feral Cadastrado
                   </h3>
                   <p className="text-xs text-[#B0A497]">
@@ -320,7 +320,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                 <div className="w-12 h-12 rounded-xl bg-[#242220] text-[#FF9B42] flex items-center justify-center mx-auto border border-[#383430]">
                   <Search className="w-6 h-6" />
                 </div>
-                <h3 className="font-serif font-bold text-base text-[#F5EFEB]">
+                <h3 className=" font-bold text-base text-[#F5EFEB]">
                   Nenhum feral encontrado
                 </h3>
                 <p className="text-xs text-[#B0A497] max-w-sm mx-auto">
@@ -359,7 +359,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
           <div className="w-full space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#383430]">
               <div>
-                <h2 className="text-xl font-bold font-serif text-[#89B5F7]">
+                <h2 className="text-xl font-bold  text-[#89B5F7]">
                   Bestiário do Guia
                 </h2>
                 <p className="text-xs text-[#B0A497]">
@@ -407,7 +407,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                   <Swords className="w-8 h-8" />
                 </div>
                 <div className="max-w-md mx-auto space-y-1">
-                  <h3 className="font-serif font-black text-lg text-[#89B5F7]">
+                  <h3 className=" font-black text-lg text-[#89B5F7]">
                     Nenhuma Criatura Cadastrada
                   </h3>
                   <p className="text-xs text-[#B0A497]">
@@ -429,7 +429,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                 <div className="w-12 h-12 rounded-xl bg-[#242220] text-[#FF9B42] flex items-center justify-center mx-auto border border-[#383430]">
                   <Search className="w-6 h-6" />
                 </div>
-                <h3 className="font-serif font-bold text-base text-[#F5EFEB]">
+                <h3 className=" font-bold text-base text-[#F5EFEB]">
                   Nenhuma criatura encontrado
                 </h3>
                 <p className="text-xs text-[#B0A497] max-w-sm mx-auto">
@@ -497,7 +497,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
               </div>
 
               <div>
-                <h3 className="font-serif text-lg font-black text-[#F5EFEB]">
+                <h3 className=" text-lg font-black text-[#F5EFEB]">
                   Excluir ficha
                 </h3>
 
@@ -520,7 +520,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                       {deleteTarget.type === "feral" ? "Feral" : "Criatura"}
                     </span>
 
-                    <p className="truncate font-serif text-base font-bold text-[#F5EFEB]">
+                    <p className="truncate  text-base font-bold text-[#F5EFEB]">
                       {deleteTarget.name}
                     </p>
                   </div>

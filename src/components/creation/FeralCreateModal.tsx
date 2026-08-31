@@ -444,7 +444,7 @@ function UtensilStep({
         <>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-serif font-black text-sm text-[#89B5F7]">
+              <h4 className=" font-black text-sm text-[#89B5F7]">
                 Distribuição de Estilos
               </h4>
               <span className="text-[10px] uppercase tracking-wider text-[#7A7065]">
@@ -508,7 +508,7 @@ function UtensilStep({
             <div className={cardClass}>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-4 h-4 text-[#FF9B42]" />
-                <h4 className="font-serif font-black text-sm text-[#89B5F7]">
+                <h4 className=" font-black text-sm text-[#89B5F7]">
                   Técnica concedida
                 </h4>
               </div>
@@ -529,7 +529,7 @@ function UtensilStep({
             </div>
 
             <div className={cardClass}>
-              <h4 className="font-serif font-black text-sm text-[#89B5F7] mb-2">
+              <h4 className=" font-black text-sm text-[#89B5F7] mb-2">
                 Escolha 1 Técnica adicional
               </h4>
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
@@ -632,7 +632,7 @@ function SpecialtyStep({
         <div className={cardClass}>
           <div className="flex items-center gap-2 mb-3">
             <PawPrint className="w-4 h-4 text-[#38C2B3]" />
-            <h4 className="font-serif font-black text-sm text-[#89B5F7]">
+            <h4 className=" font-black text-sm text-[#89B5F7]">
               Monstro Importante
             </h4>
           </div>
@@ -894,7 +894,7 @@ function PackStep({
       <div className={cardClass}>
         <div className="flex items-center gap-2 mb-3">
           <Link2 className="w-4 h-4 text-[#38C2B3]" />
-          <h4 className="font-serif font-black text-sm text-[#89B5F7]">
+          <h4 className=" font-black text-sm text-[#89B5F7]">
             Conexão com outro Feral
           </h4>
         </div>

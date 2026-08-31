@@ -386,7 +386,7 @@ function CombatStep({ draft, setDraft }: StepProps) {
         subtitle="Os valores estruturais usados nos testes e ataques da Criatura."
       />
       <div>
-        <h4 className="font-serif font-black text-sm text-[#89B5F7] mb-2.5">
+        <h4 className=" font-black text-sm text-[#89B5F7] mb-2.5">
           Estilos{" "}
           <span className="text-[#7A7065] font-sans font-normal text-[10px]">
             (0 a 5)
@@ -411,7 +411,7 @@ function CombatStep({ draft, setDraft }: StepProps) {
         </div>
       </div>
       <div>
-        <h4 className="font-serif font-black text-sm text-[#89B5F7] mb-2.5">
+        <h4 className=" font-black text-sm text-[#89B5F7] mb-2.5">
           Perícias{" "}
           <span className="text-[#7A7065] font-sans font-normal text-[10px]">
             (0 a 3)

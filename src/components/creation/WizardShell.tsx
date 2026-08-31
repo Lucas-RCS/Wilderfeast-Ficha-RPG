@@ -63,7 +63,7 @@ export function WizardShell({
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF9B42]">
                   {eyebrow}
                 </p>
-                <h2 className="text-xl sm:text-2xl font-serif font-black text-[#89B5F7] leading-tight">
+                <h2 className="text-xl sm:text-2xl  font-black text-[#89B5F7] leading-tight">
                   {title}
                 </h2>
                 <p className="text-xs text-[#B0A497] mt-1">{subtitle}</p>
@@ -79,7 +79,12 @@ export function WizardShell({
           </div>
 
           {/* STEPPER */}
-          <div className="grid gap-1.5 mt-5" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+          <div
+            className="grid gap-1.5 mt-5"
+            style={{
+              gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))`,
+            }}
+          >
             {steps.map((item, index) => {
               const isReachable = index <= furthestStepReached;
               const isActive = index === currentStep;

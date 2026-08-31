@@ -48,6 +48,7 @@ import type {
   ITechniqueDefinition,
   ITraitDefinition,
   IUtensilDefinition,
+  SpecialtyKey,
 } from "../../types/types";
 
 interface RulesModalProps {
@@ -172,18 +173,8 @@ const RULE_HIGHLIGHTS = [
   },
 ] as const;
 
-type LineageKey =
-  | "Açougueiro"
-  | "Amontoeiro"
-  | "Churrasqueiro"
-  | "Jardineiro"
-  | "Molheiro"
-  | "Padeiro"
-  | "Peixeiro"
-  | "Pivoteiro";
-
 const LINEAGE_META: Record<
-  LineageKey,
+  SpecialtyKey,
   {
     icon: React.ReactNode;
     text: string;
@@ -249,7 +240,7 @@ const DEFAULT_LINEAGE_META = {
 };
 
 const getLineageMeta = (lineage: string) =>
-  LINEAGE_META[lineage as LineageKey] ?? DEFAULT_LINEAGE_META;
+  LINEAGE_META[lineage as SpecialtyKey] ?? DEFAULT_LINEAGE_META;
 
 const STYLE_ORDER: Array<keyof ICreature["styles"]> = [
   "ligeiro",

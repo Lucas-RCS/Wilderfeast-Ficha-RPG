@@ -1,8 +1,24 @@
-import { ArrowRight, Clock, Copy, Hammer, Target, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  Layers,
+  Beef,
+  Clock,
+  Copy,
+  Dna,
+  Droplets,
+  Fish,
+  Flame,
+  Hammer,
+  Sprout,
+  Target,
+  Trash2,
+  Wheat,
+  Utensils,
+} from "lucide-react";
 
 import { formatRelativeTime } from "../../hooks/useUtils";
 import { specialtiesById, utensilsById } from "../../data/wilderfeastData";
-import type { ID, IFeralCard } from "../../types/types";
+import type { ID, IFeralCard, SpecialtyKey } from "../../types/types";
 import type { DeleteTarget } from "../../types/cardTypes";
 
 interface CardFeralProps {
@@ -11,6 +27,65 @@ interface CardFeralProps {
   onDuplicateFeral: (id: ID) => void;
   setDeleteTarget: (target: DeleteTarget) => void;
 }
+
+const LINEAGE_META: Record<
+  SpecialtyKey,
+  {
+    icon: React.ReactNode;
+    text: string;
+    bg: string;
+    border: string;
+  }
+> = {
+  Açougueiro: {
+    icon: <Beef className="h-4 w-4" />,
+    text: "text-red-300",
+    bg: "bg-red-500/20",
+    border: "border-red-500/60",
+  },
+  Amontoeiro: {
+    icon: <Layers className="h-4 w-4" />,
+    text: "text-stone-300",
+    bg: "bg-stone-500/20",
+    border: "border-stone-500/60",
+  },
+  Churrasqueiro: {
+    icon: <Flame className="h-4 w-4" />,
+    text: "text-orange-300",
+    bg: "bg-orange-500/20",
+    border: "border-orange-500/60",
+  },
+  Jardineiro: {
+    icon: <Sprout className="h-4 w-4" />,
+    text: "text-emerald-300",
+    bg: "bg-emerald-500/20",
+    border: "border-emerald-500/60",
+  },
+  Molheiro: {
+    icon: <Droplets className="h-4 w-4" />,
+    text: "text-sky-300",
+    bg: "bg-sky-500/20",
+    border: "border-sky-500/60",
+  },
+  Padeiro: {
+    icon: <Wheat className="h-4 w-4" />,
+    text: "text-amber-300",
+    bg: "bg-amber-500/20",
+    border: "border-amber-500/60",
+  },
+  Peixeiro: {
+    icon: <Fish className="h-4 w-4" />,
+    text: "text-cyan-300",
+    bg: "bg-cyan-500/20",
+    border: "border-cyan-500/60",
+  },
+  Pivoteiro: {
+    icon: <Dna className="h-4 w-4" />,
+    text: "text-violet-300",
+    bg: "bg-violet-500/20",
+    border: "border-violet-500/60",
+  },
+};
 
 export function CardFeral({
   data,
@@ -21,6 +96,7 @@ export function CardFeral({
   const specialtyName =
     specialtiesById[data.specialtyId]?.name ?? data.specialtyId;
   const utensilName = utensilsById[data.utensilId]?.name ?? data.utensilId;
+  const lineageMeta = LINEAGE_META[data.specialtyId as SpecialtyKey];
 
   return (
     <div
@@ -54,7 +130,7 @@ export function CardFeral({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <span className="font-serif text-4xl font-black text-[#89B5F7]">
+            <span className=" text-4xl font-black text-[#89B5F7]">
               {data.name ? data.name.split(" ")[0] : "..."}
             </span>
           </div>
@@ -74,7 +150,6 @@ export function CardFeral({
         <div className="absolute inset-x-0 bottom-0 p-3">
           <h3
             className="
-              font-serif
               text-base
               font-bold
               leading-tight
@@ -99,21 +174,25 @@ export function CardFeral({
         <div className="grid grid-cols-2 gap-1.5">
           {/* Especialidade */}
           <div
-            className="
+            className={`
               flex items-center gap-2
               rounded-lg
-              border border-[#2B6CB0]/40
-              bg-[#13335C]/20
+              border ${lineageMeta.border ?? "border-[#2B6CB0]/40"}
+              ${lineageMeta.bg ?? "bg-[#13335C]/20"}
               px-2 py-2
               transition-colors
-              group-hover:border-[#2B6CB0]/60
-            "
+              group-hover:${lineageMeta.border ?? "border-[#2B6CB0]/60"}
+            `}
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#2B6CB0]/50 bg-[#13335C]/30">
-              <Target className="h-3 w-3 text-[#89B5F7]" />
+            <span
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${lineageMeta.border ?? "border-[#2B6CB0]/50"} ${lineageMeta.bg ?? "bg-[#13335C]/30"} ${lineageMeta.text ?? "text-[#89B5F7]"}`}
+            >
+              {lineageMeta?.icon ?? <Target className="h-3 w-3" />}
             </span>
             <div className="min-w-0">
-              <span className="block text-[8px] font-bold uppercase tracking-wider text-[#89B5F7]">
+              <span
+                className={`block text-[8px] font-bold uppercase tracking-wider ${lineageMeta.text ?? "text-[#89B5F7]"}`}
+              >
                 Especialidade
               </span>
               <span className="block truncate text-[11px] font-bold text-white">
@@ -135,7 +214,7 @@ export function CardFeral({
             "
           >
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#FF9B42]/40 bg-[#3A2A17]">
-              <Hammer className="h-3 w-3 text-[#FF9B42]" />
+              <Utensils className="h-3 w-3 text-[#FF9B42]" />
             </span>
             <div className="min-w-0">
               <span className="block text-[8px] font-bold uppercase tracking-wider text-[#FF9B42]">

@@ -93,7 +93,7 @@ export function CardCreature({
         <div className="absolute inset-x-0 bottom-0 p-3">
           <h3
             className={`
-              font-serif
+              
               text-base
               font-bold
               leading-tight

@@ -50,9 +50,7 @@ export function SectionTitle({ eyebrow, title, subtitle }: SectionTitleProps) {
       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FF9B42]">
         {eyebrow}
       </span>
-      <h3 className="text-lg font-serif font-black text-[#89B5F7] mt-0.5">
-        {title}
-      </h3>
+      <h3 className="text-lg  font-black text-[#89B5F7] mt-0.5">{title}</h3>
       {subtitle && (
         <p className="text-xs text-[#B0A497] mt-1 leading-relaxed">
           {subtitle}

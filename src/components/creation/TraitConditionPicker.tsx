@@ -36,9 +36,7 @@ export function TraitPicker({
   return (
     <div className="rounded-2xl bg-[#1A1918] border border-[#383430] p-4">
       <div className="flex items-center justify-between gap-3 mb-1">
-        <h4 className="font-serif font-black text-sm text-[#89B5F7]">
-          {title}
-        </h4>
+        <h4 className=" font-black text-sm text-[#89B5F7]">{title}</h4>
         <span className="text-[10px] text-[#7A7065]">
           {selected.length} selecionado{selected.length === 1 ? "" : "s"}
         </span>
@@ -149,9 +147,7 @@ export function ConditionPicker({
   return (
     <div className="rounded-2xl bg-[#1A1918] border border-[#383430] p-4">
       <div className="flex items-center justify-between gap-3 mb-1">
-        <h4 className="font-serif font-black text-sm text-[#89B5F7]">
-          {title}
-        </h4>
+        <h4 className=" font-black text-sm text-[#89B5F7]">{title}</h4>
         <span className="text-[10px] text-[#7A7065]">
           {selected.length} selecionada{selected.length === 1 ? "" : "s"}
         </span>

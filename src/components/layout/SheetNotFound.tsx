@@ -12,7 +12,7 @@ export function SheetNotFound({ label, onBack }: SheetNotFoundProps) {
         <SearchX className="h-6 w-6 text-[#7A7065]" />
       </div>
       <div>
-        <h2 className="font-serif text-lg font-black text-[#F5EFEB]">
+        <h2 className=" text-lg font-black text-[#F5EFEB]">
           {label} não encontrado
         </h2>
         <p className="mt-1 text-xs text-[#8F877D]">

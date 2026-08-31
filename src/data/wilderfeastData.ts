@@ -20,21 +20,28 @@ import type {
   UtensilKey,
 } from "../types/types";
 
-export const STYLES: Record<StyleKey, { name: string; description: string }> = {
+export const STYLES: Record<
+  StyleKey,
+  { name: string; color: string; description: string }
+> = {
   ligeiro: {
     name: "LIGEIRO",
+    color: "#19a194",
     description: "Rápido, enérgico, alerta ou hábil.",
   },
   poderoso: {
     name: "PODEROSO",
+    color: "#c02626",
     description: "Forte, tenaz, firme ou grosseiro.",
   },
   preciso: {
     name: "PRECISO",
+    color: "#db7029",
     description: "Calmo, metódico, focado ou acurado.",
   },
   sagaz: {
     name: "SAGAZ",
+    color: "#327acd",
     description: "Sutil, dissimulado, técnico ou astuto.",
   },
 };
@@ -6131,3 +6138,122 @@ export const specialtiesById = Object.fromEntries(
 export const creaturesById = Object.fromEntries(
   creatureDefinitions.map((item) => [item.id, item]),
 );
+
+export const skillsList: Array<{
+  key: SkillKey;
+  name: string;
+  description: string;
+  tooltipHelp: string;
+}> = [
+  {
+    key: "agarrar",
+    name: "AGARRAR",
+    description: "Imobilizar, escalar e segurar presas ou fendas",
+    tooltipHelp:
+      "Usado para conter monstros, escalar partes do corpo de criaturas colossais, agarrar galhos ou prender presas no combate.",
+  },
+  {
+    key: "armazenar",
+    name: "ARMAZENAR",
+    description: "Conservar carne, guardar provisões e transportar peso",
+    tooltipHelp:
+      "Capacidade de empacotar provisões, salgar e secar carnes de monstros caçados, suportar cargas pesadas na marcha.",
+  },
+  {
+    key: "assegurar",
+    name: "ASSEGURAR",
+    description: "Amarrar cordas, prender acampamento e fixar defesas",
+    tooltipHelp:
+      "Amarrar nós de caçada, ancorar cordas para descida, armar barricadas táticas e proteger a toca da matilha.",
+  },
+  {
+    key: "atirar",
+    name: "ATIRAR",
+    description:
+      "Arremessar utensílios, disparar maçarico e alvejar à distância",
+    tooltipHelp:
+      "Disparar flechas de cabo, arremessar cutelos ou temperos combustíveis, alvejar partes aéreas ou à distância.",
+  },
+  {
+    key: "atravessar",
+    name: "ATRAVESSAR",
+    description: "Superar terrenos acidentados, saltar e forçar passagens",
+    tooltipHelp:
+      "Correr por pântanos, atravessar rios de lava, esquivar de desmoronamentos e desbravar a selva fechada.",
+  },
+  {
+    key: "chamar",
+    name: "CHAMAR",
+    description: "Emitir rugidos, atrair monstros e coordenar a matilha",
+    tooltipHelp:
+      "Usado para atrair monstros com imitações de acasalamento/desafio, emitir comandos à matilha e inspirar companheiros.",
+  },
+  {
+    key: "curar",
+    name: "CURAR",
+    description: "Tratar ferimentos, primeiros socorros e ministrar pomadas",
+    tooltipHelp:
+      "Tratar queimaduras, extrair venenos monstruosos, estancar sangramentos e regenerar vigor dos aliados com remédios de campo.",
+  },
+  {
+    key: "estudar",
+    name: "ESTUDAR",
+    description: "Analisar anatomia de monstros, fraquezas e botânica",
+    tooltipHelp:
+      "Examinar carcaças, descobrir pontos fracos e vulnerabilidades de criaturas, identificar ervas medicinais e cogumelos.",
+  },
+  {
+    key: "exibir",
+    name: "EXIBIR",
+    description: "Intimidar com postura, demonstrar força e liderança",
+    tooltipHelp:
+      "Intimidar feras predadoras para fazê-las hesitar, realizar rituais de liderança e impor presença de caçador alfa.",
+  },
+  {
+    key: "golpear",
+    name: "GOLPEAR",
+    description: "Ataques corpo a corpo com utensílios e cortes limpos",
+    tooltipHelp:
+      "Ataques corporais principais com seu Utensílio culinário para desferir cortes, quebrar carapaças e decepar partes.",
+  },
+  {
+    key: "manufaturar",
+    name: "MANUFATURAR",
+    description: "Forjar arkaicaço, armadilhas e cozinhar banquetes",
+    tooltipHelp:
+      "Cozinhar pratos magistrais no Banquete, forjar melhorias para utensílios com carcaças e construir armadilhas letais.",
+  },
+  {
+    key: "procurar",
+    name: "PROCURAR",
+    description: "Rastrear pegadas, forragear ingredientes e vigiar trilhas",
+    tooltipHelp:
+      "Seguir rastros de sangue, encontrar pegadas na terra, detectar predadores emboscados e forragear temperos raros.",
+  },
+];
+
+export const STYLE_INFO: Record<
+  string,
+  { description: string; tooltip: string }
+> = {
+  ligeiro: {
+    description: "Velocidade, agilidade, esquiva e destreza acrobática.",
+    tooltip:
+      "Estilo usado para esquivar de ataques, correr, saltar e reagir rápido durante a Caçada. Quanto maior, mais dados de Ligeiro você rola.",
+  },
+  poderoso: {
+    description: "Força bruta, impacto pesado, resistência e vigor físico.",
+    tooltip:
+      "Estilo usado para golpes pesados, quebrar partes resistentes e resistir a efeitos físicos. Ideal para abordagens diretas e brutais.",
+  },
+  preciso: {
+    description: "Mira, cirurgia culinária, cortes milimétricos e foco.",
+    tooltip:
+      "Estilo usado para ataques certeiros, cortes cirúrgicos em partes específicas e ações que exigem controle fino de movimento.",
+  },
+  sagaz: {
+    description: "Astúcia, armadilhas, percepção, intuição e conhecimento.",
+    tooltip:
+      "Estilo usado para perceber padrões, montar armadilhas, ler o comportamento da presa e agir com inteligência tática.",
+  },
+};
