@@ -1659,22 +1659,29 @@ function TecnicasPanel({
   return (
     <section className={cardClass}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#13335C]/60 text-[#89B5F7]">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#383430]  bg-[#13335C]/60 text-[#89B5F7]">
             <Swords className="h-4 w-4" />
           </div>
 
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
-              Técnicas de Utensílio ({total})
-            </h3>
-          </div>
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+                Técnicas de Utensílio ({total})
+              </h3>
 
-          <InfoTooltip
-            title="Técnicas de Utensílio"
-            category="Combate"
-            description="Manobras táticas e golpes especiais executados com o Utensílio de Arkaicaço. Escolha uma Técnica da biblioteca ou crie uma manobra personalizada."
-          />
+              <InfoTooltip
+                title="Técnicas de Utensílio"
+                category="Combate"
+                description="Manobras táticas e golpes especiais executados com o Utensílio de Arkaicaço. Escolha uma Técnica da biblioteca ou crie uma manobra personalizada."
+              />
+            </div>
+
+            <p className="mt-1 text-[10px] leading-relaxed text-[#7A7065]">
+              Técnicas de Utensílio são manobras táticas e golpes especiais que
+              os ferais podem executar com seu Utensílio de Arkaicaço.
+            </p>
+          </div>
         </div>
 
         <button
@@ -2336,20 +2343,29 @@ function TraitPanel({
   return (
     <section className={cardClass}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#2E6F63]/15 text-[#6FCF97]">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#383430]  bg-[#2E6F63]/15 text-[#6FCF97]">
             <Sparkles className="h-4 w-4" />
           </div>
 
-          <h3 className="truncate text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
-            Traços & Mutações ({total})
-          </h3>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+                Traços & Mutações ({total})
+              </h3>
 
-          <InfoTooltip
-            title="Traços & Mutações Biológicas"
-            category="Mutações"
-            description="Poderes e mutações corporais herdadas do consumo de criaturas."
-          />
+              <InfoTooltip
+                title="Traços & Mutações Biológicas"
+                category="Mutações"
+                description="Poderes e mutações corporais herdadas do consumo de criaturas."
+              />
+            </div>
+
+            <p className="mt-1 text-[10px] leading-relaxed text-[#7A7065]">
+              Traços e mutações biológicas são habilidades especiais que os
+              ferais podem adquirir ao longo de sua jornada.
+            </p>
+          </div>
         </div>
 
         <button
