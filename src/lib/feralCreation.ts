@@ -270,7 +270,11 @@ export function buildFeralFromDraft(draft: IFeralDraft): IFeral {
 
   const traits: ITraitState[] =
     draft.chosenTraitId !== undefined
-      ? [{ traitId: draft.chosenTraitId, level: 1 }]
+      ? [
+          { traitId: 1, level: 1 },
+          { traitId: 2, level: 1 },
+          { traitId: draft.chosenTraitId, level: 1 },
+        ]
       : [];
 
   const origin: IFeralOrigin = {
@@ -307,6 +311,7 @@ export function buildFeralFromDraft(draft: IFeralDraft): IFeral {
     pronouns: draft.pronouns.trim(),
     appearance: draft.appearance.trim(),
     avatarUrl: draft.avatarUrl || undefined,
+    harmony: 3,
 
     specialtyId: draft.specialtyId as SpecialtyKey,
     utensil,

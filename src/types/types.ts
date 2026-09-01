@@ -238,7 +238,7 @@ export type PermanentReward =
 
 export interface IFeastRecord {
   id: ID;
-  monsterId: ID;
+  monsterName: string;
   dishName?: string;
   date?: string;
   permanentReward: PermanentReward;
@@ -276,6 +276,7 @@ export interface IFeral {
   pronouns: string;
   appearance: string;
   avatarUrl?: string;
+  harmony: number;
 
   specialtyId: SpecialtyKey;
   utensil: IFeralUtensil;

@@ -159,6 +159,74 @@ export function NumberStepper({
 }
 
 // ============================================================================
+// INLINE STEPPER — controle compacto de min/max (ex: Harmonia da Matilha)
+// ============================================================================
+
+interface InlineStepperProps {
+  label: string;
+  value: number;
+  min?: number;
+  max?: number | null;
+  onChange: (value: number) => void;
+  accent?: string;
+}
+
+export function InlineStepper({
+  label,
+  value,
+  min = 0,
+  max,
+  onChange,
+  accent = "#FF9B42",
+}: InlineStepperProps) {
+  const canDecrease = value > min;
+  const canIncrease = max == null || value < max;
+
+  return (
+    <div
+      className="flex items-center justify-between gap-2"
+      style={{ borderColor: `${accent}33` }}
+    >
+      <span className="text-[9px] font-bold uppercase tracking-wider text-[#cdc6c1]">
+        {label}
+      </span>
+
+      <div
+        className="flex items-center gap-0.5 rounded-lg border bg-[#171615] p-0.5"
+        style={{ borderColor: `${accent}4D` }}
+      >
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={!canDecrease}
+          className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
+        >
+          <Minus className="h-3 w-3" />
+        </button>
+
+        <span
+          className="min-w-[22px] text-center text-[9px] font-black"
+          style={{ color: accent }}
+        >
+          {value}
+        </span>
+
+        <button
+          type="button"
+          onClick={() =>
+            onChange(max != null ? Math.min(max, value + 1) : value + 1)
+          }
+          disabled={!canIncrease}
+          className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#6FCF97] disabled:pointer-events-none disabled:opacity-25"
+        >
+          <Plus className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // ERROR SUMMARY — pendências de validação da etapa/wizard
 // ============================================================================
 

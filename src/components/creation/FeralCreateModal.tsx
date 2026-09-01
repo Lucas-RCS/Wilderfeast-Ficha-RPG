@@ -1,24 +1,12 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import {
-  ChefHat,
-  Link2,
-  PawPrint,
-  Sparkles,
-  Users,
-  Utensils,
-} from "lucide-react";
+import { ChefHat, PawPrint, Sparkles, Utensils } from "lucide-react";
 import type {
   IFeral,
   OriginDishType,
-  SkillKey,
   SpecialtyKey,
   UtensilKey,
 } from "../../types/types";
-import {
-  SKILLS,
-  STYLES,
-  creatureDefinitions,
-} from "../../data/wilderfeastData";
+import { STYLES, creatureDefinitions } from "../../data/wilderfeastData";
 import {
   createEmptyFeralDraft,
   finalizeFeralCreation,
@@ -27,15 +15,10 @@ import {
   getSpecialtyCreationInfo,
   getUtensilCreationInfo,
   previewUtensilStyles,
-  type IFeralConnectionDraft,
   type IFeralDraft,
   type IFeralOriginDraft,
 } from "../../lib/feralCreation";
-import { getAllFeralCards, getAllMatilhas } from "../../lib/storage";
-import {
-  ALL_ORIGIN_DISH_TYPES,
-  ORIGIN_DISH_LABELS,
-} from "../../types/wilderfeastTypes";
+import { ORIGIN_DISH_LABELS } from "../../types/wilderfeastTypes";
 import { WizardShell, type WizardStepDef } from "./WizardShell";
 import {
   ChoiceCard,
@@ -51,7 +34,6 @@ const STEPS: WizardStepDef[] = [
   { id: "utensil", label: "Utensílio & Técnicas" },
   { id: "specialty", label: "Especialidade & Traços" },
   { id: "origin", label: "Origem & Personalidade" },
-  { id: "pack", label: "Matilha & Vínculos" },
 ];
 
 interface FeralCreateModalProps {
@@ -112,14 +94,6 @@ export function FeralCreateModal({
 
   const utensilOptions = useMemo(() => getAllUtensilOptions(), []);
   const specialtyOptions = useMemo(() => getAllSpecialtyOptions(), []);
-  const feralOptions = useMemo(
-    () => (isOpen ? getAllFeralCards() : []),
-    [isOpen],
-  );
-  const matilhaOptions = useMemo(
-    () => (isOpen ? getAllMatilhas() : []),
-    [isOpen],
-  );
 
   const utensilInfo = draft.utensilId
     ? getUtensilCreationInfo(draft.utensilId)
@@ -210,14 +184,6 @@ export function FeralCreateModal({
         />
       )}
       {currentStep === 3 && <OriginStep draft={draft} setDraft={setDraft} />}
-      {currentStep === 4 && (
-        <PackStep
-          draft={draft}
-          setDraft={setDraft}
-          feralOptions={feralOptions}
-          matilhaOptions={matilhaOptions}
-        />
-      )}
     </WizardShell>
   );
 }
@@ -790,7 +756,11 @@ function OriginStep({ draft, setDraft }: StepProps) {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label="Ingrediente típico">
+        <Field
+          label="Ingrediente típico"
+          hint="Ingrediente marcante da sua cultura."
+          required
+        >
           <input
             value={draft.origin.typicalIngredient}
             onChange={(e) =>
@@ -799,134 +769,17 @@ function OriginStep({ draft, setDraft }: StepProps) {
             className={inputClass}
           />
         </Field>
-        <Field label="Tempero típico">
+        <Field
+          label="Tempero típico"
+          hint="Tempero ou sabor característico."
+          required
+        >
           <input
             value={draft.origin.typicalSeasoning}
             onChange={(e) => updateOrigin({ typicalSeasoning: e.target.value })}
             className={inputClass}
           />
         </Field>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// ETAPA 5 — MATILHA & VÍNCULOS
-// ============================================================================
-
-interface PackStepProps extends StepProps {
-  feralOptions: ReturnType<typeof getAllFeralCards>;
-  matilhaOptions: ReturnType<typeof getAllMatilhas>;
-}
-
-function PackStep({
-  draft,
-  setDraft,
-  feralOptions,
-  matilhaOptions,
-}: PackStepProps) {
-  const updateConnection = (patch: Partial<IFeralConnectionDraft>) =>
-    setDraft((current) => ({
-      ...current,
-      connection: { ...current.connection, ...patch },
-    }));
-
-  return (
-    <div className="space-y-5">
-      <SectionTitle
-        eyebrow="05"
-        title="Matilha & Vínculos"
-        subtitle="Associe o Feral a uma Matilha existente e registre uma conexão com outro membro. Ambos os campos são opcionais."
-      />
-
-      <Field
-        label="Matilha"
-        hint="Opcional. O Feral será adicionado aos membros dela."
-      >
-        <select
-          value={draft.matilhaId ?? ""}
-          onChange={(e) =>
-            setDraft((current) => ({
-              ...current,
-              matilhaId: e.target.value ? Number(e.target.value) : undefined,
-            }))
-          }
-          className={inputClass}
-        >
-          <option value="">Nenhuma Matilha</option>
-          {matilhaOptions.map((matilha) => (
-            <option key={matilha.id} value={matilha.id}>
-              {matilha.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      <div className={cardClass}>
-        <div className="flex items-center gap-2 mb-3">
-          <Link2 className="w-4 h-4 text-[#38C2B3]" />
-          <h4 className=" font-black text-sm text-[#89B5F7]">
-            Conexão com outro Feral
-          </h4>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Feral parceiro" hint="Opcional">
-            <select
-              value={draft.connection.partnerFeralId ?? ""}
-              onChange={(e) =>
-                updateConnection({
-                  partnerFeralId: e.target.value
-                    ? Number(e.target.value)
-                    : undefined,
-                })
-              }
-              className={inputClass}
-            >
-              <option value="">Nenhum</option>
-              {feralOptions.map((feral) => (
-                <option key={feral.id} value={feral.id}>
-                  {feral.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Prato associado">
-            <select
-              value={draft.connection.dish}
-              onChange={(e) =>
-                updateConnection({ dish: e.target.value as OriginDishType })
-              }
-              className={inputClass}
-            >
-              {ALL_ORIGIN_DISH_TYPES.map((dish) => (
-                <option key={dish} value={dish}>
-                  {ORIGIN_DISH_LABELS[dish]}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-        <div className="mt-4">
-          <Field label="Descrição da conexão">
-            <textarea
-              value={draft.connection.description}
-              onChange={(e) =>
-                updateConnection({ description: e.target.value })
-              }
-              className={`${inputClass} min-h-20 resize-y`}
-              placeholder="Como essa relação nasceu e o que ela significa hoje."
-            />
-          </Field>
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-[#1A1918] border border-[#383430] p-4 text-xs text-[#8F877D] flex gap-3">
-        <Users className="w-4 h-4 text-[#38C2B3] shrink-0 mt-0.5" />
-        <p>
-          A Matilha não guarda uma cópia do Feral: ao salvar, apenas o ID do
-          novo Feral é adicionado à lista de membros da Matilha escolhida.
-        </p>
       </div>
     </div>
   );

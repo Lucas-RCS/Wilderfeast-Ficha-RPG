@@ -21,6 +21,11 @@ export const formatRelativeTime = (isoString?: string) => {
   }
 };
 
+export const formateDatePtBR = (date: string) => {
+  const [year, month, day] = date.split("-");
+  return `${day}/${month}/${year}`;
+};
+
 export const SPECIALTY_COLOR: Record<
   MonsterLineage,
   {

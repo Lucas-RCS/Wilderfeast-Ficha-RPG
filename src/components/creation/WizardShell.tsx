@@ -51,7 +51,7 @@ export function WizardShell({
         className="absolute inset-0 bg-black/70"
       />
 
-      <section className="relative w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden rounded-3xl bg-[#171615] border border-[#383430] shadow-2xl text-[#F5EFEB]">
+      <section className="relative w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden rounded-3xl bg-[#171615] border border-[#383430] shadow-2xl text-[#F5EFEB]">
         {/* HEADER */}
         <header className="px-5 sm:px-6 py-5 border-b border-[#2B2825] bg-[#1A1918] shrink-0">
           <div className="flex items-start justify-between gap-4">
