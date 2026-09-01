@@ -24,9 +24,12 @@ import {
   Wheat,
   Fish,
   Dna,
+  Edit2,
+  PawPrint,
 } from "lucide-react";
 
 import type {
+  ICost,
   ICreature,
   ID,
   IFeastRecord,
@@ -44,7 +47,6 @@ import type {
   IUtensilDefinition,
   OriginDishType,
   PermanentReward,
-  CostType,
   SkillKey,
   SpecialtyKey,
   StyleKey,
@@ -95,36 +97,26 @@ import { InfoTooltip } from "../ui/Tooltip";
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
 
-const COST_TYPE_LABELS: Record<CostType, string> = {
-  acoes: "Ações",
-  vigor: "Vigor",
-  sucessos: "Sucessos",
-};
-
-interface ICustomEntry {
+interface ICustomEntryBase {
   id: ID;
   name: string;
   badge?: string;
   description: string;
-  level?: number;
-  maxLevel?: number | null;
 }
 
-type FeralSheetEntity = IFeral & {
-  customTraits?: ICustomEntry[];
-  customTechniques?: ICustomEntry[];
+type ICustomTechniqueEntry = ICustomEntryBase & {
+  level: ITechniqueDefinition["level"];
+  cost?: string;
 };
 
-type CustomEntryKey = keyof Pick<
-  FeralSheetEntity,
-  "customTraits" | "customTechniques"
->;
+type ICustomTraitEntry = ICustomEntryBase & {
+  level?: number;
+  maxLevel?: number | null;
+};
 
-function readCustom(
-  entity: FeralSheetEntity,
-  key: CustomEntryKey,
-): ICustomEntry[] {
-  return entity[key] ?? [];
+function readCustom<T>(entity: unknown, key: string): T[] {
+  const value = (entity as Record<string, unknown>)[key];
+  return Array.isArray(value) ? (value as T[]) : [];
 }
 
 const LINEAGE_META: Record<
@@ -237,7 +229,7 @@ function Modal({
 // ============================================================================
 
 interface TabDef {
-  key: FeralTabKey;
+  key: string;
   label: string;
   icon: typeof Award;
   count: number;
@@ -250,8 +242,8 @@ function TabBar({
   onChange,
 }: {
   tabs: TabDef[];
-  active: FeralTabKey;
-  onChange: (key: FeralTabKey) => void;
+  active: string;
+  onChange: (key: string) => void;
 }) {
   return (
     <div className="flex flex-wrap gap-2 rounded-2xl border border-[#302D29] bg-[#171615] p-2">
@@ -334,11 +326,7 @@ interface FeralSheetProps {
   onDeleted: () => void;
 }
 
-function FeralSheet({
-  feralId,
-  onBack,
-  onDeleted: _onDeleted,
-}: FeralSheetProps) {
+function FeralSheet({ feralId, onBack, onDeleted }: FeralSheetProps) {
   const initial = getFeralById(feralId);
 
   if (!initial) {
@@ -358,7 +346,7 @@ function FeralSheetView({
   onBack: () => void;
 }) {
   const { entity, update, undo, canUndo, lastSavedAt, isPending } =
-    useAutosaveEntity<FeralSheetEntity>({
+    useAutosaveEntity<IFeral>({
       initial,
       save: saveFeral,
     });
@@ -373,11 +361,15 @@ function FeralSheetView({
     | IUtensilDefinition
     | undefined;
 
-  const updateSheet = (patch: Partial<FeralSheetEntity>) => update(patch);
+  const updateRaw = (patch: Record<string, unknown>) =>
+    update(patch as Partial<IFeral>);
 
-  const customTraits = readCustom(entity, "customTraits");
+  const customTraits = readCustom<ICustomTraitEntry>(entity, "customTraits");
 
-  const customTechniques = readCustom(entity, "customTechniques");
+  const customTechniques = readCustom<ICustomTechniqueEntry>(
+    entity,
+    "customTechniques",
+  );
 
   const tabs: TabDef[] = [
     {
@@ -514,7 +506,7 @@ function FeralSheetView({
                     },
                   })
                 }
-                tooltip="Usar técnicas ou bloquear ataques pesados consome Durabilidade. Quando chega a 0, o Utensílio quebra e passa a sofrer penalidades até ser reparado."
+                tooltip="Usar técnicas ou bloquear ataques pesados consome Durabilidade. Se atingir 0, o utensílio quebra e precisa ser reparado."
                 category="Equipamento"
               />
 
@@ -627,7 +619,11 @@ function FeralSheetView({
 
           {/* ================= COLUNA DIREITA ================= */}
           <div className="min-w-0 space-y-4">
-            <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} />
+            <TabBar
+              tabs={tabs}
+              active={activeTab}
+              onChange={(k) => setActiveTab(k as FeralTabKey)}
+            />
 
             {activeTab === "habilidades" && (
               <HabilidadesPanel
@@ -658,7 +654,7 @@ function FeralSheetView({
                   })
                 }
                 onAddCustom={(entryData) =>
-                  updateSheet({
+                  updateRaw({
                     customTechniques: [
                       {
                         id: generateId(),
@@ -669,14 +665,14 @@ function FeralSheetView({
                   })
                 }
                 onEditCustom={(id, patch) =>
-                  updateSheet({
+                  updateRaw({
                     customTechniques: customTechniques.map((c) =>
                       c.id === id ? { ...c, ...patch } : c,
                     ),
                   })
                 }
                 onRemoveCustom={(id) =>
-                  updateSheet({
+                  updateRaw({
                     customTechniques: customTechniques.filter(
                       (c) => c.id !== id,
                     ),
@@ -686,7 +682,7 @@ function FeralSheetView({
             )}
 
             {activeTab === "tracos" && (
-              <TracosPanel
+              <TraitPanel
                 selected={entity.traits}
                 custom={customTraits}
                 onToggleLibrary={(traitId) =>
@@ -710,7 +706,7 @@ function FeralSheetView({
                   })
                 }
                 onAddCustom={(entryData) =>
-                  updateSheet({
+                  updateRaw({
                     customTraits: [
                       {
                         id: generateId(),
@@ -721,14 +717,14 @@ function FeralSheetView({
                   })
                 }
                 onEditCustom={(id, patch) =>
-                  updateSheet({
+                  updateRaw({
                     customTraits: customTraits.map((c) =>
                       c.id === id ? { ...c, ...patch } : c,
                     ),
                   })
                 }
                 onRemoveCustom={(id) =>
-                  updateSheet({
+                  updateRaw({
                     customTraits: customTraits.filter((c) => c.id !== id),
                   })
                 }
@@ -754,11 +750,7 @@ function FeralSheetView({
             )}
 
             {activeTab === "diario" && (
-              <DiarioPanel
-                entity={entity}
-                update={update}
-                feralOptions={feralOptions}
-              />
+              <DiarioPanel entity={entity} update={update} />
             )}
           </div>
         </div>
@@ -1279,26 +1271,21 @@ function ConditionsGrid({
   onToggle: (conditionId: ID) => void;
   onLevelChange: (conditionId: ID, level: number) => void;
 }) {
-  const selectedById = useMemo(
-    () =>
-      new Map(selected.map((condition) => [condition.conditionId, condition])),
-    [selected],
-  );
-
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {conditionDefinitions.map((condition) => {
-        const conditionOption = condition as {
+        const anyCondition = condition as unknown as {
           id: ID;
           name: string;
           description?: string;
+          maxLevel?: number | null;
         };
 
-        const active = selectedById.get(conditionOption.id);
+        const active = selected.find((c) => c.conditionId === anyCondition.id);
 
         return (
           <div
-            key={String(conditionOption.id)}
+            key={String(anyCondition.id)}
             className={`
               group flex h-12 min-w-0 items-center gap-2
               rounded-xl border px-2.5
@@ -1321,9 +1308,9 @@ function ConditionsGrid({
             {/* Área clicável da condição */}
             <button
               type="button"
-              onClick={() => onToggle(conditionOption.id)}
-              title={conditionOption.description ?? conditionOption.name}
-              className="flex min-w-0 flex-1 items-center gap-2 text-left focus:outline-none"
+              onClick={() => onToggle(anyCondition.id)}
+              title={anyCondition.description ?? anyCondition.name}
+              className="cursor-pointer flex min-w-0 flex-1 items-center gap-2 text-left focus:outline-none"
             >
               <span
                 className={`
@@ -1348,14 +1335,14 @@ function ConditionsGrid({
                   }
                 `}
               >
-                {conditionOption.name}
+                {anyCondition.name}
               </span>
             </button>
 
             {/* Tooltip fica fora do botão da condição */}
             <InfoTooltip
-              title={conditionOption.name}
-              description={conditionOption.description ?? ""}
+              title={anyCondition.name}
+              description={anyCondition.description ?? ""}
               category="Condição"
             />
 
@@ -1373,21 +1360,21 @@ function ConditionsGrid({
                   type="button"
                   onClick={() =>
                     onLevelChange(
-                      conditionOption.id,
+                      anyCondition.id,
                       Math.max(1, active.level - 1),
                     )
                   }
                   disabled={active.level <= 1}
                   className="
                     flex h-5 w-5 items-center justify-center
-                    rounded-md text-[#a09891]
+                    rounded-md text-[#81776E]
                     transition-colors
                     hover:bg-[#38251F]
                     hover:text-[#F0C4A8]
                     disabled:pointer-events-none
                     disabled:opacity-25
                   "
-                  aria-label={`Diminuir nível de ${conditionOption.name}`}
+                  aria-label={`Diminuir nível de ${anyCondition.name}`}
                 >
                   <Minus className="h-3 w-3" />
                 </button>
@@ -1405,16 +1392,27 @@ function ConditionsGrid({
                 <button
                   type="button"
                   onClick={() =>
-                    onLevelChange(conditionOption.id, active.level + 1)
+                    onLevelChange(
+                      anyCondition.id,
+                      anyCondition.maxLevel != null
+                        ? Math.min(anyCondition.maxLevel, active.level + 1)
+                        : active.level + 1,
+                    )
+                  }
+                  disabled={
+                    anyCondition.maxLevel != null &&
+                    active.level >= anyCondition.maxLevel
                   }
                   className="
                     flex h-5 w-5 items-center justify-center
-                    rounded-md text-[#a09891]
+                    rounded-md text-[#81776E]
                     transition-colors
                     hover:bg-[#38251F]
                     hover:text-[#F0C4A8]
+                    disabled:pointer-events-none
+                    disabled:opacity-25
                   "
-                  aria-label={`Aumentar nível de ${conditionOption.name}`}
+                  aria-label={`Aumentar nível de ${anyCondition.name}`}
                 >
                   <Plus className="h-3 w-3" />
                 </button>
@@ -1540,9 +1538,9 @@ function HabilidadesPanel({
             Dica de Caçador Feral:
           </span>{" "}
           Na criação de personagem, distribua seus pontos entre as perícias que
-          melhor representam seu passado humano e sua afinidade de monstro. Cada
-          feral preparado começa com +1 em três Habilidades diferentes e +0 nas
-          Habilidades restantes
+          melhor representam seu passado humano e sua afinidade de criatura.
+          Cada feral preparado começa com +1 em três Habilidades diferentes e +0
+          nas Habilidades restantes
         </p>
       </div>
     </section>
@@ -1558,10 +1556,16 @@ function formatTechniqueCost(
 ): string | null {
   if (!cost) return null;
 
-  return `${cost.amount} ${COST_TYPE_LABELS[cost.type] ?? cost.type}`;
+  const typeLabel: Record<string, string> = {
+    acoes: "Ações",
+    vigor: "Vigor",
+    sucessos: "Sucessos",
+  };
+
+  return `${cost.amount} ${typeLabel[cost.type] ?? cost.type}`;
 }
 
-function techniqueLevelClass(level: ITechniqueDefinition["level"]): string {
+function techniqueLevelClass(level: ITechniqueDefinition["level"]) {
   switch (level) {
     case "Iniciante":
       return "border-[#2E6F63]/40 bg-[#153029]/70 text-[#6FCF97]";
@@ -1574,7 +1578,7 @@ function techniqueLevelClass(level: ITechniqueDefinition["level"]): string {
   }
 }
 
-function techniqueLevelIndicator(level: ITechniqueDefinition["level"]): string {
+function techniqueLevelIndicator(level: ITechniqueDefinition["level"]) {
   switch (level) {
     case "Iniciante":
       return "bg-[#6FCF97]";
@@ -1598,16 +1602,16 @@ function TecnicasPanel({
   onRemoveCustom,
 }: {
   known: IFeral["techniques"];
-  custom: ICustomEntry[];
+  custom: ICustomTechniqueEntry[];
   training?: ITechniqueTraining;
   onToggle: (techniqueId: ID) => void;
   onTrainingChange: (training: ITechniqueTraining | undefined) => void;
-  onAddCustom: (entry: Omit<ICustomEntry, "id">) => void;
-  onEditCustom: (id: ID, patch: Partial<ICustomEntry>) => void;
+  onAddCustom: (entry: Omit<ICustomTechniqueEntry, "id">) => void;
+  onEditCustom: (id: ID, patch: Partial<ICustomTechniqueEntry>) => void;
   onRemoveCustom: (id: ID) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<ICustomEntry | null>(null);
+  const [editing, setEditing] = useState<ICustomTechniqueEntry | null>(null);
 
   const knownEntries = useMemo(
     () =>
@@ -1642,7 +1646,7 @@ function TecnicasPanel({
     setModalOpen(true);
   };
 
-  const openEditModal = (entry: ICustomEntry) => {
+  const openEditModal = (entry: ICustomTechniqueEntry) => {
     setEditing(entry);
     setModalOpen(true);
   };
@@ -1692,36 +1696,35 @@ function TecnicasPanel({
         </button>
       </div>
 
-      {knownEntries.length > 0 && (
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {knownEntries.map(({ selection, definition }) => (
-            <TechniqueCard
-              key={`lib-${definition.id}`}
-              technique={definition}
-              onRemove={() => onToggle(selection.techniqueId)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        {knownEntries.length > 0 && (
+          <>
+            {knownEntries.map(({ selection, definition }) => (
+              <TechniqueCard
+                key={`lib-${definition.id}`}
+                technique={definition}
+                training={
+                  training?.techniqueId === definition.id ? training : undefined
+                }
+                onRemove={() => onToggle(selection.techniqueId)}
+              />
+            ))}
+          </>
+        )}
 
-      {custom.length > 0 && (
-        <div
-          className={
-            knownEntries.length > 0
-              ? "mt-2.5 grid gap-2.5 sm:grid-cols-2"
-              : "grid gap-2.5 sm:grid-cols-2"
-          }
-        >
-          {custom.map((entry) => (
-            <TechniqueCard
-              key={entry.id}
-              custom={entry}
-              onEdit={() => openEditModal(entry)}
-              onRemove={() => onRemoveCustom(entry.id)}
-            />
-          ))}
-        </div>
-      )}
+        {custom.length > 0 && (
+          <>
+            {custom.map((entry) => (
+              <TechniqueCard
+                key={entry.id}
+                custom={entry}
+                onEdit={() => openEditModal(entry)}
+                onRemove={() => onRemoveCustom(entry.id)}
+              />
+            ))}
+          </>
+        )}
+      </div>
 
       {total === 0 && (
         <Placeholder
@@ -1755,18 +1758,23 @@ function TecnicasPanel({
 function TechniqueCard({
   technique,
   custom,
+  training,
   onEdit,
   onRemove,
 }: {
   technique?: ITechniqueDefinition;
-  custom?: ICustomEntry;
+  custom?: ICustomTechniqueEntry;
+  training?: ITechniqueTraining;
   onEdit?: () => void;
   onRemove: () => void;
 }) {
   const isCustom = Boolean(custom);
   const name = technique?.name ?? custom?.name ?? "Técnica";
   const description = technique?.description ?? custom?.description ?? "";
-  const costLabel = technique ? formatTechniqueCost(technique.cost) : null;
+  const level = technique?.level ?? custom?.level;
+  const costLabel = technique
+    ? formatTechniqueCost(technique.cost)
+    : (custom?.cost ?? null);
 
   return (
     <div
@@ -1806,7 +1814,7 @@ function TechniqueCard({
                   {name}
                 </p>
 
-                {technique?.level && (
+                {level && (
                   <span
                     className={`
                       inline-flex shrink-0
@@ -1815,35 +1823,28 @@ function TechniqueCard({
                       px-1.5 py-0.5
                       text-[8px] font-black
                       uppercase tracking-wide
-                      ${techniqueLevelClass(technique.level)}
+                      ${techniqueLevelClass(level)}
                     `}
                   >
-                    <span
-                      className={`
-                        h-1.5 w-1.5 rounded-full
-                        ${techniqueLevelIndicator(technique.level)}
-                      `}
-                    />
-
-                    {technique.level}
-                  </span>
-                )}
-
-                {isCustom && custom?.badge && (
-                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#6FCF97]">
-                    {custom.badge}
-                  </span>
-                )}
-
-                {isCustom && !custom?.badge && (
-                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-[#6FCF97]">
-                    Personalizada
+                    {level}
                   </span>
                 )}
 
                 {costLabel && (
                   <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
                     {costLabel}
+                  </span>
+                )}
+
+                {!isCustom && !costLabel && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                    PASSIVA
+                  </span>
+                )}
+
+                {isCustom && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-[#6FCF97]">
+                    Personalizado
                   </span>
                 )}
 
@@ -1859,6 +1860,13 @@ function TechniqueCard({
                     ))}
                   </div>
                 )}
+
+                {training && training.sessions > 0 && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#B0A497]">
+                    {training.sessions} treino
+                    {training.sessions === 1 ? "" : "s"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -1868,30 +1876,24 @@ function TechniqueCard({
                   type="button"
                   onClick={onEdit}
                   aria-label={`Editar ${name}`}
-                  className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB]"
+                  className="cursor-pointer rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB]"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
               )}
 
-              <InfoTooltip
-                title={name}
-                category="Técnica"
-                description={description}
-              />
-
               <button
                 type="button"
                 onClick={onRemove}
                 aria-label={`Remover ${name}`}
-                className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#2B1F1C] hover:text-[#D97867]"
+                className="cursor-pointer rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#2B1F1C] hover:text-[#D97867]"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
 
-          <p className="text-[10px] leading-relaxed text-[#a7a19a]">
+          <p className="text-[10px] leading-relaxed text-[#ccc5c0]">
             {description}
           </p>
         </div>
@@ -1913,7 +1915,7 @@ function ModeTab({
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-wide transition-colors ${
+      className={`cursor-pointer flex-1 rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-wide transition-colors ${
         active
           ? "border-[#89B5F7]/50 bg-[#13335C]/40 text-[#89B5F7]"
           : "border-[#383430] bg-[#1E1D1B] text-[#8F877D] hover:text-[#F5EFEB]"
@@ -1932,9 +1934,9 @@ function AddTechniqueModal({
   onClose,
 }: {
   known: IFeral["techniques"];
-  editing: ICustomEntry | null;
+  editing: ICustomTechniqueEntry | null;
   onToggleLibrary: (techniqueId: ID) => void;
-  onSaveCustom: (data: Omit<ICustomEntry, "id">) => void;
+  onSaveCustom: (data: Omit<ICustomTechniqueEntry, "id">) => void;
   onClose: () => void;
 }) {
   const [mode, setMode] = useState<"biblioteca" | "personalizada">(
@@ -1942,20 +1944,15 @@ function AddTechniqueModal({
   );
 
   const [search, setSearch] = useState("");
-
   const [name, setName] = useState(editing?.name ?? "");
-
-  const [badge, setBadge] = useState(editing?.badge ?? "");
-
-  const [description, setDescription] = useState(editing?.description ?? "");
-
-  const knownTechniqueIds = useMemo(
-    () => new Set(known.map(({ techniqueId }) => techniqueId)),
-    [known],
+  const [level, setLevel] = useState<ICustomTechniqueEntry["level"]>(
+    editing?.level ?? "Iniciante",
   );
-
+  const [cost, setCost] = useState(editing?.cost ?? "");
+  const [badge, setBadge] = useState(editing?.badge ?? "");
+  const [description, setDescription] = useState(editing?.description ?? "");
   const filteredTechniques = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = search.trim().toLocaleLowerCase();
 
     if (!normalizedSearch) {
       return techniqueDefinitions;
@@ -1970,7 +1967,7 @@ function AddTechniqueModal({
         ...(technique.utensils ?? []),
       ]
         .join(" ")
-        .toLowerCase();
+        .toLocaleLowerCase();
 
       return searchableText.includes(normalizedSearch);
     });
@@ -1983,6 +1980,8 @@ function AddTechniqueModal({
 
     onSaveCustom({
       name: normalizedName,
+      level,
+      cost: cost.trim() || undefined,
       badge: badge.trim() || undefined,
       description: description.trim(),
     });
@@ -2023,14 +2022,14 @@ function AddTechniqueModal({
               px-3 py-2.5
               text-xs text-[#F5EFEB]
               outline-none
-              placeholder:text-[#625A53]
+              placeholder:text-[#cdc6c1]
               transition-colors
               focus:border-[#89B5F7]/60
             "
           />
 
           <div className="flex items-center justify-between px-1">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#625A53]">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#cdc6c1]">
               {filteredTechniques.length} resultado
               {filteredTechniques.length === 1 ? "" : "s"}
             </span>
@@ -2043,7 +2042,9 @@ function AddTechniqueModal({
 
           <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
             {filteredTechniques.map((technique) => {
-              const isKnown = knownTechniqueIds.has(technique.id);
+              const isKnown = known.some(
+                (entry) => entry.techniqueId === technique.id,
+              );
 
               return (
                 <button
@@ -2148,14 +2149,30 @@ function AddTechniqueModal({
             />
           </Field>
 
-          <Field label="Selo / Custo" hint="Opcional. Ex: Passiva · 1 Sucesso">
-            <input
-              value={badge}
-              onChange={(e) => setBadge(e.target.value)}
-              placeholder="Ex: Passiva · 1 Sucesso"
-              className={inputClass}
-            />
-          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Nível" required>
+              <select
+                value={level}
+                onChange={(e) =>
+                  setLevel(e.target.value as ICustomTechniqueEntry["level"])
+                }
+                className={inputClass}
+              >
+                <option value="Iniciante">Iniciante</option>
+                <option value="Intermediária">Intermediária</option>
+                <option value="Avançada">Avançada</option>
+              </select>
+            </Field>
+
+            <Field label="Custo">
+              <input
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                placeholder="Ex: 1 Sucesso"
+                className={inputClass}
+              />
+            </Field>
+          </div>
 
           <Field label="Descrição">
             <textarea
@@ -2210,82 +2227,44 @@ function AddTechniqueModal({
 }
 
 // ============================================================================
-// CARTÃO GENÉRICO
+// TAB 3 — TRAÇOS & MUTAÇÕES
 // ============================================================================
 
-function EntryCard({
-  name,
-  badge,
-  description,
-  onEdit,
-  onRemove,
-}: {
-  name: string;
-  badge?: string;
-  description: string;
-  onEdit?: () => void;
-  onRemove: () => void;
-}) {
+function formatTraitCost(cost: ITraitDefinition["cost"]): ReactNode {
+  if (!cost) return null;
+
+  const typeLabel: Record<string, string> = {
+    acoes: "Ações",
+    vigor: "Vigor",
+    sucessos: "Sucessos",
+  };
+
   return (
-    <div className="rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
-            {name}
-          </p>
-
-          {badge && (
-            <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
-              {badge}
-            </span>
-          )}
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1">
-          {onEdit && (
-            <button
-              type="button"
-              onClick={onEdit}
-              className="rounded-lg p-1.5 text-[#8F877D] hover:bg-[#242220] hover:text-[#F5EFEB]"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onRemove}
-            className="rounded-lg p-1.5 text-[#B0645A] hover:bg-[#5C2626]/40 hover:text-white"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {description && (
-        <p className="mt-1.5 border-t border-[#302D29] pt-1.5 text-[10px] leading-relaxed text-[#8F877D]">
-          {description}
-        </p>
-      )}
-    </div>
+    <>
+      <span>{cost.amount}</span>
+      <span className="ml-1">{typeLabel[cost.type] ?? cost.type}</span>
+    </>
   );
 }
 
-// ============================================================================
-// TAB 3 — TRAÇOS & MUTAÇÕES
-// ============================================================================
+function formatCustomCost(cost?: string): ReactNode {
+  if (!cost?.trim()) return null;
 
-// ============================================================================
-// TAB 3 — TRAÇOS & MUTAÇÕES
-// ============================================================================
+  const parts = cost.trim().split(/\s+/);
 
-function formatTraitCost(cost: ITraitDefinition["cost"]): string | null {
-  if (!cost) return null;
+  if (parts.length < 2) {
+    return cost;
+  }
 
-  return `${cost.amount} ${COST_TYPE_LABELS[cost.type] ?? cost.type}`;
+  return (
+    <>
+      <span>{parts[0]}</span>
+      <span className="ml-1">{parts.slice(1).join(" ")}</span>
+    </>
+  );
 }
 
-function TracosPanel({
+function TraitPanel({
   selected,
   custom,
   onToggleLibrary,
@@ -2298,15 +2277,15 @@ function TracosPanel({
     traitId: ID;
     level: number;
   }>;
-  custom: ICustomEntry[];
+  custom: ICustomTraitEntry[];
   onToggleLibrary: (traitId: ID) => void;
   onLevelChange: (traitId: ID, level: number) => void;
-  onAddCustom: (entry: Omit<ICustomEntry, "id">) => void;
-  onEditCustom: (id: ID, patch: Partial<ICustomEntry>) => void;
+  onAddCustom: (entry: Omit<ICustomTraitEntry, "id">) => void;
+  onEditCustom: (id: ID, patch: Partial<ICustomTraitEntry>) => void;
   onRemoveCustom: (id: ID) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<ICustomEntry | null>(null);
+  const [editing, setEditing] = useState<ICustomTraitEntry | null>(null);
 
   const libraryEntries = useMemo(
     () =>
@@ -2344,7 +2323,7 @@ function TracosPanel({
     setModalOpen(true);
   };
 
-  const openEditModal = (entry: ICustomEntry) => {
+  const openEditModal = (entry: ICustomTraitEntry) => {
     setEditing(entry);
     setModalOpen(true);
   };
@@ -2369,7 +2348,7 @@ function TracosPanel({
           <InfoTooltip
             title="Traços & Mutações Biológicas"
             category="Mutações"
-            description="Poderes e mutações corporais herdadas do consumo de monstros."
+            description="Poderes e mutações corporais herdadas do consumo de criaturas."
           />
         </div>
 
@@ -2459,7 +2438,7 @@ function TraitCard({
   onRemove,
 }: {
   trait?: ITraitDefinition;
-  custom?: ICustomEntry;
+  custom?: ICustomTraitEntry;
   level: number;
   onLevelChange: (level: number) => void;
   onEdit?: () => void;
@@ -2468,11 +2447,12 @@ function TraitCard({
   const isCustom = Boolean(custom);
   const name = trait?.name ?? custom?.name ?? "Traço";
   const description = trait?.description ?? custom?.description ?? "";
-  const costLabel = trait ? formatTraitCost(trait.cost) : custom?.badge;
+  const costLabel = trait
+    ? formatTraitCost(trait.cost)
+    : formatCustomCost(custom?.badge);
   const maxLevel = trait?.maxLevel ?? custom?.maxLevel ?? null;
   const canDecrease = level > 1;
   const canIncrease = maxLevel == null || level < maxLevel;
-
   const decreaseLevel = () => {
     if (!canDecrease) return;
 
@@ -2507,7 +2487,7 @@ function TraitCard({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center justify-between gap-2">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <p className="truncate text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
                   {name}
                 </p>
@@ -2518,13 +2498,13 @@ function TraitCard({
                   </span>
                 )}
 
-                <div className="flex items-center justify-between gap-2">
+                <div className="mt-1 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wider">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#cdc6c1]">
                       Nível
                     </span>
 
-                    <div className="flex items-center rounded-lg border border-[#383430] bg-[#171615] p-0.5">
+                    <div className="flex items-center gap-0.5 rounded-lg border border-[#383430] bg-[#171615] p-0.5">
                       <button
                         type="button"
                         onClick={decreaseLevel}
@@ -2532,7 +2512,7 @@ function TraitCard({
                         className="
                     flex h-5 w-5
                     items-center justify-center
-                    rounded-md text-[#a09891]
+                    rounded-md text-[#81776E]
                     transition-colors
                     hover:bg-[#242220]
                     hover:text-[#F0C4A8]
@@ -2555,7 +2535,7 @@ function TraitCard({
                         className="
                     flex h-5 w-5
                     items-center justify-center
-                    rounded-md text-[#a09891]
+                    rounded-md text-[#81776E]
                     transition-colors
                     hover:bg-[#242220]
                     hover:text-[#6FCF97]
@@ -2570,7 +2550,7 @@ function TraitCard({
                   </div>
 
                   {maxLevel != null && (
-                    <span className="text-[9px] font-bold text-[#625A53]">
+                    <span className="text-[9px] font-bold text-[#cdc6c1]">
                       Máx. {maxLevel}
                     </span>
                   )}
@@ -2590,23 +2570,17 @@ function TraitCard({
                   type="button"
                   onClick={onEdit}
                   aria-label={`Editar ${name}`}
-                  className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB]"
+                  className="cursor-pointer rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#242220] hover:text-[#F5EFEB]"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
               )}
 
-              <InfoTooltip
-                title={name}
-                category="Traço"
-                description={description}
-              />
-
               <button
                 type="button"
                 onClick={onRemove}
                 aria-label={`Remover ${name}`}
-                className="rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#2B1F1C] hover:text-[#D97867]"
+                className="cursor-pointer rounded-lg p-1.5 text-[#6D655D] transition-colors hover:bg-[#2B1F1C] hover:text-[#D97867]"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -2614,7 +2588,7 @@ function TraitCard({
           </div>
 
           {description && (
-            <p className="mt-2 text-[10px] leading-relaxed text-[#a7a19a]">
+            <p className="text-[10px] leading-relaxed text-[#ccc5c0]">
               {description}
             </p>
           )}
@@ -2636,10 +2610,10 @@ function AddTraitModal({
     traitId: ID;
     level: number;
   }>;
-  editing: ICustomEntry | null;
+  editing: ICustomTraitEntry | null;
   onToggleLibrary: (traitId: ID) => void;
   onLevelChange: (traitId: ID, level: number) => void;
-  onSaveCustom: (data: Omit<ICustomEntry, "id">) => void;
+  onSaveCustom: (data: Omit<ICustomTraitEntry, "id">) => void;
   onClose: () => void;
 }) {
   const [mode, setMode] = useState<"biblioteca" | "personalizada">(
@@ -2647,26 +2621,16 @@ function AddTraitModal({
   );
 
   const [search, setSearch] = useState("");
-
   const [name, setName] = useState(editing?.name ?? "");
-
   const [badge, setBadge] = useState(editing?.badge ?? "");
-
   const [description, setDescription] = useState(editing?.description ?? "");
-
   const [level, setLevel] = useState(editing?.level ?? 1);
-
   const [maxLevel, setMaxLevel] = useState<number | "">(
     editing?.maxLevel ?? "",
   );
 
-  const selectedTraitsById = useMemo(
-    () => new Map(selected.map((trait) => [trait.traitId, trait])),
-    [selected],
-  );
-
   const filteredTraits = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = search.trim().toLocaleLowerCase();
 
     if (!normalizedSearch) {
       return traitDefinitions;
@@ -2679,7 +2643,7 @@ function AddTraitModal({
         formatTraitCost(trait.cost) ?? "",
       ]
         .join(" ")
-        .toLowerCase();
+        .toLocaleLowerCase();
 
       return searchableText.includes(normalizedSearch);
     });
@@ -2742,14 +2706,14 @@ function AddTraitModal({
               px-3 py-2.5
               text-xs text-[#F5EFEB]
               outline-none
-              placeholder:text-[#625A53]
+              placeholder:text-[#cdc6c1]
               transition-colors
               focus:border-[#2E6F63]/70
             "
           />
 
           <div className="flex items-center justify-between px-1">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#625A53]">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#cdc6c1]">
               {filteredTraits.length} resultado
               {filteredTraits.length === 1 ? "" : "s"}
             </span>
@@ -2762,7 +2726,9 @@ function AddTraitModal({
 
           <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
             {filteredTraits.map((trait) => {
-              const selectedTrait = selectedTraitsById.get(trait.id);
+              const selectedTrait = selected.find(
+                (item) => item.traitId === trait.id,
+              );
 
               const isSelected = Boolean(selectedTrait);
 
@@ -2828,7 +2794,7 @@ function AddTraitModal({
 
                       {isSelected && selectedTrait && (
                         <div className="mt-2 flex items-center justify-between border-t border-[#2E6F63]/20 pt-2">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#625A53]">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#cdc6c1]">
                             Nível {selectedTrait.level}
                           </span>
 
@@ -2842,7 +2808,7 @@ function AddTraitModal({
                                 )
                               }
                               disabled={selectedTrait.level <= 1}
-                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#a09891] hover:bg-[#242220] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
+                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
                             >
                               <Minus className="h-3 w-3" />
                             </button>
@@ -2868,7 +2834,7 @@ function AddTraitModal({
                                 trait.maxLevel != null &&
                                 selectedTrait.level >= trait.maxLevel
                               }
-                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#a09891] hover:bg-[#242220] hover:text-[#6FCF97] disabled:pointer-events-none disabled:opacity-25"
+                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#6FCF97] disabled:pointer-events-none disabled:opacity-25"
                             >
                               <Plus className="h-3 w-3" />
                             </button>
@@ -2901,11 +2867,11 @@ function AddTraitModal({
             />
           </Field>
 
-          <Field label="Selo / Custo" hint="Opcional.">
+          <Field label="Custo">
             <input
               value={badge}
               onChange={(e) => setBadge(e.target.value)}
-              placeholder="Ex: Passiva"
+              placeholder="Ex: Passiva ou 1 Sucesso"
               className={inputClass}
             />
           </Field>
@@ -3116,9 +3082,9 @@ function FeastRecordForm({
   const [rewardType, setRewardType] =
     useState<PermanentReward["type"]>("trait");
 
-  const [styleKey, setStyleKey] = useState<StyleKey>("ligeiro");
+  const [styleKey, setStyleKey] = useState<StyleKey>("ligeiro" as StyleKey);
 
-  const [skillKey, setSkillKey] = useState<SkillKey>("agarrar");
+  const [skillKey, setSkillKey] = useState<SkillKey>("agarrar" as SkillKey);
 
   const [traitId, setTraitId] = useState("");
 
@@ -3286,30 +3252,42 @@ function FeastRecordForm({
 function DiarioPanel({
   entity,
   update,
-  feralOptions,
 }: {
   entity: IFeral;
   update: (patch: Partial<IFeral>) => void;
-  feralOptions: ReturnType<typeof getAllFeralCards>;
 }) {
   const [section, setSection] = useState<"historia" | "notas">("notas");
 
   return (
     <section className={cardClass}>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
-            Diário & Notas
-          </h3>
+      {/* Cabeçalho */}
+      <div className="mb-2 flex flex-col gap-4 border-b border-[#302D29] pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#383430] bg-[#242220] text-[#FF9B42]">
+            <FileText className="h-4.5 w-4.5" />
+          </div>
 
-          <InfoTooltip
-            title="Diário & Notas"
-            category="Campanha"
-            description="Anotações livres sobre a jornada do Feral, além da História pessoal: Origem, Personalidade, Monstro Importante e Matilha."
-          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-sm font-black uppercase tracking-wide text-[#F5EFEB]">
+                Diário & Notas
+              </h3>
+
+              <InfoTooltip
+                title="Diário & Notas"
+                category="Campanha"
+                description="Registre acontecimentos da jornada e mantenha informações importantes sobre a história do Feral."
+              />
+            </div>
+
+            <p className="mt-1 text-[10px] leading-relaxed text-[#7A7065]">
+              Registre a história do personagem ou mantenha anotações da
+              campanha.
+            </p>
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex rounded-xl border border-[#383430] bg-[#171615] gap-1 p-1">
           <ModeTab
             label="Anotações"
             active={section === "notas"}
@@ -3317,7 +3295,7 @@ function DiarioPanel({
           />
 
           <ModeTab
-            label="História"
+            label="Personagem"
             active={section === "historia"}
             onClick={() => setSection("historia")}
           />
@@ -3330,78 +3308,146 @@ function DiarioPanel({
           onChange={(notes) => update({ notes })}
         />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
+          {/* ORIGEM */}
           <div>
-            <div className="mb-2 flex items-center gap-2">
-              <h4 className="text-[11px] font-black uppercase tracking-wide text-[#B0A497]">
-                Origem
-              </h4>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#FF9B42]/10 text-[#FF9B42]">
+                <Link2 className="h-3.5 w-3.5" />
+              </div>
 
-              <InfoTooltip
-                title="Origem"
-                description="Os marcos que moldaram o Feral: os pratos de Criação, Iniciação e Ambição, além da terra natal e uma conexão com outro Feral."
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
+                    Origem
+                  </h4>
+
+                  <InfoTooltip
+                    title="Personagem"
+                    category="História"
+                    description="Os marcos que moldaram o Feral: os pratos de Criação, Iniciação e Ambição, além da terra natal e dos sabores que fazem parte de sua história."
+                  />
+                </div>
+
+                <p className="mt-0.5 text-[9px] text-[#cdc6c1]">
+                  Os sabores e experiências que moldaram seu personagem.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#383430] bg-[#171615]/70 p-3">
+              <OriginEditor
+                origin={entity.origin}
+                onChange={(origin) => update({ origin })}
               />
             </div>
-
-            <OriginEditor
-              origin={entity.origin}
-              onChange={(origin) => update({ origin })}
-              feralOptions={feralOptions}
-              selfId={entity.id}
-            />
           </div>
 
+          {/* PERSONALIDADE */}
           <div>
-            <h4 className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#B0A497]">
-              Personalidade
-            </h4>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#89B5F7]/10 text-[#89B5F7]">
+                <Users className="h-3.5 w-3.5" />
+              </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="É...">
-                <input
-                  value={entity.personality.is}
-                  onChange={(e) =>
-                    update({
-                      personality: {
-                        ...entity.personality,
-                        is: e.target.value,
-                      },
-                    })
-                  }
-                  className={inputClass}
-                />
-              </Field>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
+                    Personalidade
+                  </h4>
 
-              <Field label="Busca ser...">
-                <input
-                  value={entity.personality.strivesToBe}
-                  onChange={(e) =>
-                    update({
-                      personality: {
-                        ...entity.personality,
-                        strivesToBe: e.target.value,
-                      },
-                    })
-                  }
-                  className={inputClass}
-                />
-              </Field>
+                  <InfoTooltip
+                    title="Personalidade"
+                    category="História"
+                    description="Defina como o Feral se enxerga atualmente e quem ele deseja se tornar."
+                  />
+                </div>
+
+                <p className="mt-0.5 text-[9px] text-[#cdc6c1]">
+                  Quem você é e quem deseja se tornar.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#383430] bg-[#171615]/70 p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Você é..."
+                  hint="Como o Feral se define atualmente."
+                >
+                  <input
+                    value={entity.personality.is}
+                    onChange={(e) =>
+                      update({
+                        personality: {
+                          ...entity.personality,
+                          is: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Ex: curioso, reservado, impulsivo..."
+                    className={inputClass}
+                  />
+                </Field>
+
+                <Field
+                  label="Busca ser..."
+                  hint="Aquilo que o Feral deseja se tornar."
+                >
+                  <input
+                    value={entity.personality.strivesToBe}
+                    onChange={(e) =>
+                      update({
+                        personality: {
+                          ...entity.personality,
+                          strivesToBe: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Ex: um grande caçador, respeitado..."
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
             </div>
           </div>
 
+          {/* CRIATURA IMPORTANTE */}
           <div>
-            <h4 className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#B0A497]">
-              Monstro Importante
-            </h4>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#6FCF97]/10 text-[#6FCF97]">
+                <PawPrint className="h-3.5 w-3.5" />
+              </div>
 
-            <ImportantMonsterEditor
-              value={entity.importantMonster}
-              onChange={(importantMonster) =>
-                update({
-                  importantMonster,
-                })
-              }
-            />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
+                    Criatura Importante
+                  </h4>
+
+                  <InfoTooltip
+                    title="Criatura Importante"
+                    category="História"
+                    description="A criatura que possui alguma importância especial na história do Feral e sua relação com ela."
+                  />
+                </div>
+
+                <p className="mt-0.5 text-[9px] text-[#cdc6c1]">
+                  Uma criatura que marcou sua trajetória.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#383430] bg-[#171615]/70 p-4">
+              <ImportantMonsterEditor
+                value={entity.importantMonster}
+                onChange={(importantMonster) =>
+                  update({
+                    importantMonster,
+                  })
+                }
+              />
+            </div>
           </div>
         </div>
       )}
@@ -3412,31 +3458,34 @@ function DiarioPanel({
 const ORIGIN_DISH_META: {
   key: "creation" | "initiation" | "ambition";
   type: OriginDishType;
+  description: string;
 }[] = [
   {
     key: "creation",
     type: "criacao",
+    description:
+      "Considere sua herança quando imaginar o prato que define a sua infância.",
   },
   {
     key: "initiation",
     type: "iniciacao",
+    description:
+      "Considere seu treinamento (ou falta dele) quando imaginar o prato que o fez um feral.",
   },
   {
     key: "ambition",
     type: "ambicao",
+    description:
+      "Considere seus objetivos quando imaginar o prato que você mais quer comer.",
   },
 ];
 
 function OriginEditor({
   origin,
   onChange,
-  feralOptions,
-  selfId,
 }: {
   origin: IFeralOrigin;
   onChange: (origin: IFeralOrigin) => void;
-  feralOptions: ReturnType<typeof getAllFeralCards>;
-  selfId: ID;
 }) {
   function updateDish(
     key: "creation" | "initiation" | "ambition",
@@ -3451,203 +3500,131 @@ function OriginEditor({
     });
   }
 
-  function updateConnection(patch: Partial<IOriginConnection>) {
-    onChange({
-      ...origin,
-      connection: {
-        ...origin.connection,
-        ...patch,
-      },
-    });
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
-        {ORIGIN_DISH_META.map(({ key, type }) => {
-          const dish = origin[key];
+    <div className="space-y-5">
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h5 className="text-[10px] font-black uppercase tracking-wider text-[#FF9B42]">
+                Pratos de Origem
+              </h5>
 
-          return (
-            <div
-              key={key}
-              className="space-y-3 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5"
-            >
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#FF9B42]">
-                {ORIGIN_DISH_LABELS[type]}
-              </p>
+              <InfoTooltip
+                title="Pratos de Origem"
+                category="Origem"
+                description="Os três pratos representam momentos fundamentais da vida do Feral: sua infância, sua transformação e aquilo que deseja alcançar."
+              />
+            </div>
 
-              <Field label="Descrição">
-                <textarea
-                  value={dish.description}
-                  onChange={(e) =>
-                    updateDish(key, {
-                      description: e.target.value,
-                    })
-                  }
-                  className={`${inputClass} min-h-20 resize-y text-xs`}
-                />
-              </Field>
+            <p className="mt-1 text-[9px] text-[#cdc6c1]">
+              Três pratos que representam diferentes momentos da sua vida.
+            </p>
+          </div>
+        </div>
 
-              <Field label="Bônus de Perícia">
-                <select
-                  value={dish.skillBonus}
-                  onChange={(e) =>
-                    updateDish(key, {
-                      skillBonus: e.target.value as SkillKey,
-                    })
-                  }
-                  className={inputClass}
-                >
-                  {Object.entries(SKILLS).map(([skill, meta]) => (
-                    <option key={skill} value={skill}>
-                      {meta.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+        <div className="grid grid-cols-3 gap-3">
+          {ORIGIN_DISH_META.map(({ key, type, description }) => {
+            const dish = origin[key];
 
-              {key === "initiation" && (
-                <Field label="Criatura do 1º Banquete">
-                  <select
-                    value={dish.monsterId ?? ""}
+            return (
+              <div
+                key={key}
+                className="rounded-2xl border border-[#383430] bg-[#1E1D1B] p-4 transition-colors hover:border-[#4A433C]"
+              >
+                <div className="mb-3 flex items-start gap-3">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[#FF9B42]/20 bg-[#FF9B42]/10 text-[#FF9B42]">
+                    <Utensils className="h-3.5 w-3.5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-[#F5EFEB]">
+                        {ORIGIN_DISH_LABELS[type]}
+                      </p>
+                    </div>
+
+                    <p className="mt-0.5 text-[9px] leading-relaxed text-[#cdc6c1]">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+
+                <Field label="Descrição">
+                  <textarea
+                    value={dish.description}
                     onChange={(e) =>
                       updateDish(key, {
-                        monsterId: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
+                        description: e.target.value,
                       })
                     }
-                    className={inputClass}
-                  >
-                    <option value="">Selecionar...</option>
-
-                    {creatureDefinitions.map((creature) => (
-                      <option key={creature.id} value={creature.id}>
-                        {creature.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Descreva o prato e o que ele significa para você..."
+                    className={`${inputClass} min-h-24 resize-y text-xs`}
+                  />
                 </Field>
-              )}
-
-              <Field label="Notas" hint="Opcional">
-                <input
-                  value={dish.notes ?? ""}
-                  onChange={(e) =>
-                    updateDish(key, {
-                      notes: e.target.value || undefined,
-                    })
-                  }
-                  className={inputClass}
-                />
-              </Field>
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Terra natal" hint="Opcional">
-          <input
-            value={origin.homeland ?? ""}
-            onChange={(e) =>
-              onChange({
-                ...origin,
-                homeland: e.target.value || undefined,
-              })
-            }
-            className={inputClass}
-          />
-        </Field>
-
-        <Field label="Ingrediente típico">
-          <input
-            value={origin.typicalIngredient}
-            onChange={(e) =>
-              onChange({
-                ...origin,
-                typicalIngredient: e.target.value,
-              })
-            }
-            className={inputClass}
-          />
-        </Field>
-
-        <Field label="Tempero típico">
-          <input
-            value={origin.typicalSeasoning}
-            onChange={(e) =>
-              onChange({
-                ...origin,
-                typicalSeasoning: e.target.value,
-              })
-            }
-            className={inputClass}
-          />
-        </Field>
-      </div>
-
-      <div className="rounded-xl border border-[#302D29] bg-[#171615] p-3.5">
+      {/* IDENTIDADE CULINÁRIA */}
+      <div className="border-t border-[#302D29] pt-5">
         <div className="mb-3 flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-[#38C2B3]" />
+          <h5 className="text-[10px] font-black uppercase tracking-wider text-[#F5EFEB]">
+            Identidade Culinária
+          </h5>
 
-          <p className="text-[11px] font-black uppercase tracking-wide text-[#89B5F7]">
-            Conexão com outro Feral
-          </p>
+          <InfoTooltip
+            title="Identidade Culinária"
+            category="Origem"
+            description="Informações sobre a terra natal e os sabores mais característicos da cultura e da história do Feral."
+          />
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Feral parceiro">
-            <select
-              value={origin.connection.partnerFeralId || ""}
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="Terra natal" hint="Opcional">
+            <input
+              value={origin.homeland ?? ""}
               onChange={(e) =>
-                updateConnection({
-                  partnerFeralId: e.target.value ? Number(e.target.value) : 0,
+                onChange({
+                  ...origin,
+                  homeland: e.target.value || undefined,
                 })
               }
+              placeholder="Ex: Vila Hanami"
               className={inputClass}
-            >
-              <option value="">Nenhum</option>
-
-              {feralOptions
-                .filter((f) => f.id !== selfId)
-                .map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-            </select>
+            />
           </Field>
 
-          <Field label="Prato associado">
-            <select
-              value={origin.connection.dish}
+          <Field
+            label="Ingrediente típico"
+            hint="Ingrediente marcante da sua cultura."
+          >
+            <input
+              value={origin.typicalIngredient}
               onChange={(e) =>
-                updateConnection({
-                  dish: e.target.value as OriginDishType,
+                onChange({
+                  ...origin,
+                  typicalIngredient: e.target.value,
                 })
               }
+              placeholder="Ex: cogumelo, peixe..."
               className={inputClass}
-            >
-              {ALL_ORIGIN_DISH_TYPES.map((dish) => (
-                <option key={dish} value={dish}>
-                  {ORIGIN_DISH_LABELS[dish]}
-                </option>
-              ))}
-            </select>
+            />
           </Field>
-        </div>
 
-        <div className="mt-3">
-          <Field label="Descrição da conexão">
-            <textarea
-              value={origin.connection.description}
+          <Field label="Tempero típico" hint="Tempero ou sabor característico.">
+            <input
+              value={origin.typicalSeasoning}
               onChange={(e) =>
-                updateConnection({
-                  description: e.target.value,
+                onChange({
+                  ...origin,
+                  typicalSeasoning: e.target.value,
                 })
               }
-              className={`${inputClass} min-h-16 resize-y text-xs`}
+              placeholder="Ex: pimenta, sal..."
+              className={inputClass}
             />
           </Field>
         </div>
@@ -3664,103 +3641,57 @@ function ImportantMonsterEditor({
   onChange: (value: IImportantMonsterRelation) => void;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Criatura">
-        <select
-          value={value.monsterId}
-          onChange={(e) =>
-            onChange({
-              ...value,
-              monsterId: Number(e.target.value),
-            })
-          }
-          className={inputClass}
-        >
-          {creatureDefinitions.map((creature) => (
-            <option key={creature.id} value={creature.id}>
-              {creature.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      <Field label="Relação">
-        <input
-          value={value.description}
-          onChange={(e) =>
-            onChange({
-              ...value,
-              description: e.target.value,
-            })
-          }
-          className={inputClass}
-        />
-      </Field>
-    </div>
-  );
-}
-
-function MatilhaMembershipEditor({
-  matilhas,
-  currentMatilha,
-  onJoin,
-  onLeave,
-}: {
-  matilhas: IMatilha[];
-  currentMatilha: IMatilha | undefined;
-  onJoin: (matilhaId: ID) => void;
-  onLeave: () => void;
-}) {
-  return (
-    <div className="space-y-3">
-      {currentMatilha ? (
-        <div className="flex items-center justify-between rounded-xl border border-[#2B6CB0]/40 bg-[#13335C]/20 px-3.5 py-3">
-          <div>
-            <p className="text-[11px] font-bold text-[#F5EFEB]">
-              {currentMatilha.name}
-            </p>
-
-            <p className="text-[10px] text-[#8F877D]">
-              {currentMatilha.memberIds.length} membro
-              {currentMatilha.memberIds.length === 1 ? "" : "s"}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={onLeave}
-            className="rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-[#B0645A] transition-colors hover:bg-[#5C2626]/40 hover:text-white"
-          >
-            Sair
-          </button>
-        </div>
-      ) : (
-        <p className="text-[11px] text-[#8F877D]">
-          Este Feral não pertence a nenhuma Matilha no momento.
-        </p>
-      )}
-
-      {matilhas.length > 0 && (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.5fr)]">
         <Field
-          label={currentMatilha ? "Trocar de Matilha" : "Entrar em uma Matilha"}
+          label="Criatura"
+          hint="A criatura importante para a história do Feral."
         >
           <select
-            value=""
-            onChange={(e) => e.target.value && onJoin(Number(e.target.value))}
+            value={value.monsterId}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                monsterId: Number(e.target.value),
+              })
+            }
             className={inputClass}
           >
-            <option value="">Selecionar...</option>
-
-            {matilhas
-              .filter((m) => m.id !== currentMatilha?.id)
-              .map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
+            {creatureDefinitions.map((creature) => (
+              <option key={creature.id} value={creature.id}>
+                {creature.name}
+              </option>
+            ))}
           </select>
         </Field>
-      )}
+
+        <Field
+          label="Relação"
+          hint="Descreva por que essa criatura é importante."
+        >
+          <input
+            value={value.description}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                description: e.target.value,
+              })
+            }
+            placeholder="Ex: foi quem me ensinou a caçar..."
+            className={inputClass}
+          />
+        </Field>
+      </div>
+
+      <div className="flex items-start gap-2 rounded-xl border border-[#2E6F63]/25 bg-[#153029]/30 px-3 py-2.5">
+        <PawPrint className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#6FCF97]" />
+
+        <p className="text-[9px] leading-relaxed text-[#8F877D]">
+          <span className="font-bold text-[#6FCF97]">Relação narrativa:</span>{" "}
+          essa criatura pode ser uma referência importante para a história,
+          motivação ou memória do seu Feral.
+        </p>
+      </div>
     </div>
   );
 }
@@ -3773,10 +3704,35 @@ function JournalNotesEditor({
   onChange: (notes: IJournalNote[]) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<IJournalNote | null>(null);
 
-  function addNote(note: IJournalNote) {
-    onChange([note, ...notes]);
+  function openCreateModal() {
+    setEditingNote(null);
+    setModalOpen(true);
+  }
+
+  function openEditModal(note: IJournalNote) {
+    setEditingNote(note);
+    setModalOpen(true);
+  }
+
+  function closeModal() {
     setModalOpen(false);
+    setEditingNote(null);
+  }
+
+  function saveNote(note: IJournalNote) {
+    if (editingNote) {
+      onChange(
+        notes.map((currentNote) =>
+          currentNote.id === note.id ? note : currentNote,
+        ),
+      );
+    } else {
+      onChange([note, ...notes]);
+    }
+
+    closeModal();
   }
 
   function removeNote(id: ID) {
@@ -3784,64 +3740,137 @@ function JournalNotesEditor({
   }
 
   return (
-    <div className="space-y-3">
-      <button
-        type="button"
-        onClick={() => setModalOpen(true)}
-        className="inline-flex items-center gap-2 rounded-xl border border-[#383430] bg-[#242220] px-3.5 py-2 text-xs font-black text-[#F5EFEB] transition-colors hover:border-[#FF9B42]"
-      >
-        <Plus className="h-4 w-4 text-[#FF9B42]" />
-        Nova Anotação
-      </button>
+    <div className="space-y-2">
+      {/* Cabeçalho */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#F5EFEB] sm:mb-0">
+          Anotações ({notes.length})
+        </h4>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            className="space-y-1.5 rounded-xl border border-[#383430] bg-[#1E1D1B] p-3.5"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="truncate text-[11px] font-black text-[#F5EFEB]">
-                  {note.title || "Sem título"}
-                </p>
-
-                <span className="text-[9px] font-bold uppercase tracking-wide text-[#7A7065]">
-                  {note.category}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => removeNote(note.id)}
-                className="shrink-0 rounded-lg p-1.5 text-[#B0645A] hover:bg-[#5C2626]/40 hover:text-white"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <p className="text-[10px] leading-relaxed text-[#B0A497]">
-              {note.content}
-            </p>
-
-            <p className="text-[9px] text-[#5E564D]">
-              {formatRelativeTime(note.createdAt)}
-            </p>
-          </div>
-        ))}
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="
+            cursor-pointer
+            inline-flex shrink-0 items-center justify-center gap-2
+            rounded-xl border border-[#FF9B42]/35
+            bg-[#2B1A16] px-3.5 py-2
+            text-xs font-black text-[#FF9B42]
+            transition-all
+            hover:border-[#FF9B42]/60
+            hover:bg-[#342019]
+            active:scale-[0.98]
+          "
+        >
+          <Plus className="h-4 w-4" />
+          Nova Anotação
+        </button>
       </div>
 
+      {/* Lista */}
+      {notes.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {notes.map((note) => (
+            <article
+              key={note.id}
+              className="
+                group relative overflow-hidden
+                rounded-2xl border border-[#383430]
+                bg-[#1E1D1B] p-4
+                transition-all duration-150
+                hover:border-[#4A433C]
+                hover:bg-[#201F1D]
+              "
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="truncate text-[11px] font-black text-[#F5EFEB]">
+                      {note.title || "Sem título"}
+                    </p>
+
+                    {note.category && (
+                      <span className="rounded-md border border-[#383430] bg-[#171615] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-[#FF9B42]">
+                        {note.category}
+                      </span>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-bold text-[#5E564D]">
+                        {formatRelativeTime(note.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(note)}
+                    aria-label={`Editar anotação ${note.title || "sem título"}`}
+                    className="
+                      rounded-lg p-1.5
+                      text-[#6D655D]
+                      transition-colors
+                      hover:bg-[#242220]
+                      hover:text-[#F5EFEB]
+                    "
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => removeNote(note.id)}
+                    aria-label={`Remover anotação ${
+                      note.title || "sem título"
+                    }`}
+                    className="
+                      rounded-lg p-1.5
+                      text-[#6D655D]
+                      transition-colors
+                      hover:bg-[#5C2626]/40
+                      hover:text-[#D97867]
+                    "
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {note.content ? (
+                <p className="mt-1 border-t border-[#302D29] pt-3 text-[10px] leading-relaxed text-[#B0A497]">
+                  {note.content}
+                </p>
+              ) : (
+                <p className="mt-1 border-t border-[#302D29] pt-3 text-[10px] italic text-[#5E564D]">
+                  Nenhum conteúdo registrado.
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+
+      {/* Estado vazio */}
       {notes.length === 0 && (
         <Placeholder
           icon={FileText}
           message="Nenhuma anotação registrada ainda."
-          hint="Registre descobertas, eventos e memórias da jornada do Feral."
+          hint="Registre descobertas, eventos, personagens, locais ou memórias importantes da jornada do Feral."
         />
       )}
 
+      {/* Modal */}
       {modalOpen && (
-        <Modal title="Nova Anotação" onClose={() => setModalOpen(false)}>
-          <NewNoteForm onAdd={addNote} onCancel={() => setModalOpen(false)} />
+        <Modal
+          title={editingNote ? "Editar Anotação" : "Nova Anotação"}
+          onClose={closeModal}
+        >
+          <NewNoteForm
+            editing={editingNote}
+            onSave={saveNote}
+            onCancel={closeModal}
+          />
         </Modal>
       )}
     </div>
@@ -3849,73 +3878,103 @@ function JournalNotesEditor({
 }
 
 function NewNoteForm({
-  onAdd,
+  editing,
+  onSave,
   onCancel,
 }: {
-  onAdd: (note: IJournalNote) => void;
+  editing: IJournalNote | null;
+  onSave: (note: IJournalNote) => void;
   onCancel: () => void;
 }) {
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(editing?.title ?? "");
+  const [category, setCategory] = useState(editing?.category ?? "Geral");
+  const [content, setContent] = useState(editing?.content ?? "");
 
-  const [category, setCategory] = useState("Geral");
-
-  const [content, setContent] = useState("");
+  const canSubmit = title.trim().length > 0 || content.trim().length > 0;
 
   function handleSubmit() {
-    onAdd({
-      id: generateId(),
-      title,
-      category,
-      content,
-      createdAt: new Date().toISOString(),
+    if (!canSubmit) return;
+
+    onSave({
+      id: editing?.id ?? generateId(),
+      title: title.trim(),
+      category: category.trim() || "Geral",
+      content: content.trim(),
+      createdAt: editing?.createdAt ?? new Date().toISOString(),
     });
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
-        <Field label="Título">
+        <Field label="Título" hint="Um nome curto para identificar a anotação.">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="Ex: O ataque na Floresta"
             className={inputClass}
+            autoFocus
           />
         </Field>
 
-        <Field label="Categoria">
+        <Field label="Categoria" hint="Ex: Geral, NPC, Local, Evento...">
           <input
             value={category}
             onChange={(e) => setCategory(e.target.value)}
+            placeholder="Geral"
             className={inputClass}
           />
         </Field>
       </div>
 
-      <Field label="Conteúdo">
+      <Field
+        label="Conteúdo"
+        required
+        hint="Descreva os detalhes que deseja guardar."
+      >
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="O que aconteceu..."
-          className={`${inputClass} min-h-28 resize-y`}
+          className={`${inputClass} min-h-32 resize-y`}
         />
       </Field>
 
-      <div className="flex items-center gap-2 pt-1">
+      {/* Ações */}
+      <div className="flex items-center justify-end gap-2 border-t border-[#302D29] pt-4">
         <button
           type="button"
-          onClick={handleSubmit}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[#383430] bg-[#242220] px-3.5 py-2 text-xs font-black text-[#F5EFEB] transition-colors hover:border-[#FF9B42]"
+          onClick={onCancel}
+          className="
+            rounded-xl px-3.5 py-2
+            text-xs font-bold text-[#8F877D]
+            transition-colors
+            hover:bg-[#242220]
+            hover:text-[#F5EFEB]
+          "
         >
-          <Check className="h-3.5 w-3.5" />
-          Adicionar
+          Cancelar
         </button>
 
         <button
           type="button"
-          onClick={onCancel}
-          className="px-2 text-xs font-bold text-[#B0A497] hover:text-[#F5EFEB]"
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+          className="
+            inline-flex items-center gap-1.5
+            rounded-xl border border-[#FF9B42]/35
+            bg-[#2B1A16] px-3.5 py-2
+            text-xs font-black text-[#FF9B42]
+            transition-all
+            hover:border-[#FF9B42]/60
+            hover:bg-[#342019]
+            disabled:cursor-not-allowed
+            disabled:opacity-40
+          "
         >
-          Cancelar
+          <Check className="h-3.5 w-3.5" />
+
+          {editing ? "Salvar alterações" : "Adicionar Anotação"}
         </button>
       </div>
     </div>

@@ -44,6 +44,7 @@ import {
   cardClass,
   inputClass,
 } from "./FormControls";
+import { InfoTooltip } from "../ui/Tooltip";
 
 const STEPS: WizardStepDef[] = [
   { id: "basics", label: "Dados Básicos" },
@@ -689,21 +690,28 @@ const ORIGIN_DISH_KEYS: {
     | "initiationSkillBonus"
     | "ambitionSkillBonus";
   type: OriginDishType;
+  description: string;
 }[] = [
   {
     key: "creationDescription",
     skillKey: "creationSkillBonus",
     type: "criacao",
+    description:
+      "Considere sua herança quando imaginar o prato que define a sua infância.",
   },
   {
     key: "initiationDescription",
     skillKey: "initiationSkillBonus",
     type: "iniciacao",
+    description:
+      "Considere seu treinamento (ou falta dele) quando imaginar o prato que o fez um feral.",
   },
   {
     key: "ambitionDescription",
     skillKey: "ambitionSkillBonus",
     type: "ambicao",
+    description:
+      "Considere seus objetivos quando imaginar o prato que você mais quer comer.",
   },
 ];
 
@@ -733,7 +741,7 @@ function OriginStep({ draft, setDraft }: StepProps) {
               }))
             }
             className={inputClass}
-            placeholder="Direta e destemida"
+            placeholder="Ex: Direta e destemida"
           />
         </Field>
         <Field label="Busca ser..." required>
@@ -749,76 +757,40 @@ function OriginStep({ draft, setDraft }: StepProps) {
               }))
             }
             className={inputClass}
-            placeholder="Alguém em quem a Matilha confie de olhos fechados"
+            placeholder="Ex: Alguém em quem a Matilha confie de olhos fechados"
           />
         </Field>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        {ORIGIN_DISH_KEYS.map(({ key, skillKey, type }) => (
+      <div className="grid sm:grid-cols-1 gap-4">
+        {ORIGIN_DISH_KEYS.map(({ key, skillKey, type, description }) => (
           <div key={type} className={cardClass}>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#FF9B42] mb-3">
-              {ORIGIN_DISH_LABELS[type]}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#FF9B42]">
+                {ORIGIN_DISH_LABELS[type]}
+              </p>
+              <InfoTooltip
+                title={ORIGIN_DISH_LABELS[type]}
+                category="Origem"
+                description={description}
+              />
+            </div>
             <div className="space-y-3">
-              <Field label="Descrição" required>
+              <Field label="Descrição">
                 <textarea
                   value={draft.origin[key]}
                   onChange={(e) => updateOrigin({ [key]: e.target.value })}
                   className={`${inputClass} min-h-24 resize-y`}
+                  placeholder="Descreva o prato e o que ele significa para você."
                 />
               </Field>
-              <Field label="Bônus de Perícia">
-                <select
-                  value={draft.origin[skillKey]}
-                  onChange={(e) =>
-                    updateOrigin({ [skillKey]: e.target.value as SkillKey })
-                  }
-                  className={inputClass}
-                >
-                  {Object.entries(SKILLS).map(([skill, meta]) => (
-                    <option key={skill} value={skill}>
-                      {meta.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              {type === "iniciacao" && (
-                <Field label="Criatura do 1º Banquete">
-                  <select
-                    value={draft.origin.initiationMonsterId ?? ""}
-                    onChange={(e) =>
-                      updateOrigin({
-                        initiationMonsterId: e.target.value
-                          ? Number(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    <option value="">Selecionar...</option>
-                    {creatureDefinitions.map((creature) => (
-                      <option key={creature.id} value={creature.id}>
-                        {creature.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              )}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        <Field label="Terra natal" hint="Opcional">
-          <input
-            value={draft.origin.homeland}
-            onChange={(e) => updateOrigin({ homeland: e.target.value })}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Ingrediente típico" required>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Field label="Ingrediente típico">
           <input
             value={draft.origin.typicalIngredient}
             onChange={(e) =>
@@ -827,7 +799,7 @@ function OriginStep({ draft, setDraft }: StepProps) {
             className={inputClass}
           />
         </Field>
-        <Field label="Tempero típico" required>
+        <Field label="Tempero típico">
           <input
             value={draft.origin.typicalSeasoning}
             onChange={(e) => updateOrigin({ typicalSeasoning: e.target.value })}
