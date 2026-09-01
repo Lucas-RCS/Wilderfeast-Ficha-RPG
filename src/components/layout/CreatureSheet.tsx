@@ -31,6 +31,7 @@ import {
   traitDefinitions,
 } from "../../data/wilderfeastData";
 import { generateId, getCreatureById, saveCreature } from "../../lib/storage";
+import { exportSheet } from "../../lib/sheetTransfer";
 import {
   ALL_MONSTER_LINEAGES,
   ALL_MONSTER_STAGES,
@@ -152,6 +153,7 @@ function CreatureSheetView({
         onBack={onBack}
         lastSavedAt={lastSavedAt}
         isPending={isPending}
+        onExport={() => exportSheet("creature", entity, entity.name)}
         subtitle={
           <div className="flex flex-wrap items-center gap-2">
             <select

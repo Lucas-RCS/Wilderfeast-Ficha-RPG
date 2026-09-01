@@ -237,7 +237,7 @@ export function PartEditor({
               />
             </label>
             {hasAttack && part.attack && (
-              <div className="mt-3 grid gap-3 border-t border-[#89B5F7]/15 pt-3 sm:grid-cols-3">
+              <div className="mt-3 grid gap-3 border-t border-[#89B5F7]/15 pt-3 sm:grid-cols-2 md:grid-cols-3">
                 <Field label="Alcance">
                   <input
                     type="number"

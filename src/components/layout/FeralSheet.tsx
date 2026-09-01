@@ -71,6 +71,7 @@ import {
   saveFeral,
   saveMatilha,
 } from "../../lib/storage";
+import { exportSheet } from "../../lib/sheetTransfer";
 
 import { ORIGIN_DISH_LABELS } from "../../types/wilderfeastTypes";
 
@@ -423,6 +424,7 @@ function FeralSheetView({
         onBack={onBack}
         lastSavedAt={lastSavedAt}
         isPending={isPending}
+        onExport={() => exportSheet("feral", entity, entity.name)}
         subtitle={
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -1210,7 +1212,7 @@ function StyleCard({
         </div>
 
         <span
-          className={`shrink-0 rounded-md  px-1.5 py-0.5 text-[9px] font-black text-[#fff]`}
+          className={`shrink-0 rounded-md  px-1.5 py-0.5 text-[11px] font-black text-[#fff]`}
           style={{ backgroundColor: color }}
         >
           {value}d6
@@ -3619,7 +3621,7 @@ function OriginEditor({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {ORIGIN_DISH_META.map(({ key, type, description }) => {
             const dish = origin[key];
 

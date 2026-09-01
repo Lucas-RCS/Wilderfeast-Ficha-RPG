@@ -8,9 +8,9 @@ export function Toast({ message }: ToastProps) {
   if (!message) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl bg-[#13335C] text-white font-bold text-xs shadow-2xl border border-[#2B6CB0] flex items-center gap-2 animate-fadeIn">
-      <Check className="w-4 h-4 text-[#FF9B42]" />
-      <span>{message}</span>
+    <div className="fixed bottom-4 right-4 left-4 z-50 mx-auto flex max-w-sm items-center gap-2 rounded-xl border border-[#2B6CB0] bg-[#13335C] px-4 py-3 text-xs font-bold text-white shadow-2xl animate-fadeIn sm:left-auto sm:mx-0 sm:bottom-6 sm:right-6">
+      <Check className="w-4 h-4 shrink-0 text-[#FF9B42]" />
+      <span className="min-w-0">{message}</span>
     </div>
   );
 }

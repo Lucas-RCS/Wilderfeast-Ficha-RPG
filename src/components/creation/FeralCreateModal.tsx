@@ -388,7 +388,7 @@ function UtensilStep({
       />
 
       <Field label="Utensílio de Arkaicaço" required>
-        <div className="grid sm:grid-cols-3 gap-2.5">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2.5">
           {utensilOptions.map((utensil) => (
             <ChoiceCard
               key={utensil.id}
@@ -554,7 +554,7 @@ function SpecialtyStep({
       />
 
       <Field label="Especialidade" required>
-        <div className="grid sm:grid-cols-2 gap-2.5">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2.5">
           {specialtyOptions.map((specialty) => (
             <ChoiceCard
               key={specialty.id}

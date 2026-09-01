@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import {
   Swords,
   Info,
@@ -21,8 +21,13 @@ import {
   getAllCreatureCards,
   getAllFeralCards,
   getItem,
+  generateId,
+  saveCreature,
+  saveFeral,
   setItem,
 } from "../lib/storage";
+import { importSheet } from "../lib/sheetTransfer";
+import { useToast } from "../hooks/useToast";
 import { FeralCreateModal } from "../components/creation/FeralCreateModal";
 import { CreatureCreateModal } from "../components/creation/CreatureCreateModal";
 import { CardCreature } from "../components/ui/CardCreature";
@@ -35,6 +40,7 @@ interface HubProps {
 }
 
 export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
+  const { showToast } = useToast();
   const [showQuickGuide, setShowQuickGuide] = useState<boolean>(
     () => getItem("showQuickGuide") !== "false",
   );
@@ -91,6 +97,46 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
     setShowQuickGuide(false);
   };
 
+  async function handleFeralImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    try {
+      const feral = await importSheet(file, "feral");
+      saveFeral({ ...feral, id: generateId() });
+      setFeralCards(getAllFeralCards());
+      setActiveTab("ferais");
+      showToast("Feral importado com sucesso.");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "Falha ao importar o Feral.",
+      );
+    }
+  }
+
+  async function handleCreatureImport(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    try {
+      const creature = await importSheet(file, "creature");
+      saveCreature({ ...creature, id: generateId() });
+      setCreatureCards(getAllCreatureCards());
+      setActiveTab("criaturas");
+      showToast("Criatura importada com sucesso.");
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Falha ao importar a Criatura.",
+      );
+    }
+  }
+
   return (
     <main className="w-full min-h-screen bg-[#121110] text-[#F5EFEB] flex flex-col font-sans pb-16">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-6 sm:pt-10 flex-1 flex flex-col">
@@ -136,7 +182,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[#2B2825] text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-[#2B2825] text-xs">
               <div className="p-3 rounded-xl bg-[#242220] border border-[#383430] space-y-1">
                 <div className=" font-bold text-xs text-[#89B5F7] uppercase flex items-center gap-1.5">
                   <Utensils className="w-3.5 h-3.5 text-[#FF9B42]" />
@@ -270,7 +316,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                   <input
                     type="file"
                     accept=".json"
-                    onChange={() => {}}
+                    onChange={handleFeralImport}
                     className="hidden"
                   />
                 </label>
@@ -379,7 +425,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                   <input
                     type="file"
                     accept=".json"
-                    onChange={() => {}}
+                    onChange={handleCreatureImport}
                     className="hidden"
                   />
                 </label>

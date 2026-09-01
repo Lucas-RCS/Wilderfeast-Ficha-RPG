@@ -4,6 +4,7 @@ import {
   Camera,
   Check,
   Cloud,
+  Download,
   MoreHorizontal,
   Sparkles,
 } from "lucide-react";
@@ -21,6 +22,7 @@ interface SheetHeaderProps {
   onBack: () => void;
   lastSavedAt: Date | null;
   isPending: boolean;
+  onExport?: () => void;
   actions?: ReactNode;
 }
 
@@ -183,6 +185,7 @@ export function SheetHeader({
   onBack,
   lastSavedAt,
   isPending,
+  onExport,
   actions,
 }: SheetHeaderProps) {
   const theme = ACCENT_STYLES[accent];
@@ -227,6 +230,19 @@ export function SheetHeader({
               isPending={isPending}
             />
 
+            {onExport && (
+              <button
+                type="button"
+                onClick={onExport}
+                title="Exportar ficha JSON"
+                aria-label="Exportar ficha JSON"
+                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[#383430] bg-[#1C1A18] px-2.5 text-[10px] font-black uppercase tracking-wide text-[#B0A497] transition-colors hover:border-[#4A433C] hover:bg-[#242220] hover:text-[#F5EFEB]"
+              >
+                <Download className="h-4 w-4 text-[#FF9B42]" />
+                Exportar
+              </button>
+            )}
+
             {actions && (
               <div className="hidden items-center gap-2 sm:flex">{actions}</div>
             )}
@@ -261,7 +277,7 @@ export function SheetHeader({
                 value={titleValue}
                 onChange={(e) => onTitleChange(e.target.value)}
                 placeholder={titlePlaceholder}
-                className="block w-full min-w-0 font-medium text-2xl font-black text-[#F5EFEB] outline-none placeholder:text-[#4D4741] sm:text-3xl lg:text-[2.1rem] border-b border-transparent bg-transparent text-xs font-medium text-[#B0A497] outline-none transition-colors hover:border-[#383430] focus:border-[#FF9B42]"
+                className="block w-full min-w-0 font-medium text-lg font-black text-[#F5EFEB] outline-none placeholder:text-[#4D4741] sm:text-2xl lg:text-3xl xl:text-[2.1rem] border-b border-transparent bg-transparent text-xs font-medium text-[#B0A497] outline-none transition-colors hover:border-[#383430] focus:border-[#FF9B42]"
               />
 
               {subtitle && (
