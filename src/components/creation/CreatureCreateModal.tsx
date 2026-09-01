@@ -1,5 +1,5 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
-import { PawPrint, Plus } from "lucide-react";
+import { Heart, PawPrint, Plus, Sparkles, Swords } from "lucide-react";
 import type {
   ICreature,
   MonsterLineage,
@@ -192,7 +192,7 @@ function BasicsStep({ draft, setDraft }: StepProps) {
         <Field label="Avatar" hint="Opcional. PNG, JPG ou WEBP.">
           <div className="group relative overflow-hidden rounded-2xl border border-[#383430] bg-[#1A1918] transition-all duration-300 hover:border-[#5A5149]">
             <input
-              id="feral-avatar"
+              id="creature-avatar"
               type="file"
               accept="image/*"
               className="sr-only"
@@ -213,7 +213,7 @@ function BasicsStep({ draft, setDraft }: StepProps) {
               }}
             />
 
-            <label htmlFor="feral-avatar" className="block cursor-pointer">
+            <label htmlFor="creature-avatar" className="block cursor-pointer">
               {draft.avatarUrl ? (
                 <div className="relative aspect-[16/7] overflow-hidden">
                   <img
@@ -308,7 +308,7 @@ function BasicsStep({ draft, setDraft }: StepProps) {
           </div>
         </Field>
       </div>
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Field label="Linhagem">
           <select
             value={draft.lineage}
@@ -385,13 +385,25 @@ function CombatStep({ draft, setDraft }: StepProps) {
         title="Estilos & Perícias"
         subtitle="Os valores estruturais usados nos testes e ataques da Criatura."
       />
-      <div>
-        <h4 className=" font-black text-sm text-[#89B5F7] mb-2.5">
-          Estilos{" "}
-          <span className="text-[#7A7065] font-sans font-normal text-[10px]">
-            (0 a 5)
+      <section className="rounded-2xl border border-[#383430] bg-[#1A1918] p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#FF9B42]/25 bg-[#2B1A16] text-[#FF9B42]">
+              <Swords className="h-4 w-4" />
+            </span>
+            <div>
+              <h4 className="text-sm font-black text-[#F5EFEB]">
+                Estilos de ataque
+              </h4>
+              <p className="text-[10px] text-[#7A7065]">
+                Dados rolados pela Criatura em cada abordagem.
+              </p>
+            </div>
+          </div>
+          <span className="rounded-md bg-[#242220] px-2 py-1 text-[9px] font-black text-[#FF9B42]">
+            0 a 5d6
           </span>
-        </h4>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Object.entries(STYLES).map(([key, meta]) => (
             <NumberStepper
@@ -409,14 +421,24 @@ function CombatStep({ draft, setDraft }: StepProps) {
             />
           ))}
         </div>
-      </div>
-      <div>
-        <h4 className=" font-black text-sm text-[#89B5F7] mb-2.5">
-          Perícias{" "}
-          <span className="text-[#7A7065] font-sans font-normal text-[10px]">
-            (0 a 3)
+      </section>
+      <section className="rounded-2xl border border-[#383430] bg-[#1A1918] p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#89B5F7]/25 bg-[#13335C]/60 text-[#89B5F7]">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <div>
+              <h4 className="text-sm font-black text-[#F5EFEB]">Perícias</h4>
+              <p className="text-[10px] text-[#7A7065]">
+                Bônus que acompanham os Estilos durante testes e ataques.
+              </p>
+            </div>
+          </div>
+          <span className="rounded-md bg-[#242220] px-2 py-1 text-[9px] font-black text-[#89B5F7]">
+            0 a +3
           </span>
-        </h4>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Object.entries(SKILLS).map(([key, meta]) => (
             <NumberStepper
@@ -434,7 +456,7 @@ function CombatStep({ draft, setDraft }: StepProps) {
             />
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

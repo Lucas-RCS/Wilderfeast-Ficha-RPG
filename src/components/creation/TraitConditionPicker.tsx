@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Check, Minus, Plus, Search } from "lucide-react";
 import type {
   IConditionDefinition,
   IConditionState,
@@ -34,7 +34,7 @@ export function TraitPicker({
   );
 
   return (
-    <div className="rounded-2xl bg-[#1A1918] border border-[#383430] p-4">
+    <div className="rounded-2xl border border-[#383430] bg-[#1A1918] p-4">
       <div className="flex items-center justify-between gap-3 mb-1">
         <h4 className=" font-black text-sm text-[#89B5F7]">{title}</h4>
         <span className="text-[10px] text-[#7A7065]">
@@ -62,46 +62,78 @@ export function TraitPicker({
           return (
             <div
               key={trait.id}
-              className={`rounded-xl border p-3 transition-colors ${
+              className={`group relative overflow-hidden rounded-xl border p-3 transition-colors ${
                 isSelected
-                  ? "border-[#FF9B42] bg-[#2B2216]"
-                  : "border-[#383430] bg-[#1E1D1B] hover:border-[#4D4741]"
+                  ? "border-[#2E6F63]/60 bg-[#153029]/60"
+                  : "border-[#383430] bg-[#1E1D1B] hover:border-[#4A433C] hover:bg-[#211F1D]"
               }`}
             >
-              <button
-                type="button"
-                onClick={() => onToggle(trait.id)}
-                className="w-full text-left"
-              >
-                <p className="text-[11px] font-bold text-[#F5EFEB]">
-                  {trait.name}
-                </p>
-                <p className="text-[10px] text-[#8F877D] mt-1 leading-relaxed line-clamp-2">
-                  {trait.description}
-                </p>
-              </button>
+              {isSelected && (
+                <span className="absolute inset-y-0 left-0 w-0.5 bg-[#6FCF97]" />
+              )}
+              <div className="flex items-start gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => onToggle(trait.id)}
+                  aria-label={
+                    isSelected
+                      ? `Remover ${trait.name}`
+                      : `Adicionar ${trait.name}`
+                  }
+                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border transition-colors ${isSelected ? "border-[#2E6F63]/50 bg-[#2E6F63]/20 text-[#6FCF97]" : "border-[#383430] bg-[#171615] text-transparent group-hover:border-[#6FCF97]/40"}`}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggle(trait.id)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <p className="text-[11px] font-black text-[#F5EFEB]">
+                    {trait.name}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-[#8F877D]">
+                    {trait.description}
+                  </p>
+                </button>
+              </div>
 
               {isSelected && maxLevel > 1 && (
-                <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-[#302D29]">
+                <div className="mt-2.5 flex items-center justify-between border-t border-[#2E6F63]/20 pt-2.5">
                   <span className="text-[9px] uppercase font-black text-[#7A7065]">
                     Nível
                   </span>
-                  <select
-                    value={state?.level ?? 1}
-                    onChange={(e) =>
-                      onLevelChange(trait.id, Number(e.target.value))
-                    }
-                    className="flex-1 rounded-lg bg-[#171615] border border-[#383430] px-2 py-1 text-[11px] text-[#F5EFEB] outline-none focus:border-[#FF9B42]"
-                  >
-                    {Array.from(
-                      { length: maxLevel },
-                      (_, index) => index + 1,
-                    ).map((level) => (
-                      <option key={level} value={level}>
-                        {level}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-0.5 rounded-lg border border-[#2E6F63]/30 bg-[#171615] p-0.5">
+                    <button
+                      type="button"
+                      disabled={(state?.level ?? 1) <= 1}
+                      onClick={() =>
+                        onLevelChange(
+                          trait.id,
+                          Math.max(1, (state?.level ?? 1) - 1),
+                        )
+                      }
+                      className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="min-w-[22px] text-center text-[9px] font-black text-[#6FCF97]">
+                      {state?.level ?? 1}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={(state?.level ?? 1) >= maxLevel}
+                      onClick={() =>
+                        onLevelChange(
+                          trait.id,
+                          Math.min(maxLevel, (state?.level ?? 1) + 1),
+                        )
+                      }
+                      className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#6FCF97] disabled:pointer-events-none disabled:opacity-25"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -175,46 +207,78 @@ export function ConditionPicker({
           return (
             <div
               key={condition.id}
-              className={`rounded-xl border p-3 transition-colors ${
+              className={`group relative overflow-hidden rounded-xl border p-3 transition-colors ${
                 isSelected
-                  ? "border-[#FF9B42] bg-[#2B2216]"
-                  : "border-[#383430] bg-[#1E1D1B] hover:border-[#4D4741]"
+                  ? "border-[#D97867]/60 bg-[#2B1A16]/70"
+                  : "border-[#383430] bg-[#1E1D1B] hover:border-[#4A433C] hover:bg-[#211F1D]"
               }`}
             >
-              <button
-                type="button"
-                onClick={() => onToggle(condition.id)}
-                className="w-full text-left"
-              >
-                <p className="text-[11px] font-bold text-[#F5EFEB]">
-                  {condition.name}
-                </p>
-                <p className="text-[10px] text-[#8F877D] mt-1 leading-relaxed line-clamp-2">
-                  {condition.description}
-                </p>
-              </button>
+              {isSelected && (
+                <span className="absolute inset-y-0 left-0 w-0.5 bg-[#D97867]" />
+              )}
+              <div className="flex items-start gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => onToggle(condition.id)}
+                  aria-label={
+                    isSelected
+                      ? `Remover ${condition.name}`
+                      : `Adicionar ${condition.name}`
+                  }
+                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border transition-colors ${isSelected ? "border-[#D97867]/50 bg-[#D97867]/15 text-[#F0C4A8]" : "border-[#383430] bg-[#171615] text-transparent group-hover:border-[#D97867]/40"}`}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggle(condition.id)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <p className="text-[11px] font-black text-[#F5EFEB]">
+                    {condition.name}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-[#8F877D]">
+                    {condition.description}
+                  </p>
+                </button>
+              </div>
 
               {isSelected && maxLevel > 1 && (
-                <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-[#302D29]">
+                <div className="mt-2.5 flex items-center justify-between border-t border-[#D97867]/20 pt-2.5">
                   <span className="text-[9px] uppercase font-black text-[#7A7065]">
                     Nível
                   </span>
-                  <select
-                    value={state?.level ?? 1}
-                    onChange={(e) =>
-                      onLevelChange(condition.id, Number(e.target.value))
-                    }
-                    className="flex-1 rounded-lg bg-[#171615] border border-[#383430] px-2 py-1 text-[11px] text-[#F5EFEB] outline-none focus:border-[#FF9B42]"
-                  >
-                    {Array.from(
-                      { length: maxLevel },
-                      (_, index) => index + 1,
-                    ).map((level) => (
-                      <option key={level} value={level}>
-                        {level}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-0.5 rounded-lg border border-[#D97867]/30 bg-[#171615] p-0.5">
+                    <button
+                      type="button"
+                      disabled={(state?.level ?? 1) <= 1}
+                      onClick={() =>
+                        onLevelChange(
+                          condition.id,
+                          Math.max(1, (state?.level ?? 1) - 1),
+                        )
+                      }
+                      className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#38251F] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="min-w-[22px] text-center text-[9px] font-black text-[#F0C4A8]">
+                      {state?.level ?? 1}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={(state?.level ?? 1) >= maxLevel}
+                      onClick={() =>
+                        onLevelChange(
+                          condition.id,
+                          Math.min(maxLevel, (state?.level ?? 1) + 1),
+                        )
+                      }
+                      className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#38251F] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

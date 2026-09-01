@@ -1238,7 +1238,7 @@ function StyleCard({
           <button
             type="button"
             onClick={() => onChange(clamp(value - 1, min, max))}
-            className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
+            className="cursor-pointer rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
           >
             <Minus className="h-3 w-3" />
           </button>
@@ -1246,7 +1246,7 @@ function StyleCard({
           <button
             type="button"
             onClick={() => onChange(clamp(value + 1, min, max))}
-            className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
+            className="cursor-pointer rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
           >
             <Plus className="h-3 w-3" />
           </button>
@@ -1367,6 +1367,7 @@ function ConditionsGrid({
                   }
                   disabled={active.level <= 1}
                   className="
+                  cursor-pointer 
                     flex h-5 w-5 items-center justify-center
                     rounded-md text-[#81776E]
                     transition-colors
@@ -1405,6 +1406,7 @@ function ConditionsGrid({
                     active.level >= anyCondition.maxLevel
                   }
                   className="
+                  cursor-pointer 
                     flex h-5 w-5 items-center justify-center
                     rounded-md text-[#81776E]
                     transition-colors
@@ -1493,7 +1495,7 @@ function HabilidadesPanel({
                         [skill.key]: clamp(value - 1, 0, 3),
                       })
                     }
-                    className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
+                    className="cursor-pointer rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
                   >
                     <Minus className="h-3 w-3" />
                   </button>
@@ -1516,7 +1518,7 @@ function HabilidadesPanel({
                         [skill.key]: clamp(value + 1, 0, 3),
                       })
                     }
-                    className="rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
+                    className="cursor-pointer rounded-md border border-[#383430] bg-[#242220] p-1 text-[#D8CFC4] hover:border-[#FF9B42] hover:text-[#FF9B42]"
                   >
                     <Plus className="h-3 w-3" />
                   </button>
@@ -2832,7 +2834,7 @@ function AddTraitModal({
                                 )
                               }
                               disabled={selectedTrait.level <= 1}
-                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
+                              className="cursor-pointer flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#F0C4A8] disabled:pointer-events-none disabled:opacity-25"
                             >
                               <Minus className="h-3 w-3" />
                             </button>
@@ -2858,7 +2860,7 @@ function AddTraitModal({
                                 trait.maxLevel != null &&
                                 selectedTrait.level >= trait.maxLevel
                               }
-                              className="flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#6FCF97] disabled:pointer-events-none disabled:opacity-25"
+                              className="cursor-pointer flex h-5 w-5 items-center justify-center rounded-md text-[#81776E] hover:bg-[#242220] hover:text-[#6FCF97] disabled:pointer-events-none disabled:opacity-25"
                             >
                               <Plus className="h-3 w-3" />
                             </button>
