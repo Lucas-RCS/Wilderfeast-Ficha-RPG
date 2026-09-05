@@ -332,7 +332,7 @@ function EmptyState({ search }: { search: string }) {
 
 function TestWalkthrough() {
   return (
-    <article className="overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-[#241b0f] via-[#1c1917] to-black/40 p-3 sm:p-3">
+    <article className="overflow-hidden rounded-2xl border border-amber-500/20 bg-black/20 p-3 sm:p-3">
       <div className="flex items-center gap-2">
         <span className="rounded-lg bg-amber-500/15 p-1.5 text-amber-300">
           <ListOrdered className="h-4 w-4" />
@@ -359,7 +359,7 @@ function TestWalkthrough() {
                 className="absolute left-[15px] top-8 bottom-0 w-px bg-gradient-to-b from-amber-500/40 to-transparent"
               />
             )}
-            <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-amber-500/40 bg-[#1C1B18] font-code text-xs font-bold text-amber-300">
+            <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-amber-500/40 bg-[#1C1B18] font-code text-xs font-bold text-amber-500">
               {index + 1}
             </span>
             <div className="min-w-0 pt-1">

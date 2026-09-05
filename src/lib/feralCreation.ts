@@ -31,7 +31,7 @@ import {
 import { createEmptySkills } from "../types/wilderfeastTypes";
 import { getMatilhaById, saveFeral, saveMatilha } from "./storage";
 
-const DEFAULT_VIGOR = 15;
+const DEFAULT_VIGOR = 20;
 
 // ============================================================================
 // CONSULTA DE OPÇÕES — UTENSÍLIO & TÉCNICAS
@@ -163,7 +163,7 @@ export interface IFeralDraft {
   // Etapa 3 — Especialidade & Traços
   specialtyId: SpecialtyKey | "";
   chosenTraitId?: ID;
-  importantMonsterId?: ID;
+  importantMonsterName?: string;
   importantMonsterDescription: string;
 
   // Etapa 4 — Origem & Personalidade
@@ -189,7 +189,7 @@ export function createEmptyFeralDraft(): IFeralDraft {
 
     specialtyId: "",
     chosenTraitId: undefined,
-    importantMonsterId: undefined,
+    importantMonsterName: "",
     importantMonsterDescription: "",
 
     origin: {
@@ -233,7 +233,7 @@ export function validateFeralDraft(draft: IFeralDraft): string[] {
   if (!draft.specialtyId) errors.push("Escolha uma Especialidade.");
   if (draft.chosenTraitId === undefined)
     errors.push("Escolha o Traço inicial concedido pela Especialidade.");
-  if (draft.importantMonsterId === undefined)
+  if (!draft.importantMonsterName?.trim())
     errors.push("Escolha o Monstro Importante do Feral.");
   if (!draft.origin.typicalIngredient.trim())
     errors.push("Descreva o Ingrediente típico da Origem.");
@@ -319,7 +319,7 @@ export function buildFeralFromDraft(draft: IFeralDraft): IFeral {
     origin,
 
     importantMonster: {
-      monsterId: draft.importantMonsterId as ID,
+      monsterName: draft.importantMonsterName?.trim() ?? "",
       description: draft.importantMonsterDescription,
     },
 

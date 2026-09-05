@@ -55,6 +55,25 @@ import { InfoTooltip } from "../ui/Tooltip";
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
 
+function formatTraitCost(
+  cost: (typeof traitDefinitions)[number]["cost"],
+): ReactNode {
+  if (!cost) return null;
+
+  const typeLabel: Record<string, string> = {
+    acoes: "Ações",
+    vigor: "Vigor",
+    sucessos: "Sucessos",
+  };
+
+  return (
+    <>
+      <span>{cost.amount}</span>
+      <span className="ml-1">{typeLabel[cost.type] ?? cost.type}</span>
+    </>
+  );
+}
+
 interface ICustomCreatureTrait {
   id: ID;
   name: string;
@@ -298,7 +317,7 @@ function CreatureSheetView({
               active={activeTab}
               onChange={setActiveTab}
               counts={{
-                tracos: entity.traits.length + entity.additionalTraits.length,
+                tracos: entity.traits.length + customTraits.length,
                 anatomia: entity.parts.length,
               }}
             />
@@ -1046,6 +1065,11 @@ function CustomCreatureTraitCard({
                 <p className="truncate text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
                   {trait.name}
                 </p>
+                {trait.badge && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                    {trait.badge}
+                  </span>
+                )}
                 {maxLevel != null && (
                   <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#6FCF97]">
                     Máx. {maxLevel}
@@ -1084,7 +1108,7 @@ function CustomCreatureTraitCard({
                   </div>
                 </div>
               </div>
-              <p className="mt-1 text-[10px] leading-relaxed text-[#ccc5c0]">
+              <p className="mt-1 text-[12px] leading-relaxed text-[#bbb6b3]">
                 {trait.description}
               </p>
             </div>
@@ -1125,6 +1149,8 @@ function CreatureTraitCard({
   onRemove: () => void;
 }) {
   const maxLevel = trait.maxLevel ?? null;
+  const costLabel = formatTraitCost(trait.cost);
+
   return (
     <article className="group relative overflow-hidden rounded-xl border border-[#2E6F63]/40 bg-[#1E1D1B] transition-all duration-150 hover:border-[#2E6F63]/70 hover:bg-[#201F1D]">
       <div className="flex min-w-0 items-start gap-3 p-2">
@@ -1138,6 +1164,11 @@ function CreatureTraitCard({
                 <p className="truncate text-[11px] font-black uppercase tracking-wide text-[#F5EFEB]">
                   {trait.name}
                 </p>
+                {costLabel && (
+                  <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#89B5F7]">
+                    {costLabel}
+                  </span>
+                )}
                 {maxLevel != null && (
                   <span className="rounded-md bg-[#242220] px-1.5 py-0.5 text-[9px] font-black text-[#6FCF97]">
                     Máx. {maxLevel}
@@ -1176,7 +1207,7 @@ function CreatureTraitCard({
                   </div>
                 </div>
               </div>
-              <p className="mt-1 text-[10px] leading-relaxed text-[#ccc5c0]">
+              <p className="mt-1 text-[12px] leading-relaxed text-[#bbb6b3]">
                 {trait.description}
               </p>
             </div>

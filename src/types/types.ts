@@ -261,7 +261,7 @@ export interface IJournalNote {
 // ============================================================================
 
 export interface IImportantMonsterRelation {
-  monsterId: ID;
+  monsterName: string;
   description: string;
 }
 

@@ -20,13 +20,7 @@ import {
 } from "../../lib/feralCreation";
 import { ORIGIN_DISH_LABELS } from "../../types/wilderfeastTypes";
 import { WizardShell, type WizardStepDef } from "./WizardShell";
-import {
-  ChoiceCard,
-  Field,
-  SectionTitle,
-  cardClass,
-  inputClass,
-} from "./FormControls";
+import { ChoiceCard, Field, SectionTitle, inputClass } from "./FormControls";
 import { InfoTooltip } from "../ui/Tooltip";
 
 const STEPS: WizardStepDef[] = [
@@ -63,7 +57,7 @@ function getStepErrors(step: number, draft: IFeralDraft): string[] {
       if (!draft.specialtyId) errors.push("Escolha uma Especialidade.");
       if (draft.chosenTraitId === undefined)
         errors.push("Escolha o Traço inicial concedido pela Especialidade.");
-      if (draft.importantMonsterId === undefined)
+      if (!draft.importantMonsterName?.trim())
         errors.push("Escolha o Monstro Importante do Feral.");
       return errors;
     }
@@ -471,8 +465,13 @@ function UtensilStep({
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className={cardClass}>
+          <div className="flex row gap-4">
+            <div
+              className={
+                "rounded-2xl bg-[#1A1918] border border-[#383430] p-4 h-full min-w-[300px] max-w-[300px]"
+              }
+              style={{ width: "100%", maxHeight: "160px" }}
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="w-4 h-4 text-[#FF9B42]" />
                 <h4 className=" font-black text-sm text-[#89B5F7]">
@@ -495,11 +494,13 @@ function UtensilStep({
               )}
             </div>
 
-            <div className={cardClass}>
+            <div
+              className={"rounded-2xl bg-[#1A1918] border border-[#383430] p-4"}
+            >
               <h4 className=" font-black text-sm text-[#89B5F7] mb-2">
                 Escolha 1 Técnica adicional
               </h4>
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <div className="max-h-100 overflow-y-auto pr-1 grid grid-cols-1 gap-2">
                 {utensilInfo.optionalTechniques.map((technique) => (
                   <ChoiceCard
                     key={technique.id}
@@ -596,7 +597,7 @@ function SpecialtyStep({
       )}
 
       {draft.specialtyId && (
-        <div className={cardClass}>
+        <div className={"rounded-2xl bg-[#1A1918] border border-[#383430] p-4"}>
           <div className="flex items-center gap-2 mb-3">
             <PawPrint className="w-4 h-4 text-[#38C2B3]" />
             <h4 className=" font-black text-sm text-[#89B5F7]">
@@ -605,25 +606,17 @@ function SpecialtyStep({
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Criatura" required>
-              <select
-                value={draft.importantMonsterId ?? ""}
+              <input
+                value={draft.importantMonsterName ?? ""}
                 onChange={(e) =>
                   setDraft((current) => ({
                     ...current,
-                    importantMonsterId: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
+                    importantMonsterName: e.target.value,
                   }))
                 }
                 className={inputClass}
-              >
-                <option value="">Selecionar...</option>
-                {monsterChoices.map((monster) => (
-                  <option key={monster.id} value={monster.id}>
-                    {monster.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Nome da criatura"
+              />
             </Field>
             <Field label="Relação">
               <input
@@ -730,7 +723,10 @@ function OriginStep({ draft, setDraft }: StepProps) {
 
       <div className="grid sm:grid-cols-1 gap-4">
         {ORIGIN_DISH_KEYS.map(({ key, skillKey, type, description }) => (
-          <div key={type} className={cardClass}>
+          <div
+            key={type}
+            className={"rounded-2xl bg-[#1A1918] border border-[#383430] p-4"}
+          >
             <div className="flex items-center gap-2">
               <p className="text-[10px] font-black uppercase tracking-wider text-[#FF9B42]">
                 {ORIGIN_DISH_LABELS[type]}

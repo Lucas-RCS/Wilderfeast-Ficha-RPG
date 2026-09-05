@@ -1895,7 +1895,7 @@ function TechniqueCard({
             </div>
           </div>
 
-          <p className="text-[10px] leading-relaxed text-[#ccc5c0]">
+          <p className="text-[10px] leading-relaxed text-[#bbb6b3]">
             {description}
           </p>
         </div>
@@ -2616,7 +2616,7 @@ function TraitCard({
           </div>
 
           {description && (
-            <p className="text-[10px] leading-relaxed text-[#ccc5c0]">
+            <p className="text-[12px] leading-relaxed text-[#bbb6b3]">
               {description}
             </p>
           )}
@@ -3745,22 +3745,17 @@ function ImportantMonsterEditor({
           label="Criatura"
           hint="A criatura importante para a história do Feral."
         >
-          <select
-            value={value.monsterId}
+          <input
+            value={value.monsterName}
             onChange={(e) =>
               onChange({
                 ...value,
-                monsterId: Number(e.target.value),
+                monsterName: e.target.value,
               })
             }
+            placeholder="Ex: Nargath"
             className={inputClass}
-          >
-            {creatureDefinitions.map((creature) => (
-              <option key={creature.id} value={creature.id}>
-                {creature.name}
-              </option>
-            ))}
-          </select>
+          />
         </Field>
 
         <Field
