@@ -244,6 +244,7 @@ export function normalizeCreature(creature: Partial<ICreature>): ICreature {
     skills,
     traits: creature.traits ?? [],
     additionalTraits: creature.additionalTraits ?? [],
+    customTraits: creature.customTraits ?? [],
     conditions: creature.conditions ?? [],
     parts: (creature.parts ?? []).map((part) => ({
       ...part,
@@ -280,6 +281,7 @@ export function copyCreature(id: ID): ICreature | undefined {
     additionalTraits: normalized.additionalTraits.map((trait) => ({
       ...trait,
     })),
+    customTraits: normalized.customTraits?.map((trait) => ({ ...trait })),
     conditions: normalized.conditions.map((condition) => ({ ...condition })),
     parts: normalized.parts.map((part) => ({
       ...part,

@@ -57,6 +57,15 @@ export interface ITraitState {
   level: number;
 }
 
+export interface ICustomTrait {
+  id: ID;
+  name: string;
+  description: string;
+  badge?: string;
+  level?: number;
+  maxLevel?: number | null;
+}
+
 // ============================================================================
 // CONDIÇÕES
 // ============================================================================
@@ -296,6 +305,7 @@ export interface IFeral {
   techniques: ITechniqueState[];
   techniqueTraining?: ITechniqueTraining;
   traits: ITraitState[];
+  customTraits?: ICustomTrait[];
   conditions: IConditionState[];
 
   feastHistory: IFeastRecord[];
@@ -412,6 +422,7 @@ export interface ICreature {
 
   traits: ITraitState[];
   additionalTraits: ITraitState[];
+  customTraits?: ICustomTrait[];
   conditions: IConditionState[];
   parts: ICreaturePart[];
 
