@@ -6,6 +6,7 @@ import type {
   ID,
   IMatilha,
 } from "../types/types";
+import { ALL_SKILL_KEYS, ALL_STYLE_KEYS } from "../types/wilderfeastTypes";
 
 /** Chaves usadas no localStorage. */
 const STORAGE_KEYS = {
@@ -91,6 +92,10 @@ function getEntryMap<T>(key: string): EntryMap<T> {
 
 function setEntryMap<T>(key: string, map: EntryMap<T>): boolean {
   return setItem(key, JSON.stringify(map));
+}
+
+function wasEntrySaved<T extends { id: ID }>(key: string, id: ID): boolean {
+  return Boolean(getEntryById<T>(key, id));
 }
 
 function getAllEntries<T>(key: string): StoredEntry<T>[] {
@@ -206,6 +211,53 @@ export function saveCreature(criatura: ICreature): ICreature {
   return saveEntry(STORAGE_KEYS.criaturas, criatura);
 }
 
+/** Completa campos ausentes em fichas importadas de versões anteriores. */
+export function normalizeCreature(creature: Partial<ICreature>): ICreature {
+  const styles = ALL_STYLE_KEYS.reduce(
+    (result, key) => {
+      result[key] = creature.styles?.[key] ?? 0;
+      return result;
+    },
+    {} as ICreature["styles"],
+  );
+  const skills = ALL_SKILL_KEYS.reduce(
+    (result, key) => {
+      result[key] = creature.skills?.[key] ?? 0;
+      return result;
+    },
+    {} as ICreature["skills"],
+  );
+
+  return {
+    id: creature.id ?? generateId(),
+    name: creature.name ?? "Criatura sem nome",
+    lineage: creature.lineage ?? "Açougueiro",
+    stage: creature.stage ?? "Jovem",
+    sizeDescription: creature.sizeDescription ?? "",
+    description: creature.description ?? "",
+    avatarUrl: creature.avatarUrl,
+    vigor: {
+      current: creature.vigor?.current ?? creature.vigor?.max ?? 12,
+      max: creature.vigor?.max ?? 12,
+    },
+    styles,
+    skills,
+    traits: creature.traits ?? [],
+    additionalTraits: creature.additionalTraits ?? [],
+    conditions: creature.conditions ?? [],
+    parts: (creature.parts ?? []).map((part) => ({
+      ...part,
+      durability: {
+        current: part.durability?.current ?? part.durability?.max ?? 10,
+        max: part.durability?.max ?? 10,
+      },
+    })),
+    diet: creature.diet ?? "",
+    habitat: creature.habitat ?? "",
+    behavior: creature.behavior ?? "",
+  };
+}
+
 /** Remove uma Creature pelo ID. Retorna `true` se algo foi removido. */
 export function deleteCreature(id: ID): boolean {
   return deleteEntry(STORAGE_KEYS.criaturas, id);
@@ -215,13 +267,41 @@ export function deleteCreature(id: ID): boolean {
 export function copyCreature(id: ID): ICreature | undefined {
   const original = getCreatureById(id);
   if (!original) return undefined;
+  const normalized = normalizeCreature(original);
 
   const copy: ICreature = {
-    ...original,
+    ...normalized,
     id: generateId(),
-    name: `${original.name} (cópia)`,
+    name: `${normalized.name} (cópia)`,
+    styles: { ...normalized.styles },
+    skills: { ...normalized.skills },
+    vigor: { ...normalized.vigor },
+    traits: normalized.traits.map((trait) => ({ ...trait })),
+    additionalTraits: normalized.additionalTraits.map((trait) => ({
+      ...trait,
+    })),
+    conditions: normalized.conditions.map((condition) => ({ ...condition })),
+    parts: normalized.parts.map((part) => ({
+      ...part,
+      durability: { ...part.durability },
+      attack: part.attack ? { ...part.attack } : undefined,
+      broken: part.broken
+        ? {
+            ...part.broken,
+            attack: part.broken.attack ? { ...part.broken.attack } : undefined,
+          }
+        : undefined,
+    })),
   };
-  return saveCreature(copy);
+
+  if (copy.avatarUrl?.startsWith("data:")) {
+    copy.avatarUrl = undefined;
+  }
+
+  const saved = saveCreature(copy);
+  return wasEntrySaved<ICreature>(STORAGE_KEYS.criaturas, copy.id)
+    ? saved
+    : undefined;
 }
 
 function toCreatureCard(creature: ICreature, lastSaved: string): ICreatureCard {

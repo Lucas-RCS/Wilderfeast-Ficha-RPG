@@ -27,6 +27,8 @@ interface SheetHeaderProps {
 }
 
 const MAX_AVATAR_MB = 3;
+const MAX_AVATAR_EDGE = 640;
+const AVATAR_QUALITY = 0.78;
 
 const ACCENT_STYLES = {
   blue: {
@@ -60,7 +62,7 @@ function HeaderAvatar({
   const [error, setError] = useState<string | null>(null);
   const theme = ACCENT_STYLES[accent];
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
       setError("Selecione uma imagem válida.");
       return;
@@ -73,15 +75,32 @@ function HeaderAvatar({
 
     setError(null);
 
-    const reader = new FileReader();
+    try {
+      const sourceUrl = URL.createObjectURL(file);
+      const image = new Image();
 
-    reader.onload = (event) => {
-      onChange(
-        typeof event.target?.result === "string" ? event.target.result : "",
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("Falha ao ler a imagem."));
+        image.src = sourceUrl;
+      });
+
+      const scale = Math.min(
+        1,
+        MAX_AVATAR_EDGE / Math.max(image.naturalWidth, image.naturalHeight),
       );
-    };
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas
+        .getContext("2d")
+        ?.drawImage(image, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(sourceUrl);
 
-    reader.readAsDataURL(file);
+      onChange(canvas.toDataURL("image/jpeg", AVATAR_QUALITY));
+    } catch {
+      setError("Não foi possível processar a imagem.");
+    }
   }
 
   return (

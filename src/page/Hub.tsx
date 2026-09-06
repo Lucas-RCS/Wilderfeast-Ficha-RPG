@@ -22,6 +22,7 @@ import {
   getAllFeralCards,
   getItem,
   generateId,
+  normalizeCreature,
   saveCreature,
   saveFeral,
   setItem,
@@ -124,7 +125,7 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
 
     try {
       const creature = await importSheet(file, "creature");
-      saveCreature({ ...creature, id: generateId() });
+      saveCreature(normalizeCreature({ ...creature, id: generateId() }));
       setCreatureCards(getAllCreatureCards());
       setActiveTab("criaturas");
       showToast("Criatura importada com sucesso.");
@@ -497,8 +498,15 @@ export default function Hub({ onOpenFeral, onOpenCreature }: HubProps) {
                     key={data.id}
                     data={data}
                     onDuplicateCreature={(e) => {
-                      copyCreature(e);
-                      setCreatureCards(getAllCreatureCards());
+                      const copy = copyCreature(e);
+                      if (copy) {
+                        setCreatureCards(getAllCreatureCards());
+                        showToast("Criatura duplicada com sucesso.");
+                      } else {
+                        showToast(
+                          "Não foi possível duplicar: o armazenamento do navegador está cheio.",
+                        );
+                      }
                     }}
                     setDeleteTarget={(e) => {
                       setDeleteTarget(e);
